@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package client provides a go client for interacting with the BindPlane OP server. Most of the functions depend on the
+// BindPlane REST API internally.
 package client
 
 import (
@@ -37,18 +39,22 @@ import (
 
 // AgentInstallOptions contains configuration options used for installing an agent.
 type AgentInstallOptions struct {
-	// Platform is the platform the agent will run on, such as Linux and Windows.
+	// Platform is the platform the agent will run on, e.g. "linux"
 	Platform string
-	// Version is the agent release version.
+
+	// Version is the agent release version to install. Available release versions of the observiq-otel-collector are
+	// available at [observiq-otel-collector Releases]
+	//
+	// [observiq-otel-collector Releases]: https://github.com/observIQ/observiq-otel-collector/releases
 	Version string
-	// Labels is a string representation of the agents labels.
-	// Example: "dev,windows,nginx".
+
+	// Labels is a string representation of the agents labels, e.g. "platform=dev,os=windows,app=nginx"
 	Labels string
-	// SecretKey is the secret key used for authentication against BindPlane.
-	// TODO(jsirianni) is this correct ^ ?
-	// TODO(jsirianni) should this be type uuid.UUID?
+
+	// SecretKey is the secret key used to authenticate agents with BindPlane OP
 	SecretKey string
-	// RemoteURL TODO(doc)
+
+	// RemoteURL is the URL that the agent will use to connect to BindPlane OP
 	RemoteURL string
 }
 
@@ -71,7 +77,7 @@ func makeQueryOptions(options []QueryOption) queryOptions {
 	return opts
 }
 
-// QueryOption is an option used in may Store queries
+// QueryOption is an option used in many Store queries
 type QueryOption func(*queryOptions)
 
 // WithSelector adds a selector to the query options
@@ -113,67 +119,92 @@ func WithSort(field string) QueryOption {
 	}
 }
 
-// BindPlane TODO(doc)
+// BindPlane is a REST client for BindPlane OP.
 type BindPlane interface {
-	// Agents TODO(doc)
+	// Agents returns a list of Agents.
 	Agents(ctx context.Context, options ...QueryOption) ([]*model.Agent, error)
-	// Agent TODO(doc)
+	// Agent returns a single Agent.
 	Agent(ctx context.Context, id string) (*model.Agent, error)
+	// DeleteAgents deletes multiple agents by ID.
 	DeleteAgents(ctx context.Context, agentIDs []string) ([]*model.Agent, error)
 
+	// AgentVersions returns a list of AgentVersion resources.
 	AgentVersions(ctx context.Context) ([]*model.AgentVersion, error)
+	// AgentVersion returns a single AgentVersion resources by name.
 	AgentVersion(ctx context.Context, name string) (*model.AgentVersion, error)
+	// DeleteAgentVersion deletes an AgentVersion resource by name.
 	DeleteAgentVersion(ctx context.Context, name string) error
 
-	// SyncAgentVersions builds agent-version from the release data in GitHub. If version is empty, it syncs the last 10
-	// releases.
+	// SyncAgentVersions builds agent-version from the release data in GitHub.
+	// If version is empty, it syncs the last 10 releases.
 	SyncAgentVersions(ctx context.Context, version string) ([]*model.AnyResourceStatus, error)
 
-	// Configurations TODO(doc)
+	// Configurations returns a list of Configuration resources.
 	Configurations(ctx context.Context) ([]*model.Configuration, error)
-	// Configuration TODO(doc)
+	// Configuration returns a single Configuration resource from GET /v1/configurations/:name
 	Configuration(ctx context.Context, name string) (*model.Configuration, error)
-	// DeleteConfiguration TODO(doc)
+	// Delete configuration deletes a single configuration reseource.
 	DeleteConfiguration(ctx context.Context, name string) error
-	// RawConfiguration TODO(doc)
+	// RawConfiguration returns the raw OpenTelemetry configuration for the configuration with
+	// the specified name. This can either be the raw value of a raw configuration or the
+	// rendered value of a configuration with sources and destinations.
 	RawConfiguration(ctx context.Context, name string) (string, error)
+	// CopyConfig creates a deep copy of an existing resource under a new name.
 	CopyConfig(ctx context.Context, name, copyName string) error
 
+	// Sources returns a list of all Source resources.
 	Sources(ctx context.Context) ([]*model.Source, error)
+	// Source returns a single Source resource by name.
 	Source(ctx context.Context, name string) (*model.Source, error)
+	// DeleteSource deletes a single Source resource by name.
 	DeleteSource(ctx context.Context, name string) error
 
+	// SourceTypes returns a list of all SourceType resources.
 	SourceTypes(ctx context.Context) ([]*model.SourceType, error)
+	// SourceType returns a single SourceType resource by name.
 	SourceType(ctx context.Context, name string) (*model.SourceType, error)
+	// DeleteSourceType deletes a single SourceType resource by name.
 	DeleteSourceType(ctx context.Context, name string) error
 
+	// Processors returns a list of all Processor resources.
 	Processors(ctx context.Context) ([]*model.Processor, error)
+	// Processor returns a single Processor resource by name.
 	Processor(ctx context.Context, name string) (*model.Processor, error)
+	// DeleteProcessor deletes a single Processor resource by name.
 	DeleteProcessor(ctx context.Context, name string) error
 
+	// ProcessorTypes returns a list of all ProcessorType resources.
 	ProcessorTypes(ctx context.Context) ([]*model.ProcessorType, error)
+	// ProcessorType returns a single ProcessorType resource by name.
 	ProcessorType(ctx context.Context, name string) (*model.ProcessorType, error)
+	// DeleteProcessorType deletes a single ProcessorType resource by name.
 	DeleteProcessorType(ctx context.Context, name string) error
 
+	// Destinations returns a list of all Destination resources.
 	Destinations(ctx context.Context) ([]*model.Destination, error)
+	// Destination returns a single Destination resource by name.
 	Destination(ctx context.Context, name string) (*model.Destination, error)
+	// DeleteDestination deletes a single Destination resource by name.
 	DeleteDestination(ctx context.Context, name string) error
 
+	// DestinationTypes returns a list of all DestinationType resources.
 	DestinationTypes(ctx context.Context) ([]*model.DestinationType, error)
+	// DestinationType returns a single DestinationType by name.
 	DestinationType(ctx context.Context, name string) (*model.DestinationType, error)
+	// DeleteDestinationType deletes a single Destination resource by name.
 	DeleteDestinationType(ctx context.Context, name string) error
 
-	// Apply TODO(doc)
+	// Apply upserts multiple resources of any kind.
 	Apply(ctx context.Context, r []*model.AnyResource) ([]*model.AnyResourceStatus, error)
-	// Delete TODO(doc)
+	// Delete deletes multiple resources, minimum required fields to delete are Kind and Metadata.Name.
 	Delete(ctx context.Context, r []*model.AnyResource) ([]*model.AnyResourceStatus, error)
 
-	// Version returns the BindPlane version
+	// Version returns the version of the BindPlane-OP server.
 	Version(ctx context.Context) (version.Version, error)
 
-	// AgentInstallCommand TODO(doc)
+	// AgentInstallCommand returns the installation command for the given AgentInstallationOptions.
 	AgentInstallCommand(ctx context.Context, options AgentInstallOptions) (string, error)
-	// AgentUpgrade TODO(doc)
+	// AgentUpgrade upgrades the agent with given ID to the specified version.
 	AgentUpgrade(ctx context.Context, id string, version string) error
 
 	// AgentLabels gets the labels for an agent
@@ -211,7 +242,6 @@ func NewBindPlane(config *common.Client, logger *zap.Logger) (BindPlane, error) 
 	}, nil
 }
 
-// Agents TODO(doc)
 func (c *bindplaneClient) Agents(ctx context.Context, options ...QueryOption) ([]*model.Agent, error) {
 	c.Debug("Agents called")
 
@@ -233,7 +263,6 @@ func (c *bindplaneClient) Agents(ctx context.Context, options ...QueryOption) ([
 	return ar.Agents, c.statusError(resp, err, "unable to get agents")
 }
 
-// Agent TODO(doc)
 func (c *bindplaneClient) Agent(ctx context.Context, id string) (*model.Agent, error) {
 	c.Debug("Agent called")
 
@@ -277,8 +306,6 @@ func (c *bindplaneClient) DeleteAgentVersion(ctx context.Context, name string) e
 	return c.deleteResource(ctx, "/agent-versions", name)
 }
 
-// SyncAgentVersions builds agent-version from the release data in GitHub. If version is empty, it syncs the last 10
-// releases.
 func (c *bindplaneClient) SyncAgentVersions(ctx context.Context, version string) ([]*model.AnyResourceStatus, error) {
 	ar := &model.ApplyResponseClientSide{}
 	resp, err := c.client.R().
@@ -294,7 +321,6 @@ func (c *bindplaneClient) SyncAgentVersions(ctx context.Context, version string)
 
 // ----------------------------------------------------------------------
 
-// Configurations TODO(doc)
 func (c *bindplaneClient) Configurations(ctx context.Context) ([]*model.Configuration, error) {
 	c.Debug("Configurations called")
 
@@ -303,21 +329,16 @@ func (c *bindplaneClient) Configurations(ctx context.Context) ([]*model.Configur
 	return pr.Configurations, c.statusError(resp, err, "unable to get configurations")
 }
 
-// Configuration TODO(doc)
 func (c *bindplaneClient) Configuration(ctx context.Context, name string) (*model.Configuration, error) {
 	result := model.ConfigurationResponse{}
 	err := c.resource(ctx, "/configurations", name, &result)
 	return result.Configuration, err
 }
 
-// DeleteConfiguration TODO(doc)
 func (c *bindplaneClient) DeleteConfiguration(ctx context.Context, name string) error {
 	return c.deleteResource(ctx, "/configurations", name)
 }
 
-// RawConfiguration returns the raw OpenTelemetry configuration for the configuration with the specified name. This can
-// either be the raw value of a raw configuration or the rendered value of a configuration with sources and
-// destinations.
 func (c *bindplaneClient) RawConfiguration(ctx context.Context, name string) (string, error) {
 	result := model.ConfigurationResponse{}
 	err := c.resource(ctx, "/configurations", name, &result)
@@ -434,7 +455,6 @@ func (c *bindplaneClient) DeleteDestinationType(ctx context.Context, name string
 
 // ----------------------------------------------------------------------
 
-// Apply TODO(doc)
 func (c *bindplaneClient) Apply(ctx context.Context, resources []*model.AnyResource) ([]*model.AnyResourceStatus, error) {
 	c.Debug("Apply called")
 
@@ -453,7 +473,6 @@ func (c *bindplaneClient) Apply(ctx context.Context, resources []*model.AnyResou
 	return ar.Updates, c.statusError(resp, err, "unable to apply resources")
 }
 
-// Delete TODO(doc)
 func (c *bindplaneClient) Delete(ctx context.Context, resources []*model.AnyResource) ([]*model.AnyResourceStatus, error) {
 	c.Debug("Batch Delete called")
 
@@ -497,7 +516,6 @@ func (c *bindplaneClient) Delete(ctx context.Context, resources []*model.AnyReso
 	return nil, fmt.Errorf("unknown response from bindplane server")
 }
 
-// Version TODO(doc)
 func (c *bindplaneClient) Version(ctx context.Context) (version.Version, error) {
 	c.Debug("Version called")
 
@@ -506,7 +524,6 @@ func (c *bindplaneClient) Version(ctx context.Context) (version.Version, error) 
 	return v, c.statusError(resp, err, "unable to get version")
 }
 
-// AgentInstallCommand TODO(doc)
 func (c *bindplaneClient) AgentInstallCommand(ctx context.Context, options AgentInstallOptions) (string, error) {
 	c.Debug("AgentInstallCommand called")
 
@@ -525,7 +542,6 @@ func (c *bindplaneClient) AgentInstallCommand(ctx context.Context, options Agent
 	return command.Command, c.statusError(resp, err, "unable to get install command")
 }
 
-// AgentUpgrade TODO(doc)
 func (c *bindplaneClient) AgentUpgrade(ctx context.Context, id string, version string) error {
 	endpoint := fmt.Sprintf("/agents/%s/version", id)
 	resp, err := c.client.R().
@@ -562,7 +578,6 @@ func logRequestError(logger *zap.Logger, err error, endpoint string) {
 	logger.Error("Error making request", zap.Error(err), zap.String("endpoint", endpoint))
 }
 
-// AgentLabels gets the labels for an agent
 func (c *bindplaneClient) AgentLabels(ctx context.Context, id string) (*model.Labels, error) {
 	var response model.AgentLabelsResponse
 	endpoint := fmt.Sprintf("/agents/%s/labels", id)
@@ -574,8 +589,6 @@ func (c *bindplaneClient) AgentLabels(ctx context.Context, id string) (*model.La
 	return response.Labels, c.statusError(resp, err, "unable to get agent labels")
 }
 
-// ApplyAgentLabels applies the specified labels to an agent, merging the specified labels with the existing labels
-// and returning the labels of the agent
 func (c *bindplaneClient) ApplyAgentLabels(ctx context.Context, id string, labels *model.Labels, overwrite bool) (*model.Labels, error) {
 	payload := model.AgentLabelsPayload{
 		Labels: labels.AsMap(),
