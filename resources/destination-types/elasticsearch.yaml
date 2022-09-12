@@ -15,7 +15,7 @@ spec:
 
     - name: cloudid
       label: CloudID
-      description:  ID of the Elastic Cloud Cluster to publish events to. The cloudid can be used instead of endpoints.
+      description: ID of the Elastic Cloud Cluster to publish events to. The cloudid can be used instead of endpoints.
       type: string
       default: ""
       advancedConfig: true
@@ -59,6 +59,8 @@ spec:
       description: Whether or not to use TLS.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       advancedConfig: true
 
     - name: insecure_skip_verify
@@ -133,4 +135,3 @@ spec:
           {{ end }}
     processors: |
       - batch:
-

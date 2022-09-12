@@ -37,11 +37,27 @@ spec:
       type: bool
       default: true
 
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+      advancedConfig: true
+
     - name: enable_system_log
       label: System Logs
       description: Enable to collect macOS system logs.
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -65,6 +81,8 @@ spec:
       description: Enable to collect macOS install logs.
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -82,20 +100,6 @@ spec:
         - name: enable_install_log
           operator: equals
           value: true
-
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
-      advancedConfig: true
 
   metrics:
     receivers: |

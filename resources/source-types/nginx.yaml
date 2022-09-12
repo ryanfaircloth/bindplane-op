@@ -49,6 +49,8 @@ spec:
       description: Whether or not to use TLS.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_metrics
           operator: equals

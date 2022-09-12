@@ -1,0 +1,26 @@
+apiVersion: bindplane.observiq.com/v1
+kind: SourceType
+metadata:
+  name: bad-metrics
+  displayName: Bad Metrics
+  icon: /icons/sources/macos.svg
+spec:
+  supportedPlatforms:
+    - macos
+  parameters:
+    - name: metric_filtering
+      label: Filtering
+      type: bool
+      default: true
+    - name: disable_metrics
+      type: metrics
+      default: []
+      options:
+        metricCategories:
+          - label: Postgres Metrics
+            metrics:
+              - description: some description
+              - kpi: true
+              - description: another description
+                kpi: true
+              - name: this.is.a.metric

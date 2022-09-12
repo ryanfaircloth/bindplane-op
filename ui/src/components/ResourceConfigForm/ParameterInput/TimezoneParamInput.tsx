@@ -445,11 +445,11 @@ const TimezoneParamInputComponent: React.FC<ParamInputProps<string>> = ({
       disablePortal
       disableClearable
       options={TIMEZONE_OPTIONS}
+      ListboxProps={{
+        className: styles.listbox,
+      }}
       renderInput={(params) => (
         <TextField
-          classes={{
-            root: definition.relevantIf ? styles.indent : undefined,
-          }}
           {...params}
           fullWidth
           size="small"

@@ -7,6 +7,13 @@ metadata:
 spec:
   version: 0.0.1
   parameters:
+    - name: telemetry_types
+      label: Enable Telemetry
+      type: enums
+      description: "Select which types of telemetry you'd like to enable this processor for."
+      validValues: ["Metrics", "Logs", "Traces"]
+      default: ["Metrics", "Logs", "Traces"]
+
     - name: action
       label: Action
       type: enum
@@ -21,13 +28,8 @@ spec:
       label: Resources
       type: map
       required: true
-
-    - name: telemetry_types
-      label: Enable Telemetry
-      type: enums
-      description: "Select which types of telemetry you'd like to enable this processor for."
-      validValues: ["Metrics", "Logs", "Traces"]
-      default: ["Metrics", "Logs", "Traces"]
+      options:
+        gridColumns: 12
 
   metrics:
     processors: |

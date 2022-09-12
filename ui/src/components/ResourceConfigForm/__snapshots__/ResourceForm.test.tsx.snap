@@ -2,193 +2,203 @@
 
 exports[`EnumParameter renders correctly 1`] = `
 <div
-  className="MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-wb57ya-MuiFormControl-root-MuiTextField-root"
+  className="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-6 css-13i4rnv-MuiGrid-root"
 >
-  <label
-    className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary Mui-required css-1pysi21-MuiFormLabel-root-MuiInputLabel-root"
-    data-shrink={false}
-  >
-    Label
-    <span
-      aria-hidden={true}
-      className="MuiFormLabel-asterisk MuiInputLabel-asterisk css-wgai2y-MuiFormLabel-asterisk"
-    >
-       
-      *
-    </span>
-  </label>
   <div
-    className="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall css-md26zr-MuiInputBase-root-MuiOutlinedInput-root"
-    onClick={[Function]}
-    variant="outlined"
+    className="MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-wb57ya-MuiFormControl-root-MuiTextField-root"
   >
-    <select
-      aria-invalid={false}
-      autoFocus={false}
-      className="MuiNativeSelect-select MuiNativeSelect-outlined MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-12ogz78-MuiNativeSelect-select-MuiInputBase-input-MuiOutlinedInput-input"
-      disabled={false}
-      multiple={false}
-      name="yaml_type_param"
-      onAnimationStart={[Function]}
-      onBlur={[Function]}
-      onChange={[Function]}
-      onFocus={[Function]}
-      required={true}
-      value=""
+    <label
+      className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary Mui-required css-1pysi21-MuiFormLabel-root-MuiInputLabel-root"
+      data-shrink={false}
     >
-      <option
-        value="one"
+      Label
+      <span
+        aria-hidden={true}
+        className="MuiFormLabel-asterisk MuiInputLabel-asterisk css-wgai2y-MuiFormLabel-asterisk"
       >
-        one
-      </option>
-      <option
-        value="two"
-      >
-        two
-      </option>
-      <option
-        value="three"
-      >
-        three
-      </option>
-    </select>
-    <svg
-      aria-hidden={true}
-      className="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiNativeSelect-icon MuiNativeSelect-iconOutlined css-1g12qau-MuiSvgIcon-root-MuiNativeSelect-icon"
-      data-testid="ArrowDropDownIcon"
-      focusable="false"
-      viewBox="0 0 24 24"
+         
+        *
+      </span>
+    </label>
+    <div
+      className="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall css-md26zr-MuiInputBase-root-MuiOutlinedInput-root"
+      onClick={[Function]}
+      variant="outlined"
     >
-      <path
-        d="M7 10l5 5 5-5z"
-      />
-    </svg>
-    <fieldset
-      aria-hidden={true}
-      className="MuiOutlinedInput-notchedOutline css-1d3z3hw-MuiOutlinedInput-notchedOutline"
-    >
-      <legend
-        className="css-1ftyaf0"
+      <select
+        aria-invalid={false}
+        autoFocus={false}
+        className="MuiNativeSelect-select MuiNativeSelect-outlined MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-12ogz78-MuiNativeSelect-select-MuiInputBase-input-MuiOutlinedInput-input"
+        disabled={false}
+        multiple={false}
+        name="yaml_type_param"
+        onAnimationStart={[Function]}
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        required={true}
+        value=""
       >
-        <span>
-          Label
-           
-          *
-        </span>
-      </legend>
-    </fieldset>
+        <option
+          value="one"
+        >
+          one
+        </option>
+        <option
+          value="two"
+        >
+          two
+        </option>
+        <option
+          value="three"
+        >
+          three
+        </option>
+      </select>
+      <svg
+        aria-hidden={true}
+        className="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiNativeSelect-icon MuiNativeSelect-iconOutlined css-1g12qau-MuiSvgIcon-root-MuiNativeSelect-icon"
+        data-testid="ArrowDropDownIcon"
+        focusable="false"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M7 10l5 5 5-5z"
+        />
+      </svg>
+      <fieldset
+        aria-hidden={true}
+        className="MuiOutlinedInput-notchedOutline css-1d3z3hw-MuiOutlinedInput-notchedOutline"
+      >
+        <legend
+          className="css-1ftyaf0"
+        >
+          <span>
+            Label
+             
+            *
+          </span>
+        </legend>
+      </fieldset>
+    </div>
+    <p
+      className="MuiFormHelperText-root MuiFormHelperText-sizeSmall MuiFormHelperText-contained Mui-required css-k4qjio-MuiFormHelperText-root"
+    >
+      description
+    </p>
   </div>
-  <p
-    className="MuiFormHelperText-root MuiFormHelperText-sizeSmall MuiFormHelperText-contained Mui-required css-k4qjio-MuiFormHelperText-root"
-  >
-    description
-  </p>
 </div>
 `;
 
 exports[`EnumParameter renders creatable enum correctly 1`] = `
 <div
-  className="MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-wb57ya-MuiFormControl-root-MuiTextField-root"
+  className="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-6 css-13i4rnv-MuiGrid-root"
 >
-  <label
-    className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary Mui-required css-1pysi21-MuiFormLabel-root-MuiInputLabel-root"
-    data-shrink={false}
-    htmlFor="mui-22"
-    id="mui-22-label"
-  >
-    Label
-    <span
-      aria-hidden={true}
-      className="MuiFormLabel-asterisk MuiInputLabel-asterisk css-wgai2y-MuiFormLabel-asterisk"
-    >
-       
-      *
-    </span>
-  </label>
   <div
-    className="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall css-md26zr-MuiInputBase-root-MuiOutlinedInput-root"
-    onClick={[Function]}
-    variant="outlined"
+    className="MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-wb57ya-MuiFormControl-root-MuiTextField-root"
   >
-    <select
-      aria-describedby="mui-22-helper-text"
-      aria-invalid={false}
-      autoFocus={false}
-      className="MuiNativeSelect-select MuiNativeSelect-outlined MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-12ogz78-MuiNativeSelect-select-MuiInputBase-input-MuiOutlinedInput-input"
-      disabled={false}
-      id="mui-22"
-      multiple={false}
-      name="yaml_type_param"
-      onAnimationStart={[Function]}
-      onBlur={[Function]}
-      onChange={[Function]}
-      onFocus={[Function]}
-      required={true}
-      value=""
+    <label
+      className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary Mui-required css-1pysi21-MuiFormLabel-root-MuiInputLabel-root"
+      data-shrink={false}
+      htmlFor="mui-22"
+      id="mui-22-label"
     >
-      <option
-        value="one"
+      Label
+      <span
+        aria-hidden={true}
+        className="MuiFormLabel-asterisk MuiInputLabel-asterisk css-wgai2y-MuiFormLabel-asterisk"
       >
-        one
-      </option>
-      <option
-        value="two"
-      >
-        two
-      </option>
-      <option
-        value="three"
-      >
-        three
-      </option>
-    </select>
-    <svg
-      aria-hidden={true}
-      className="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiNativeSelect-icon MuiNativeSelect-iconOutlined css-1g12qau-MuiSvgIcon-root-MuiNativeSelect-icon"
-      data-testid="ArrowDropDownIcon"
-      focusable="false"
-      viewBox="0 0 24 24"
+         
+        *
+      </span>
+    </label>
+    <div
+      className="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl MuiInputBase-sizeSmall css-md26zr-MuiInputBase-root-MuiOutlinedInput-root"
+      onClick={[Function]}
+      variant="outlined"
     >
-      <path
-        d="M7 10l5 5 5-5z"
-      />
-    </svg>
-    <fieldset
-      aria-hidden={true}
-      className="MuiOutlinedInput-notchedOutline css-1d3z3hw-MuiOutlinedInput-notchedOutline"
-    >
-      <legend
-        className="css-1ftyaf0"
+      <select
+        aria-describedby="mui-22-helper-text"
+        aria-invalid={false}
+        autoFocus={false}
+        className="MuiNativeSelect-select MuiNativeSelect-outlined MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-12ogz78-MuiNativeSelect-select-MuiInputBase-input-MuiOutlinedInput-input"
+        disabled={false}
+        id="mui-22"
+        multiple={false}
+        name="yaml_type_param"
+        onAnimationStart={[Function]}
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        required={true}
+        value=""
       >
-        <span>
-          Label
-           
-          *
-        </span>
-      </legend>
-    </fieldset>
+        <option
+          value="one"
+        >
+          one
+        </option>
+        <option
+          value="two"
+        >
+          two
+        </option>
+        <option
+          value="three"
+        >
+          three
+        </option>
+      </select>
+      <svg
+        aria-hidden={true}
+        className="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiNativeSelect-icon MuiNativeSelect-iconOutlined css-1g12qau-MuiSvgIcon-root-MuiNativeSelect-icon"
+        data-testid="ArrowDropDownIcon"
+        focusable="false"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M7 10l5 5 5-5z"
+        />
+      </svg>
+      <fieldset
+        aria-hidden={true}
+        className="MuiOutlinedInput-notchedOutline css-1d3z3hw-MuiOutlinedInput-notchedOutline"
+      >
+        <legend
+          className="css-1ftyaf0"
+        >
+          <span>
+            Label
+             
+            *
+          </span>
+        </legend>
+      </fieldset>
+    </div>
+    <p
+      className="MuiFormHelperText-root MuiFormHelperText-sizeSmall MuiFormHelperText-contained Mui-required css-k4qjio-MuiFormHelperText-root"
+      id="mui-22-helper-text"
+    >
+      description
+    </p>
   </div>
-  <p
-    className="MuiFormHelperText-root MuiFormHelperText-sizeSmall MuiFormHelperText-contained Mui-required css-k4qjio-MuiFormHelperText-root"
-    id="mui-22-helper-text"
-  >
-    description
-  </p>
 </div>
 `;
 
 exports[`EnumsParameter renders correctly 1`] = `
-Array [
+<div
+  className="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-6 css-13i4rnv-MuiGrid-root"
+>
   <label
     className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-animated MuiFormLabel-colorPrimary css-9npbnl-MuiFormLabel-root-MuiInputLabel-root"
   >
     Label
-  </label>,
+  </label>
   <p
     className="MuiFormHelperText-root mb-1 css-1d1r5q-MuiFormHelperText-root"
   >
     description
-  </p>,
+  </p>
   <div
     className="css-4xxiys-MuiStack-root"
   >
@@ -368,24 +378,26 @@ Array [
         four
       </span>
     </label>
-  </div>,
-]
+  </div>
+</div>
 `;
 
 exports[`MapParamInput renders correctly 1`] = `
-Array [
+<div
+  className="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-6 css-13i4rnv-MuiGrid-root"
+>
   <label
     aria-required={true}
     htmlFor="map_type_param"
   >
     Label
      *
-  </label>,
+  </label>
   <p
     className="MuiFormHelperText-root css-1d1r5q-MuiFormHelperText-root"
   >
     description
-  </p>,
+  </p>
   <div
     className="MuiGrid-root MuiGrid-container MuiGrid-spacing-xs-1 css-1fshczy-MuiGrid-root"
   >
@@ -407,7 +419,7 @@ Array [
         Value
       </p>
     </div>
-  </div>,
+  </div>
   <div
     className="css-1okj3ks-MuiStack-root"
   >
@@ -517,7 +529,7 @@ Array [
         </svg>
       </button>
     </div>
-  </div>,
+  </div>
   <div
     className="MuiBox-root css-1um4smj"
   >
@@ -576,151 +588,155 @@ Array [
       </span>
       New Row
     </button>
-  </div>,
-]
+  </div>
+</div>
 `;
 
 exports[`YamlParameter renders correctly 1`] = `
 <div
-  className="MuiFormControl-root MuiFormControl-fullWidth css-q8hpuo-MuiFormControl-root"
+  className="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-6 css-13i4rnv-MuiGrid-root"
 >
-  <label
-    className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-outlined MuiFormLabel-colorPrimary Mui-required css-14s5rfu-MuiFormLabel-root-MuiInputLabel-root"
-    data-shrink={false}
-    htmlFor="yaml_type_param"
-    style={
-      Object {
-        "backgroundColor": "#fff",
-        "color": undefined,
-        "padding": undefined,
-      }
-    }
+  <div
+    className="MuiFormControl-root MuiFormControl-fullWidth css-q8hpuo-MuiFormControl-root"
   >
-    Label
-    <span
-      aria-hidden={true}
-      className="MuiFormLabel-asterisk MuiInputLabel-asterisk css-wgai2y-MuiFormLabel-asterisk"
-    >
-       
-      *
-    </span>
-  </label>
-  <div>
-    <div
-      className="w-tc-editor code-container expanded"
+    <label
+      className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-outlined MuiFormLabel-colorPrimary Mui-required css-14s5rfu-MuiFormLabel-root-MuiInputLabel-root"
+      data-shrink={false}
+      htmlFor="yaml_type_param"
       style={
         Object {
           "backgroundColor": "#fff",
-          "border": "1px solid #aaa",
-          "boxSizing": "border-box",
-          "fontFamily": "ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace",
-          "fontSize": 12,
-          "overflow": "hidden",
-          "padding": 0,
-          "position": "relative",
-          "textAlign": "left",
+          "color": undefined,
+          "padding": undefined,
         }
       }
     >
-      <textarea
-        autoCapitalize="off"
-        autoComplete="off"
-        autoCorrect="off"
-        className="w-tc-editor-text"
-        data-testid="yaml-editor"
-        name="yaml_type_param"
-        onBlur={[Function]}
-        onChange={[Function]}
-        onFocus={[Function]}
-        onKeyDown={[Function]}
-        required={true}
-        spellCheck="false"
-        style={
-          Object {
-            "MozOsxFontSmoothing": "grayscale",
-            "WebkitFontSmoothing": "antialiased",
-            "WebkitTextFillColor": "transparent",
-            "background": "none",
-            "border": 0,
-            "boxSizing": "inherit",
-            "color": "inherit",
-            "display": "inherit",
-            "fontFamily": "inherit",
-            "fontSize": "inherit",
-            "fontStyle": "inherit",
-            "fontVariantLigatures": "inherit",
-            "fontWeight": "inherit",
-            "height": "100%",
-            "left": 0,
-            "letterSpacing": "inherit",
-            "lineHeight": "inherit",
-            "margin": 0,
-            "minHeight": 200,
-            "opacity": 0.8,
-            "outline": 0,
-            "overflow": "hidden",
-            "overflowWrap": "break-word",
-            "paddingBottom": 15,
-            "paddingLeft": 15,
-            "paddingRight": 15,
-            "paddingTop": 15,
-            "position": "absolute",
-            "resize": "none",
-            "tabSize": "inherit",
-            "textIndent": "inherit",
-            "textRendering": "inherit",
-            "textTransform": "inherit",
-            "top": 0,
-            "whiteSpace": "pre-wrap",
-            "width": "100%",
-            "wordBreak": "keep-all",
-          }
-        }
-        value=""
-      />
+      Label
+      <span
+        aria-hidden={true}
+        className="MuiFormLabel-asterisk MuiInputLabel-asterisk css-wgai2y-MuiFormLabel-asterisk"
+      >
+         
+        *
+      </span>
+    </label>
+    <div>
       <div
-        className="w-tc-editor-preview language-yaml"
-        dangerouslySetInnerHTML={
-          Object {
-            "__html": "<pre aria-hidden=\\"true\\"><code class=\\"code-highlight\\"></code><br></pre>",
-          }
-        }
+        className="w-tc-editor code-container expanded"
         style={
           Object {
-            "background": "none",
-            "border": 0,
-            "boxSizing": "inherit",
-            "display": "inherit",
-            "fontFamily": "inherit",
-            "fontSize": "inherit",
-            "fontStyle": "inherit",
-            "fontVariantLigatures": "inherit",
-            "fontWeight": "inherit",
-            "letterSpacing": "inherit",
-            "lineHeight": "inherit",
-            "margin": 0,
-            "minHeight": 200,
-            "outline": 0,
-            "overflowWrap": "break-word",
-            "paddingBottom": 15,
-            "paddingLeft": 15,
-            "paddingRight": 15,
-            "paddingTop": 15,
-            "tabSize": "inherit",
-            "textIndent": "inherit",
-            "textRendering": "inherit",
-            "textTransform": "inherit",
-            "whiteSpace": "pre-wrap",
-            "wordBreak": "keep-all",
+            "backgroundColor": "#fff",
+            "border": "1px solid #aaa",
+            "boxSizing": "border-box",
+            "fontFamily": "ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace",
+            "fontSize": 12,
+            "overflow": "hidden",
+            "padding": 0,
+            "position": "relative",
+            "textAlign": "left",
           }
         }
-      />
+      >
+        <textarea
+          autoCapitalize="off"
+          autoComplete="off"
+          autoCorrect="off"
+          className="w-tc-editor-text"
+          data-testid="yaml-editor"
+          name="yaml_type_param"
+          onBlur={[Function]}
+          onChange={[Function]}
+          onFocus={[Function]}
+          onKeyDown={[Function]}
+          required={true}
+          spellCheck="false"
+          style={
+            Object {
+              "MozOsxFontSmoothing": "grayscale",
+              "WebkitFontSmoothing": "antialiased",
+              "WebkitTextFillColor": "transparent",
+              "background": "none",
+              "border": 0,
+              "boxSizing": "inherit",
+              "color": "inherit",
+              "display": "inherit",
+              "fontFamily": "inherit",
+              "fontSize": "inherit",
+              "fontStyle": "inherit",
+              "fontVariantLigatures": "inherit",
+              "fontWeight": "inherit",
+              "height": "100%",
+              "left": 0,
+              "letterSpacing": "inherit",
+              "lineHeight": "inherit",
+              "margin": 0,
+              "minHeight": 200,
+              "opacity": 0.8,
+              "outline": 0,
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "paddingBottom": 15,
+              "paddingLeft": 15,
+              "paddingRight": 15,
+              "paddingTop": 15,
+              "position": "absolute",
+              "resize": "none",
+              "tabSize": "inherit",
+              "textIndent": "inherit",
+              "textRendering": "inherit",
+              "textTransform": "inherit",
+              "top": 0,
+              "whiteSpace": "pre-wrap",
+              "width": "100%",
+              "wordBreak": "keep-all",
+            }
+          }
+          value=""
+        />
+        <div
+          className="w-tc-editor-preview language-yaml"
+          dangerouslySetInnerHTML={
+            Object {
+              "__html": "<pre aria-hidden=\\"true\\"><code class=\\"code-highlight\\"></code><br></pre>",
+            }
+          }
+          style={
+            Object {
+              "background": "none",
+              "border": 0,
+              "boxSizing": "inherit",
+              "display": "inherit",
+              "fontFamily": "inherit",
+              "fontSize": "inherit",
+              "fontStyle": "inherit",
+              "fontVariantLigatures": "inherit",
+              "fontWeight": "inherit",
+              "letterSpacing": "inherit",
+              "lineHeight": "inherit",
+              "margin": 0,
+              "minHeight": 200,
+              "outline": 0,
+              "overflowWrap": "break-word",
+              "paddingBottom": 15,
+              "paddingLeft": 15,
+              "paddingRight": 15,
+              "paddingTop": 15,
+              "tabSize": "inherit",
+              "textIndent": "inherit",
+              "textRendering": "inherit",
+              "textTransform": "inherit",
+              "whiteSpace": "pre-wrap",
+              "wordBreak": "keep-all",
+            }
+          }
+        />
+      </div>
     </div>
+    <p
+      className="MuiFormHelperText-root MuiFormHelperText-sizeMedium MuiFormHelperText-contained Mui-required css-1wc848c-MuiFormHelperText-root"
+    >
+      description
+    </p>
   </div>
-  <p
-    className="MuiFormHelperText-root MuiFormHelperText-sizeMedium MuiFormHelperText-contained Mui-required css-1wc848c-MuiFormHelperText-root"
-  >
-    description
-  </p>
 </div>
 `;

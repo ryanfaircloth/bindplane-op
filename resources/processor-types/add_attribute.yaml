@@ -21,6 +21,8 @@ spec:
       label: Attributes
       type: map
       required: true
+      options:
+        gridColumns: 12
 
   logs:
     processors: |

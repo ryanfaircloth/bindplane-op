@@ -248,7 +248,10 @@ func (s *ResourceTypeSpec) validateParameterDefinitions(kind Kind, errs validati
 	for _, parameter := range s.Parameters {
 		parameter.validateDefinition(kind, errs)
 		s.validateParameterRelevantIf(parameter, errs)
+
 	}
+
+	s.validateNoDuplicateParameterNames(errs)
 }
 
 // validateParameterRelevantIf in ResourceTypeSpec because we need to check against other parameter names
@@ -319,4 +322,19 @@ func (s *ResourceTypeSpec) TelemetryTypes() []otel.PipelineType {
 	}
 
 	return telemetryTypes
+}
+
+func (s *ResourceTypeSpec) validateNoDuplicateParameterNames(errs validation.Errors) {
+	// visited is a map of parameter names to bool
+	visited := make(map[string]bool, 0)
+
+	for _, p := range s.Parameters {
+		if visited[p.Name] {
+			errs.Add(
+				fmt.Errorf("found multiple parameters with name %s", p.Name),
+			)
+		} else {
+			visited[p.Name] = true
+		}
+	}
 }

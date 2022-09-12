@@ -47,55 +47,12 @@ spec:
       default: otel-collector
       required: true
 
-    - name: enable_metrics
-      label: Enable Metrics
-      type: bool
-      default: true
-
-    - name: metric_topic
-      label: Metric Topic
-      description: The name of the topic to export metrics to.
-      type: string
-      default: otlp_metrics
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-
-    - name: enable_logs
-      label: Enable Logs
-      type: bool
-      default: true
-
-    - name: log_topic
-      label: Log Topic
-      description: The name of the topic to export logs to.
-      type: string
-      default: otlp_logs
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
-
-    - name: enable_traces
-      label: Enable Traces
-      type: bool
-      default: true
-
-    - name: trace_topic
-      label: Trace Topic
-      description: The name of the topic to export traces to.
-      type: string
-      default: otlp_spans
-      relevantIf:
-        - name: enable_traces
-          operator: equals
-          value: true
-
     - name: enable_auth
       label: Enable Authentication
       type: bool
       default: false
+      options:
+        sectionHeader: true
       advancedConfig: true
 
     - name: auth_type
@@ -108,6 +65,8 @@ spec:
         #- tls
         - kerberos
       default: basic
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_auth
           operator: equals
@@ -282,6 +241,51 @@ spec:
         - name: kerberos_auth_type
           operator: equals
           value: basic
+
+    - name: enable_metrics
+      label: Enable Metrics
+      type: bool
+      default: true
+
+    - name: metric_topic
+      label: Metric Topic
+      description: The name of the topic to export metrics to.
+      type: string
+      default: otlp_metrics
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
+    - name: enable_logs
+      label: Enable Logs
+      type: bool
+      default: true
+
+    - name: log_topic
+      label: Log Topic
+      description: The name of the topic to export logs to.
+      type: string
+      default: otlp_logs
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+
+    - name: enable_traces
+      label: Enable Traces
+      type: bool
+      default: true
+
+    - name: trace_topic
+      label: Trace Topic
+      description: The name of the topic to export traces to.
+      type: string
+      default: otlp_spans
+      relevantIf:
+        - name: enable_traces
+          operator: equals
+          value: true
 
   metrics:
     receivers: |

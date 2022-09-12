@@ -1,5 +1,5 @@
 import { ComponentStory, ComponentMeta } from "@storybook/react";
-import { ResourceDialog } from ".";
+import { NewResourceDialog } from ".";
 import {
   Destination1,
   Destination2,
@@ -12,11 +12,11 @@ import {
 
 export default {
   title: "Resource Dialog",
-  component: ResourceDialog,
-} as ComponentMeta<typeof ResourceDialog>;
+  component: NewResourceDialog,
+} as ComponentMeta<typeof NewResourceDialog>;
 
-const Template: ComponentStory<typeof ResourceDialog> = (args) => (
-  <ResourceDialog {...args} />
+const Template: ComponentStory<typeof NewResourceDialog> = (args) => (
+  <NewResourceDialog {...args} />
 );
 
 export const Destination = Template.bind({});

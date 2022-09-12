@@ -1,6 +1,6 @@
 import { Maybe } from "graphql/jsutils/Maybe";
 import { isEqual } from "lodash";
-import { useState } from "react";
+import { memo, useState } from "react";
 import {
   CreateProcessorConfigureView,
   CreateProcessorSelectView,
@@ -14,14 +14,13 @@ import {
   Parameter,
   ResourceConfiguration,
   GetProcessorTypesQuery,
-  ParameterType,
 } from "../../graphql/generated";
 import { BPResourceConfiguration } from "../../utils/classes";
+import { initFormErrors } from "./init-form-values";
 import {
   FormValueContextProvider,
   useResourceFormValues,
 } from "./ResourceFormContext";
-import { validateStringsField, validateMapField } from "./validation-functions";
 
 enum Page {
   MAIN,
@@ -41,9 +40,9 @@ export interface FormValues {
   processors?: ResourceConfiguration[];
 }
 
-interface ResourceFormProps {
+interface ResourceConfigurationViewProps {
   // Display name for the resource
-  title: string;
+  displayName: string;
 
   description: string;
 
@@ -85,13 +84,12 @@ interface ResourceFormProps {
   onBack?: () => void;
 }
 
-interface ComponentProps extends ResourceFormProps {
+interface ComponentProps extends ResourceConfigurationViewProps {
   initValues: Record<string, any>;
 }
 
-const ResourceConfigurationFormComponent: React.FC<ComponentProps> = ({
-  title,
-  telemetryTypes,
+const ResourceConfigurationViewComponent: React.FC<ComponentProps> = ({
+  displayName,
   description,
   parameters,
   parameterDefinitions,
@@ -104,6 +102,7 @@ const ResourceConfigurationFormComponent: React.FC<ComponentProps> = ({
   saveButtonLabel,
   onBack,
   initValues,
+  telemetryTypes,
 }) => {
   const { formValues, setFormValues } = useResourceFormValues();
 
@@ -179,7 +178,7 @@ const ResourceConfigurationFormComponent: React.FC<ComponentProps> = ({
     case Page.MAIN:
       return (
         <MainView
-          title={title}
+          displayName={displayName}
           description={description}
           kind={kind}
           formValues={formValues}
@@ -200,8 +199,8 @@ const ResourceConfigurationFormComponent: React.FC<ComponentProps> = ({
     case Page.CREATE_PROCESSOR_SELECT:
       return (
         <CreateProcessorSelectView
+          displayName={displayName}
           telemetryTypes={telemetryTypes}
-          title={title}
           onBack={handleReturnToMain}
           onSelect={handleSelectNewProcessor}
         />
@@ -211,14 +210,14 @@ const ResourceConfigurationFormComponent: React.FC<ComponentProps> = ({
         <CreateProcessorConfigureView
           onBack={handleReturnToMain}
           onSave={handleNewProcessorSave!}
-          title={title}
           processorType={newProcessorType!}
+          parameterDefinitions={parameterDefinitions}
         />
       );
     case Page.EDIT_PROCESSOR:
       return (
         <EditProcessorView
-          title={title}
+          title={displayName}
           processors={formValues.processors!}
           editingIndex={editingProcessorIndex}
           onEditProcessorSave={handleEditProcessorSave!}
@@ -229,45 +228,37 @@ const ResourceConfigurationFormComponent: React.FC<ComponentProps> = ({
   }
 };
 
-export const ResourceConfigForm: React.FC<ResourceFormProps> = (props) => {
-  const { parameterDefinitions, parameters, processors, includeNameField } =
-    props;
-  const initValues = initFormValues(
-    parameterDefinitions,
-    parameters,
-    processors,
-    includeNameField
-  );
+const MemoizedComponent = memo(ResourceConfigurationViewComponent);
 
-  // Get initial errors
-  const initErrors: Record<string, string | null> = {};
-  for (const definition of props.parameterDefinitions) {
-    switch (definition.type) {
-      case ParameterType.Strings:
-        initErrors[definition.name] = validateStringsField(
-          initValues[definition.name],
-          definition.required
-        );
-        break;
-      case ParameterType.Map:
-        initErrors[definition.name] = validateMapField(
-          initValues[definition.name],
-          definition.required
-        );
-        break;
-      default:
-        initErrors[definition.name] = null;
-    }
-  }
+export const ResourceConfigurationView: React.FC<ResourceConfigurationViewProps> =
+  (props) => {
+    const { parameterDefinitions, parameters, processors, includeNameField } =
+      props;
 
-  return (
-    <FormValueContextProvider initValues={initValues}>
-      <ValidationContextProvider initErrors={initErrors}>
-        <ResourceConfigurationFormComponent
-          initValues={initValues}
-          {...props}
-        />
-      </ValidationContextProvider>
-    </FormValueContextProvider>
-  );
-};
+    const initValues = initFormValues(
+      parameterDefinitions,
+      parameters,
+      processors,
+      includeNameField
+    );
+
+    const initErrors = initFormErrors(
+      parameterDefinitions,
+      initValues,
+      props.kind,
+      props.includeNameField,
+      props.existingResourceNames
+    );
+
+    return (
+      <FormValueContextProvider initValues={initValues}>
+        <ValidationContextProvider
+          initErrors={initErrors}
+          definitions={props.parameterDefinitions}
+          includeNameField={includeNameField}
+        >
+          <MemoizedComponent initValues={initValues} {...props} />
+        </ValidationContextProvider>
+      </FormValueContextProvider>
+    );
+  };

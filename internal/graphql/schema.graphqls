@@ -206,6 +206,7 @@ enum ParameterType {
   map
   yaml
   timezone
+  metrics
 }
 
 type ParameterDefinition {
@@ -234,6 +235,21 @@ type DocumentationLink {
 type ParameterOptions {
   creatable: Boolean
   trackUnchecked: Boolean
+  gridColumns: Int
+  sectionHeader: Boolean
+  metricCategories: [MetricCategory!]
+}
+
+type MetricCategory {
+  label: String!
+  column: Int!
+  metrics: [MetricOption!]!
+}
+
+type MetricOption {
+  name: String!
+  description: String
+  kpi: Boolean
 }
 
 type RelevantIfCondition {

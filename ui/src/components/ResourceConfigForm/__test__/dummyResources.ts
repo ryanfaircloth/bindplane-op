@@ -83,6 +83,9 @@ export const boolDefaultFalseDef: ParameterDefinition = {
   options: {
     creatable: null,
     trackUnchecked: null,
+    sectionHeader: null,
+    gridColumns: null,
+    metricCategories: null,
   },
 
   type: ParameterType.Bool,
@@ -98,7 +101,13 @@ export const intDef: ParameterDefinition = {
   label: "Int Input",
   description: "Here is the description.",
   required: false,
-  options: {},
+  options: {
+    creatable: null,
+    trackUnchecked: null,
+    sectionHeader: null,
+    gridColumns: null,
+    metricCategories: null,
+  },
 
   type: ParameterType.Int,
 
@@ -113,6 +122,9 @@ export const relevantIfDef: ParameterDefinition = {
   options: {
     creatable: null,
     trackUnchecked: null,
+    sectionHeader: null,
+    gridColumns: null,
+    metricCategories: null,
   },
 
   type: ParameterType.String,

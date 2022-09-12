@@ -24,7 +24,7 @@ spec:
       label: Brokers
       description: List of brokers to connect to when sending metrics, traces and logs.
       type: strings
-      default: 
+      default:
         - localhost:9092
       required: true
 
@@ -33,6 +33,202 @@ spec:
       description: Timeout (seconds) for every attempt to send data to the backend.
       type: int
       default: 5
+
+    - name: enable_auth
+      label: Enable Authentication
+      type: bool
+      default: false
+      options:
+        sectionHeader: true
+      advancedConfig: true
+
+    - name: auth_type
+      label: Auth Type
+      type: enum
+      validValues:
+        - basic
+        - sasl
+        # TODO: Should be tested before implemented
+        #- tls
+        - kerberos
+      default: basic
+      options:
+        gridColumns: 12
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+
+    - name: basic_username
+      label: Username
+      type: string
+      required: true
+      default: ""
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+        - name: auth_type
+          operator: equals
+          value: basic
+
+    - name: basic_password
+      label: Password
+      type: string
+      required: true
+      default: ""
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+        - name: auth_type
+          operator: equals
+          value: basic
+
+    - name: sasl_username
+      label: Username
+      type: string
+      required: true
+      default: ""
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+        - name: auth_type
+          operator: equals
+          value: sasl
+
+    - name: sasl_password
+      label: Password
+      type: string
+      required: true
+      default: ""
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+        - name: auth_type
+          operator: equals
+          value: sasl
+
+    - name: sasl_mechanism
+      label: Mechanism
+      type: enum
+      validValues:
+        - SCRAM-SHA-256
+        - SCRAM-SHA-512
+        - PLAIN
+      default: SCRAM-SHA-256
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+        - name: auth_type
+          operator: equals
+          value: sasl
+
+    - name: kerberos_service_name
+      label: Service Name
+      type: string
+      required: true
+      default: ""
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+        - name: auth_type
+          operator: equals
+          value: kerberos
+
+    - name: kerberos_realm
+      label: Realm
+      type: string
+      required: true
+      default: ""
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+        - name: auth_type
+          operator: equals
+          value: kerberos
+
+    - name: kerberos_config_file
+      label: Config File
+      type: string
+      default: /etc/krb5.conf
+      required: true
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+        - name: auth_type
+          operator: equals
+          value: kerberos
+
+    - name: kerberos_auth_type
+      label: Kerberos Auth Type
+      type: enum
+      validValues:
+        - keytab
+        - basic
+      default: keytab
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+        - name: auth_type
+          operator: equals
+          value: kerberos
+
+    - name: kerberos_keytab_file
+      label: Keytab File
+      type: string
+      required: true
+      default: /etc/security/kafka.keytab
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+        - name: auth_type
+          operator: equals
+          value: kerberos
+        - name: kerberos_auth_type
+          operator: equals
+          value: keytab
+
+    - name: kerberos_username
+      label: Username
+      type: string
+      required: true
+      default: ""
+
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+        - name: auth_type
+          operator: equals
+          value: kerberos
+        - name: kerberos_auth_type
+          operator: equals
+          value: basic
+
+    - name: kerberos_password
+      label: Password
+      type: string
+      required: true
+      default: ""
+      relevantIf:
+        - name: enable_auth
+          operator: equals
+          value: true
+        - name: auth_type
+          operator: equals
+          value: kerberos
+        - name: kerberos_auth_type
+          operator: equals
+          value: basic
 
     - name: enable_metrics
       label: Enable Metrics
@@ -78,197 +274,6 @@ spec:
         - name: enable_traces
           operator: equals
           value: true
-
-    - name: enable_auth
-      label: Enable Authentication
-      type: bool
-      default: false
-      advancedConfig: true
-
-    - name: auth_type
-      label: Auth Type
-      type: enum
-      validValues:
-        - basic
-        - sasl
-        # TODO: Should be tested before implemented
-        #- tls
-        - kerberos
-      default: basic
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true    
-
-    - name: basic_username
-      label: Username
-      type: string
-      required: true
-      default: ""
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true      
-        - name: auth_type
-          operator: equals
-          value: basic    
-
-    - name: basic_password
-      label: Password
-      type: string
-      required: true 
-      default: ""
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true      
-        - name: auth_type
-          operator: equals
-          value: basic    
-
-    - name: sasl_username
-      label: Username
-      type: string
-      required: true 
-      default: ""
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true      
-        - name: auth_type
-          operator: equals
-          value: sasl    
-
-    - name: sasl_password
-      label: Password
-      type: string
-      required: true 
-      default: ""
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true      
-        - name: auth_type
-          operator: equals
-          value: sasl    
-
-    - name: sasl_mechanism
-      label: Mechanism
-      type: enum
-      validValues:
-        - SCRAM-SHA-256
-        - SCRAM-SHA-512
-        - PLAIN
-      default: SCRAM-SHA-256
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true      
-        - name: auth_type
-          operator: equals
-          value: sasl    
-
-    - name: kerberos_service_name
-      label: Service Name
-      type: string
-      required: true
-      default: ""
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true      
-        - name: auth_type
-          operator: equals
-          value: kerberos    
-
-    - name: kerberos_realm
-      label: Realm
-      type: string
-      required: true 
-      default: ""
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true      
-        - name: auth_type
-          operator: equals
-          value: kerberos    
-
-    - name: kerberos_config_file
-      label: Config File
-      type: string
-      default: /etc/krb5.conf
-      required: true 
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true      
-        - name: auth_type
-          operator: equals
-          value: kerberos
-
-    - name: kerberos_auth_type
-      label: Kerberos Auth Type
-      type: enum
-      validValues:
-        - keytab
-        - basic
-      default: keytab
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true      
-        - name: auth_type
-          operator: equals
-          value: kerberos    
-
-    - name: kerberos_keytab_file
-      label: Keytab File
-      type: string
-      required: true 
-      default: /etc/security/kafka.keytab
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true      
-        - name: auth_type
-          operator: equals
-          value: kerberos
-        - name: kerberos_auth_type
-          operator: equals
-          value: keytab    
-
-    - name: kerberos_username
-      label: Username
-      type: string
-      required: true 
-      default: ""
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true      
-        - name: auth_type
-          operator: equals
-          value: kerberos    
-        - name: kerberos_auth_type
-          operator: equals
-          value: basic    
-
-    - name: kerberos_password
-      label: Password
-      type: string
-      required: true 
-      default: ""
-      relevantIf:
-        - name: enable_auth
-          operator: equals
-          value: true      
-        - name: auth_type
-          operator: equals
-          value: kerberos    
-        - name: kerberos_auth_type
-          operator: equals
-          value: basic    
 
   metrics:
     exporters: |

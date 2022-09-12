@@ -4,7 +4,7 @@ import { useSnackbar } from "notistack";
 import { useState } from "react";
 import { ShowPageConfig } from ".";
 import { ConfirmDeleteResourceDialog } from "../../../components/ConfirmDeleteResourceDialog";
-import { EditResourceDialog } from "../../../components/EditResourceDialog";
+import { EditResourceDialog } from "../../../components/ResourceDialog/EditResourceDialog";
 import {
   ResourceConfiguration,
   useDestinationTypeQuery,
@@ -42,6 +42,17 @@ gql`
           options {
             creatable
             trackUnchecked
+            sectionHeader
+            gridColumns
+            metricCategories {
+              label
+              column
+              metrics {
+                name
+                description
+                kpi
+              }
+            }
           }
         }
       }
@@ -147,11 +158,11 @@ export const InlineDestinationCard: React.FC<{
       </Card>
 
       <EditResourceDialog
+        displayName={displayName}
+        description={description}
         kind="destination"
         fullWidth
         maxWidth="sm"
-        title={displayName}
-        description={description}
         parameters={destination.parameters ?? []}
         parameterDefinitions={data.destinationType.spec.parameters}
         open={editing}

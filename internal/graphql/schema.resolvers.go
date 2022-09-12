@@ -149,6 +149,9 @@ func (r *parameterDefinitionResolver) Type(ctx context.Context, obj *model.Param
 	case "timezone":
 		return model1.ParameterTypeTimezone, nil
 
+	case "metrics":
+		return model1.ParameterTypeMetrics, nil
+
 	default:
 		return "", errors.New("unknown parameter type")
 	}

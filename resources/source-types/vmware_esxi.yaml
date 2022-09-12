@@ -30,6 +30,8 @@ spec:
       label: Enable TLS
       description: Whether or not to use TLS.
       type: bool
+      options:
+        sectionHeader: true
       default: false
       advancedConfig: true
 

@@ -5,7 +5,6 @@ import {
   ResourceConfiguration,
   useGetProcessorTypeQuery,
 } from "../../graphql/generated";
-import { FormTitle } from "./FormTitle";
 
 interface EditProcessorViewProps {
   title: string;
@@ -45,9 +44,8 @@ export const EditProcessorView: React.FC<EditProcessorViewProps> = ({
 
   return (
     <>
-      <FormTitle title={title} crumbs={["Edit Processor"]} />
       <ResourceConfigForm
-        title={data?.processorType?.metadata.displayName ?? ""}
+        displayName={data?.processorType?.metadata.displayName ?? ""}
         description={data?.processorType?.metadata.description ?? ""}
         kind={"processor"}
         parameterDefinitions={data?.processorType?.spec.parameters ?? []}

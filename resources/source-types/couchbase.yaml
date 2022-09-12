@@ -82,11 +82,27 @@ spec:
       type: bool
       default: true
 
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      advancedConfig: true
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+
     - name: enable_error_log
       label: Error Logs
       description: Enable to read error logs.
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -111,6 +127,8 @@ spec:
       description: Enable to read info logs.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -135,6 +153,8 @@ spec:
       label: Debug Logs
       description: Enable to read debug logs.
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -159,6 +179,8 @@ spec:
       description: Enable to read http access logs.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -183,6 +205,8 @@ spec:
       description: Enable to read internal access logs.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -207,6 +231,8 @@ spec:
       description: Enable to read baby sitter logs.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -231,6 +257,8 @@ spec:
       description: Enable to read xdcr logs.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -247,20 +275,6 @@ spec:
           operator: equals
           value: true
         - name: enable_xdcr_log
-          operator: equals
-          value: true
-
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      advancedConfig: true
-      relevantIf:
-        - name: enable_logs
           operator: equals
           value: true
 

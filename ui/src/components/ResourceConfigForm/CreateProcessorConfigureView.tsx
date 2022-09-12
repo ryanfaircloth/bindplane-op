@@ -1,26 +1,83 @@
-import { FormTitle, FormValues, ProcessorType, ResourceConfigForm } from ".";
+import { Button } from "@mui/material";
+import {
+  FormValues,
+  initFormValues,
+  isValid,
+  ProcessorType,
+  useValidationContext,
+  ValidationContextProvider,
+} from ".";
+import { ParameterDefinition } from "../../graphql/generated";
+import { ActionsSection } from "../ResourceDialog/ActionSection";
+import { ContentSection } from "../ResourceDialog/ContentSection";
+import { useResourceDialog } from "../ResourceDialog/ResourceDialogContext";
+import { TitleSection } from "../ResourceDialog/TitleSection";
+import { initFormErrors } from "./init-form-values";
+import { ProcessorForm } from "./ProcessorForm";
+import {
+  FormValueContextProvider,
+  useResourceFormValues,
+} from "./ResourceFormContext";
 
 interface CreateProcessorConfigureViewProps {
-  title: string;
   processorType: ProcessorType;
+  parameterDefinitions: ParameterDefinition[];
   onBack: () => void;
   onSave: (formValues: FormValues) => void;
 }
 
-export const CreateProcessorConfigureView: React.FC<CreateProcessorConfigureViewProps> =
-  ({ title, processorType, onSave, onBack }) => {
+const CreateProcessorConfigureViewComponent: React.FC<CreateProcessorConfigureViewProps> =
+  ({ processorType, onSave, onBack }) => {
+    const { formValues } = useResourceFormValues();
+    const { onClose } = useResourceDialog();
+    const { errors } = useValidationContext();
+
     return (
       <>
-        <FormTitle title={title} crumbs={["Add a processor"]} />
-        <ResourceConfigForm
-          title={processorType.metadata.displayName ?? ""}
+        <TitleSection
+          title={`Add Processor: ${processorType.metadata.displayName}`}
           description={processorType.metadata.description ?? ""}
-          kind={"processor"}
-          parameterDefinitions={processorType.spec.parameters}
-          onSave={onSave}
-          saveButtonLabel={"Add Processor"}
-          onBack={onBack}
+          onClose={onClose}
         />
+
+        <ContentSection>
+          <ProcessorForm parameterDefinitions={processorType.spec.parameters} />
+        </ContentSection>
+
+        <ActionsSection>
+          <Button variant="contained" color="secondary" onClick={onBack}>
+            Back
+          </Button>
+
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => onSave(formValues)}
+            disabled={!isValid(errors)}
+          >
+            Save
+          </Button>
+        </ActionsSection>
       </>
+    );
+  };
+
+export const CreateProcessorConfigureView: React.FC<CreateProcessorConfigureViewProps> =
+  (props) => {
+    const initValues = initFormValues(props.processorType.spec.parameters);
+    const initErrors = initFormErrors(
+      props.processorType.spec.parameters,
+      initValues,
+      "processor"
+    );
+    return (
+      <FormValueContextProvider initValues={initValues}>
+        <ValidationContextProvider
+          initErrors={initErrors}
+          definitions={props.parameterDefinitions}
+        >
+          <CreateProcessorConfigureViewComponent {...props} />
+        </ValidationContextProvider>
+      </FormValueContextProvider>
     );
   };

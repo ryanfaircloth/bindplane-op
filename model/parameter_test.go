@@ -17,6 +17,7 @@ package model
 import (
 	"testing"
 
+	"github.com/observiq/bindplane-op/model/validation"
 	"github.com/stretchr/testify/require"
 )
 
@@ -143,6 +144,13 @@ func TestValidateDefault(t *testing.T) {
 				Default: 5,
 			},
 		},
+		{
+			"MetricsTypeNoDefault",
+			true,
+			ParameterDefinition{
+				Type: "metrics",
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -161,11 +169,13 @@ func TestValidateOptions(t *testing.T) {
 	testCases := []struct {
 		name      string
 		expectErr bool
+		errorMsg  string
 		param     ParameterDefinition
 	}{
 		{
 			"Enum Creatable OK",
 			false,
+			"",
 			ParameterDefinition{
 				Type: "enum",
 				Options: ParameterOptions{
@@ -176,6 +186,7 @@ func TestValidateOptions(t *testing.T) {
 		{
 			"Enum Not Creatable OK",
 			false,
+			"",
 			ParameterDefinition{
 				Type: "enum",
 				Options: ParameterOptions{
@@ -186,6 +197,7 @@ func TestValidateOptions(t *testing.T) {
 		{
 			"Non-Enum Creatable Error",
 			true,
+			"1 error occurred:\n\t* creatable is true for parameter of type 'string'\n\n",
 			ParameterDefinition{
 				Type: "string",
 				Options: ParameterOptions{
@@ -196,6 +208,7 @@ func TestValidateOptions(t *testing.T) {
 		{
 			"Non-Enum Not Creatable OK",
 			false,
+			"",
 			ParameterDefinition{
 				Type: "enum",
 				Options: ParameterOptions{
@@ -206,6 +219,7 @@ func TestValidateOptions(t *testing.T) {
 		{
 			"Enums TrackUnchecked OK",
 			false,
+			"",
 			ParameterDefinition{
 				Type: "enums",
 				Options: ParameterOptions{
@@ -216,6 +230,7 @@ func TestValidateOptions(t *testing.T) {
 		{
 			"Enums !TrackUnchecked OK",
 			false,
+			"",
 			ParameterDefinition{
 				Type: "enums",
 			},
@@ -223,6 +238,7 @@ func TestValidateOptions(t *testing.T) {
 		{
 			"Non Enums TrackUnchecked Error",
 			true,
+			"1 error occurred:\n\t* trackUnchecked is true for parameter of type `map`\n\n",
 			ParameterDefinition{
 				Type: "map",
 				Options: ParameterOptions{
@@ -234,11 +250,13 @@ func TestValidateOptions(t *testing.T) {
 
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
-			err := test.param.validateOptions()
+			errs := validation.NewErrors()
+			test.param.validateOptions(errs)
 			if test.expectErr {
-				require.Error(t, err)
+				require.Error(t, errs.Result())
+				require.Equal(t, test.errorMsg, errs.Result().Error())
 			} else {
-				require.NoError(t, err)
+				require.NoError(t, errs.Result())
 			}
 		})
 	}
@@ -529,5 +547,79 @@ eleven:
 				require.NoError(t, err)
 			}
 		})
+	}
+}
+
+var kpi = true
+var boolPtr = &kpi
+var desc = "description"
+var descPtr = &desc
+
+func TestValidateMetricCategory(t *testing.T) {
+	testCases := []struct {
+		description    string
+		metricCategory MetricCategory
+		expectErr      bool
+		errorMsg       string
+	}{
+		{
+			"No label, bad",
+			MetricCategory{
+				Metrics: []MetricOption{
+					{Name: "one.two.three"},
+				},
+			},
+			true,
+			"1 error occurred:\n\t* missing required field Label in metric category\n\n",
+		},
+		{
+			"No metrics, bad",
+			MetricCategory{
+				Label: "Blah",
+			},
+			true,
+			"1 error occurred:\n\t* missing required field metrics on metricCategory\n\n",
+		},
+		{
+			"Column not zero or one",
+			MetricCategory{
+				Label:   "Blah",
+				Metrics: []MetricOption{{Name: "Something"}},
+				Column:  3,
+			},
+			true,
+			"1 error occurred:\n\t* metric category value is neither 0 nor 1\n\n",
+		},
+		{
+			"OK",
+			MetricCategory{
+				Label:   "Blah",
+				Column:  1,
+				Metrics: []MetricOption{{Name: "First"}, {Name: "Seconds"}},
+			},
+			false,
+			"",
+		},
+		{
+			"Metrics missing required name field",
+			MetricCategory{
+				Label:   "Foo",
+				Column:  0,
+				Metrics: []MetricOption{{}, {KPI: boolPtr}, {Description: descPtr}},
+			},
+			true,
+			"3 errors occurred:\n\t* missing required name field for metric option\n\t* missing required name field for metric option\n\t* missing required name field for metric option\n\n",
+		},
+	}
+
+	for _, test := range testCases {
+		errs := validation.NewErrors()
+		test.metricCategory.validateMetricCategory(errs)
+		if test.expectErr {
+			require.Error(t, errs.Result())
+			require.Equal(t, test.errorMsg, errs.Result().Error())
+		} else {
+			require.NoError(t, errs.Result())
+		}
 	}
 }

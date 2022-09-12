@@ -13,7 +13,6 @@ spec:
     - windows
   parameters:
     # Metrics
-    #
     - name: enable_metrics
       label: Enable Metrics
       description: Enable to collect metrics.
@@ -35,6 +34,17 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
+
+    - name: collection_interval
+      label: Collection Interval
+      description: How often (seconds) to scrape for metrics.
+      type: int
+      default: 60
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+      advancedConfig: true
 
     - name: username
       label: Username
@@ -60,17 +70,6 @@ spec:
           value: true
       advancedConfig: true
 
-    - name: collection_interval
-      label: Collection Interval
-      description: How often (seconds) to scrape for metrics.
-      type: int
-      default: 60
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-      advancedConfig: true
-
     # Metrics TLS Settings #
 
     - name: enable_tls
@@ -78,6 +77,8 @@ spec:
       description: Whether or not to use TLS.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_metrics
           operator: equals

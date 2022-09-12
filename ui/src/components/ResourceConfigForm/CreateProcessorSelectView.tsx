@@ -2,9 +2,13 @@ import { gql } from "@apollo/client";
 import { Box, Button, CircularProgress } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useEffect, useMemo, useState } from "react";
-import { ButtonFooter, FormTitle, ProcessorType } from ".";
+import { ProcessorType } from ".";
 import { useGetProcessorTypesQuery } from "../../graphql/generated";
 import { metadataSatisfiesSubstring } from "../../utils/metadata-satisfies-substring";
+import { ActionsSection } from "../ResourceDialog/ActionSection";
+import { ContentSection } from "../ResourceDialog/ContentSection";
+import { useResourceDialog } from "../ResourceDialog/ResourceDialogContext";
+import { TitleSection } from "../ResourceDialog/TitleSection";
 import {
   ResourceTypeButton,
   ResourceTypeButtonContainer,
@@ -35,6 +39,17 @@ gql`
           options {
             creatable
             trackUnchecked
+            gridColumns
+            sectionHeader
+            metricCategories {
+              label
+              column
+              metrics {
+                name
+                description
+                kpi
+              }
+            }
           }
           documentation {
             text
@@ -48,17 +63,21 @@ gql`
 `;
 
 interface CreateProcessorSelectViewProps {
-  title: string;
+  // The display name of the Source or Destination that the processor is being added to
+  displayName: string;
+  // The supported telemetry types of the source that the processor will be added to
   telemetryTypes?: string[];
+
   onBack: () => void;
   onSelect: (pt: ProcessorType) => void;
 }
 
 export const CreateProcessorSelectView: React.FC<CreateProcessorSelectViewProps> =
-  ({ title, onBack, onSelect, telemetryTypes }) => {
+  ({ displayName, onBack, onSelect, telemetryTypes }) => {
     const { data, loading, error } = useGetProcessorTypesQuery();
     const [search, setSearch] = useState("");
     const { enqueueSnackbar } = useSnackbar();
+    const { onClose } = useResourceDialog();
 
     useEffect(() => {
       if (error != null) {
@@ -75,10 +94,13 @@ export const CreateProcessorSelectView: React.FC<CreateProcessorSelectViewProps>
       </Button>
     );
 
+    const title = `${displayName}: Add a processor`;
+    const description = `Choose a processor you'd like to configure for this source.`;
+
     // Filter the list of supported processor types down
     // to those whose telemetry matches the telemetry of the
     // source. i.e. don't show a log processor for a metric source
-    const supportedProcessorTypes = useMemo(
+    const supportedProcessorTypes: ProcessorType[] = useMemo(
       () =>
         telemetryTypes
           ? data?.processorTypes.filter((pt) =>
@@ -90,40 +112,38 @@ export const CreateProcessorSelectView: React.FC<CreateProcessorSelectViewProps>
 
     return (
       <>
-        <FormTitle
+        <TitleSection
           title={title}
-          crumbs={["Add a processor"]}
-          description={"Select a processor type to configure."}
+          description={description}
+          onClose={onClose}
         />
 
-        <ResourceTypeButtonContainer
-          onSearchChange={(v: string) => setSearch(v)}
-          placeholder={"Search for a processor..."}
-        >
-          {loading && (
-            <Box display="flex" justifyContent={"center"} marginTop={2}>
-              <CircularProgress />
-            </Box>
-          )}
-          {supportedProcessorTypes
-            .filter((pt) => metadataSatisfiesSubstring(pt, search))
-            .map((p) => (
-              <ResourceTypeButton
-                hideIcon
-                key={`${p.metadata.name}`}
-                displayName={p.metadata.displayName!}
-                onSelect={() => {
-                  onSelect(p);
-                }}
-                telemetryTypes={p.spec.telemetryTypes}
-              />
-            ))}
-        </ResourceTypeButtonContainer>
-        <ButtonFooter
-          primaryButton={<></>}
-          secondaryButton={<></>}
-          backButton={backButton}
-        />
+        <ContentSection>
+          <ResourceTypeButtonContainer
+            onSearchChange={(v: string) => setSearch(v)}
+            placeholder={"Search for a processor..."}
+          >
+            {loading && (
+              <Box display="flex" justifyContent={"center"} marginTop={2}>
+                <CircularProgress />
+              </Box>
+            )}
+            {supportedProcessorTypes
+              .filter((pt) => metadataSatisfiesSubstring(pt, search))
+              .map((p) => (
+                <ResourceTypeButton
+                  hideIcon
+                  key={`${p.metadata.name}`}
+                  displayName={p.metadata.displayName!}
+                  onSelect={() => {
+                    onSelect(p);
+                  }}
+                  telemetryTypes={p.spec.telemetryTypes}
+                />
+              ))}
+          </ResourceTypeButtonContainer>
+        </ContentSection>
+        <ActionsSection>{backButton}</ActionsSection>
       </>
     );
   };

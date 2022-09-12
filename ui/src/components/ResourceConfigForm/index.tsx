@@ -1,10 +1,8 @@
 export { initFormValues } from "./init-form-values";
-export { FormTitle } from "./FormTitle";
-export { ButtonFooter } from "./ButtonFooter";
 export { CreateProcessorSelectView } from "./CreateProcessorSelectView";
 export { MainView } from "./MainView";
-export { ResourceConfigForm } from "./ResourceConfigForm";
-export type { FormValues, ProcessorType } from "./ResourceConfigForm";
+export { ResourceConfigurationView as ResourceConfigForm } from "./ResourceConfigurationView";
+export type { FormValues, ProcessorType } from "./ResourceConfigurationView";
 export {
   ValidationContextProvider,
   useValidationContext,

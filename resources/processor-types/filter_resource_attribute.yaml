@@ -30,6 +30,8 @@ spec:
       description: Resource or Record key value pairs to filter on. All pairs must match for filtering to take effect.
       type: map
       required: true
+      options:
+        gridColumns: 12
 
   logs:
     processors: |

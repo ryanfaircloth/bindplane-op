@@ -66,9 +66,6 @@ const StringsParamInputComponent: React.FC<ParamInputProps<string[]>> = ({
         multiple
         disableClearable
         freeSolo
-        classes={{
-          root: definition.relevantIf ? styles.indent : undefined,
-        }}
         // value and onChange pertain to the string[] value of the input
         value={value ?? []}
         onChange={(e, v: string[]) => handleValueChange(v)}

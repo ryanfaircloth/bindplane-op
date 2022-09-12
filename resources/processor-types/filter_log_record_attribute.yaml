@@ -30,6 +30,8 @@ spec:
       description: Log record attribute key value pairs to filter on. Logs are filtered if all pairs are matched.
       type: map
       required: true
+      options:
+        gridColumns: 12
 
   logs:
     processors: |

@@ -1,4 +1,4 @@
-import { TextField } from "@mui/material";
+import { FormHelperText, TextField } from "@mui/material";
 import { isFunction } from "lodash";
 import { ChangeEvent, memo } from "react";
 import { validateNameField } from "../../../utils/forms/validate-name-field";
@@ -24,7 +24,12 @@ const ResourceNameInputComponent: React.FC<ResourceNameInputProps> = ({
       return;
     }
 
+    if (!touched.name) {
+      touch("name");
+    }
+
     onValueChange(e.target.value);
+
     const error = validateNameField(e.target.value, kind, existingNames);
     setError("name", error);
   }
@@ -37,19 +42,23 @@ const ResourceNameInputComponent: React.FC<ResourceNameInputProps> = ({
       inputProps={{
         "data-testid": "name-field",
       }}
-      error={errors.name != null && touched.name}
+      FormHelperTextProps={{
+        sx: { marginLeft: "-2px" },
+      }}
       helperText={
         <>
-          Choose a name for the reusable resource in BindPlane OP.
-          {errors.name && (
-            <>
-              <br />
+          <FormHelperText component={"span"}>
+            Choose a name for the reusable resource in BindPlane OP.
+          </FormHelperText>
+          <br />
+          {errors.name && touched.name && (
+            <FormHelperText error component="span">
               {errors.name}
-            </>
+            </FormHelperText>
           )}
         </>
       }
-      color={errors.name != null ? "error" : "primary"}
+      color={errors.name != null && touched.name ? "error" : "primary"}
       name={"name"}
       fullWidth
       size="small"

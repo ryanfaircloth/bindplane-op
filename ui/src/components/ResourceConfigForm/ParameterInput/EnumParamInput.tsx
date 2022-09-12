@@ -3,8 +3,6 @@ import { isFunction } from "lodash";
 import { ChangeEvent, memo } from "react";
 import { ParamInputProps } from "./ParameterInput";
 
-import styles from "./parameter-input.module.scss";
-
 const EnumParamInputComponent: React.FC<ParamInputProps<string>> = (props) => {
   return props.definition.options.creatable ? (
     <CreatableSelectInput {...props} />
@@ -20,9 +18,6 @@ const SelectParamInput: React.FC<ParamInputProps<string>> = ({
 }) => {
   return (
     <TextField
-      classes={{
-        root: definition.relevantIf ? styles.indent : undefined,
-      }}
       value={value ?? ""}
       onChange={(e: ChangeEvent<HTMLInputElement>) =>
         isFunction(onValueChange) && onValueChange(e.target.value)
@@ -82,9 +77,6 @@ const CreatableSelectInput: React.FC<ParamInputProps<string>> = ({
       renderInput={(params) => (
         <TextField
           {...params}
-          classes={{
-            root: definition.relevantIf ? styles.indent : undefined,
-          }}
           fullWidth
           label={definition.label}
           helperText={definition.description}

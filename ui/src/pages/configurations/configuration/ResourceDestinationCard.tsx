@@ -4,7 +4,7 @@ import { useSnackbar } from "notistack";
 import { memo, useState } from "react";
 import { ShowPageConfig } from ".";
 import { ConfirmDeleteResourceDialog } from "../../../components/ConfirmDeleteResourceDialog";
-import { EditResourceDialog } from "../../../components/EditResourceDialog";
+import { EditResourceDialog } from "../../../components/ResourceDialog/EditResourceDialog";
 import {
   ResourceConfiguration,
   useGetDestinationWithTypeQuery,
@@ -35,6 +35,7 @@ gql`
         metadata {
           name
           icon
+          description
         }
         spec {
           parameters {
@@ -53,6 +54,17 @@ gql`
             options {
               creatable
               trackUnchecked
+              sectionHeader
+              gridColumns
+              metricCategories {
+                label
+                column
+                metrics {
+                  name
+                  description
+                  kpi
+                }
+              }
             }
           }
         }
@@ -178,10 +190,12 @@ const ResourceDestinationCardComponent: React.FC<{
 
       <EditResourceDialog
         kind="destination"
+        displayName={destination.name ?? ""}
+        description={
+          data.destinationWithType.destinationType.metadata.description ?? ""
+        }
         fullWidth
         maxWidth="sm"
-        title={destination.name!}
-        description={""}
         parameters={data.destinationWithType.destination.spec.parameters ?? []}
         parameterDefinitions={
           data.destinationWithType.destinationType.spec.parameters

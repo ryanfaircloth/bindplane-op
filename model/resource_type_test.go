@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/observiq/bindplane-op/model/otel"
+	"github.com/observiq/bindplane-op/model/validation"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
@@ -69,6 +70,64 @@ func TestEvalGoogleCloud(t *testing.T) {
 	require.Len(t, values[otel.Traces].Processors, 1)
 	require.Len(t, values[otel.Traces].Exporters, 1)
 	require.Len(t, values[otel.Traces].Extensions, 0)
+}
+
+func TestValidateNoDuplicateParamterNames(t *testing.T) {
+	testCases := []struct {
+		description string
+		spec        ResourceTypeSpec
+		expectErr   bool
+		errorMsg    string
+	}{
+		{
+			"duplicate names, error",
+			ResourceTypeSpec{
+				Parameters: []ParameterDefinition{
+					{
+						Name: "param-1",
+					},
+					{
+						Name: "param-1",
+					},
+					{
+						Name: "param-2",
+					},
+				},
+			},
+			true,
+			"1 error occurred:\n\t* found multiple parameters with name param-1\n\n",
+		},
+		{
+			"no duplicates, ok",
+			ResourceTypeSpec{
+				Parameters: []ParameterDefinition{
+
+					{
+						Name: "param-1",
+					},
+					{
+						Name: "param-2",
+					},
+				},
+			},
+			false,
+			"1 error occurred:\n\t* found multiple parameters with name param-1\n\n",
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.description, func(t *testing.T) {
+			errs := validation.NewErrors()
+			test.spec.validateNoDuplicateParameterNames(errs)
+			if test.expectErr {
+				require.Error(t, errs.Result())
+				require.Equal(t, test.errorMsg, errs.Result().Error())
+			} else {
+				require.NoError(t, errs.Result())
+			}
+
+		})
+	}
 }
 
 func TestTelemetryTypes(t *testing.T) {

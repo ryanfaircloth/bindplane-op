@@ -178,6 +178,18 @@ type ComplexityRoot struct {
 		Name        func(childComplexity int) int
 	}
 
+	MetricCategory struct {
+		Column  func(childComplexity int) int
+		Label   func(childComplexity int) int
+		Metrics func(childComplexity int) int
+	}
+
+	MetricOption struct {
+		Description func(childComplexity int) int
+		KPI         func(childComplexity int) int
+		Name        func(childComplexity int) int
+	}
+
 	Parameter struct {
 		Name  func(childComplexity int) int
 		Value func(childComplexity int) int
@@ -197,8 +209,11 @@ type ComplexityRoot struct {
 	}
 
 	ParameterOptions struct {
-		Creatable      func(childComplexity int) int
-		TrackUnchecked func(childComplexity int) int
+		Creatable        func(childComplexity int) int
+		GridColumns      func(childComplexity int) int
+		MetricCategories func(childComplexity int) int
+		SectionHeader    func(childComplexity int) int
+		TrackUnchecked   func(childComplexity int) int
 	}
 
 	ParameterizedSpec struct {
@@ -850,6 +865,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Metadata.Name(childComplexity), true
 
+	case "MetricCategory.column":
+		if e.complexity.MetricCategory.Column == nil {
+			break
+		}
+
+		return e.complexity.MetricCategory.Column(childComplexity), true
+
+	case "MetricCategory.label":
+		if e.complexity.MetricCategory.Label == nil {
+			break
+		}
+
+		return e.complexity.MetricCategory.Label(childComplexity), true
+
+	case "MetricCategory.metrics":
+		if e.complexity.MetricCategory.Metrics == nil {
+			break
+		}
+
+		return e.complexity.MetricCategory.Metrics(childComplexity), true
+
+	case "MetricOption.description":
+		if e.complexity.MetricOption.Description == nil {
+			break
+		}
+
+		return e.complexity.MetricOption.Description(childComplexity), true
+
+	case "MetricOption.kpi":
+		if e.complexity.MetricOption.KPI == nil {
+			break
+		}
+
+		return e.complexity.MetricOption.KPI(childComplexity), true
+
+	case "MetricOption.name":
+		if e.complexity.MetricOption.Name == nil {
+			break
+		}
+
+		return e.complexity.MetricOption.Name(childComplexity), true
+
 	case "Parameter.name":
 		if e.complexity.Parameter.Name == nil {
 			break
@@ -940,6 +997,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ParameterOptions.Creatable(childComplexity), true
+
+	case "ParameterOptions.gridColumns":
+		if e.complexity.ParameterOptions.GridColumns == nil {
+			break
+		}
+
+		return e.complexity.ParameterOptions.GridColumns(childComplexity), true
+
+	case "ParameterOptions.metricCategories":
+		if e.complexity.ParameterOptions.MetricCategories == nil {
+			break
+		}
+
+		return e.complexity.ParameterOptions.MetricCategories(childComplexity), true
+
+	case "ParameterOptions.sectionHeader":
+		if e.complexity.ParameterOptions.SectionHeader == nil {
+			break
+		}
+
+		return e.complexity.ParameterOptions.SectionHeader(childComplexity), true
 
 	case "ParameterOptions.trackUnchecked":
 		if e.complexity.ParameterOptions.TrackUnchecked == nil {
@@ -1647,6 +1725,7 @@ enum ParameterType {
   map
   yaml
   timezone
+  metrics
 }
 
 type ParameterDefinition {
@@ -1675,6 +1754,21 @@ type DocumentationLink {
 type ParameterOptions {
   creatable: Boolean
   trackUnchecked: Boolean
+  gridColumns: Int
+  sectionHeader: Boolean
+  metricCategories: [MetricCategory!]
+}
+
+type MetricCategory {
+  label: String!
+  column: Int!
+  metrics: [MetricOption!]!
+}
+
+type MetricOption {
+  name: String!
+  description: String
+  kpi: Boolean
 }
 
 type RelevantIfCondition {
@@ -5217,6 +5311,272 @@ func (ec *executionContext) fieldContext_Metadata_labels(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _MetricCategory_label(ctx context.Context, field graphql.CollectedField, obj *model.MetricCategory) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MetricCategory_label(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Label, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MetricCategory_label(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MetricCategory",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MetricCategory_column(ctx context.Context, field graphql.CollectedField, obj *model.MetricCategory) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MetricCategory_column(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Column, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MetricCategory_column(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MetricCategory",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MetricCategory_metrics(ctx context.Context, field graphql.CollectedField, obj *model.MetricCategory) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MetricCategory_metrics(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metrics, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.MetricOption)
+	fc.Result = res
+	return ec.marshalNMetricOption2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricOptionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MetricCategory_metrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MetricCategory",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "name":
+				return ec.fieldContext_MetricOption_name(ctx, field)
+			case "description":
+				return ec.fieldContext_MetricOption_description(ctx, field)
+			case "kpi":
+				return ec.fieldContext_MetricOption_kpi(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MetricOption", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MetricOption_name(ctx context.Context, field graphql.CollectedField, obj *model.MetricOption) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MetricOption_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MetricOption_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MetricOption",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MetricOption_description(ctx context.Context, field graphql.CollectedField, obj *model.MetricOption) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MetricOption_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MetricOption_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MetricOption",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MetricOption_kpi(ctx context.Context, field graphql.CollectedField, obj *model.MetricOption) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MetricOption_kpi(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.KPI, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MetricOption_kpi(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MetricOption",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Parameter_name(ctx context.Context, field graphql.CollectedField, obj *model.Parameter) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Parameter_name(ctx, field)
 	if err != nil {
@@ -5699,6 +6059,12 @@ func (ec *executionContext) fieldContext_ParameterDefinition_options(ctx context
 				return ec.fieldContext_ParameterOptions_creatable(ctx, field)
 			case "trackUnchecked":
 				return ec.fieldContext_ParameterOptions_trackUnchecked(ctx, field)
+			case "gridColumns":
+				return ec.fieldContext_ParameterOptions_gridColumns(ctx, field)
+			case "sectionHeader":
+				return ec.fieldContext_ParameterOptions_sectionHeader(ctx, field)
+			case "metricCategories":
+				return ec.fieldContext_ParameterOptions_metricCategories(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParameterOptions", field.Name)
 		},
@@ -5830,6 +6196,137 @@ func (ec *executionContext) fieldContext_ParameterOptions_trackUnchecked(ctx con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ParameterOptions_gridColumns(ctx context.Context, field graphql.CollectedField, obj *model.ParameterOptions) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParameterOptions_gridColumns(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GridColumns, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParameterOptions_gridColumns(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParameterOptions",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ParameterOptions_sectionHeader(ctx context.Context, field graphql.CollectedField, obj *model.ParameterOptions) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParameterOptions_sectionHeader(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SectionHeader, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParameterOptions_sectionHeader(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParameterOptions",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ParameterOptions_metricCategories(ctx context.Context, field graphql.CollectedField, obj *model.ParameterOptions) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParameterOptions_metricCategories(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MetricCategories, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.MetricCategory)
+	fc.Result = res
+	return ec.marshalOMetricCategory2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricCategoryᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParameterOptions_metricCategories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParameterOptions",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "label":
+				return ec.fieldContext_MetricCategory_label(ctx, field)
+			case "column":
+				return ec.fieldContext_MetricCategory_column(ctx, field)
+			case "metrics":
+				return ec.fieldContext_MetricCategory_metrics(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MetricCategory", field.Name)
 		},
 	}
 	return fc, nil
@@ -11323,6 +11820,84 @@ func (ec *executionContext) _Metadata(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var metricCategoryImplementors = []string{"MetricCategory"}
+
+func (ec *executionContext) _MetricCategory(ctx context.Context, sel ast.SelectionSet, obj *model.MetricCategory) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, metricCategoryImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MetricCategory")
+		case "label":
+
+			out.Values[i] = ec._MetricCategory_label(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "column":
+
+			out.Values[i] = ec._MetricCategory_column(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "metrics":
+
+			out.Values[i] = ec._MetricCategory_metrics(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var metricOptionImplementors = []string{"MetricOption"}
+
+func (ec *executionContext) _MetricOption(ctx context.Context, sel ast.SelectionSet, obj *model.MetricOption) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, metricOptionImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MetricOption")
+		case "name":
+
+			out.Values[i] = ec._MetricOption_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "description":
+
+			out.Values[i] = ec._MetricOption_description(ctx, field, obj)
+
+		case "kpi":
+
+			out.Values[i] = ec._MetricOption_kpi(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var parameterImplementors = []string{"Parameter"}
 
 func (ec *executionContext) _Parameter(ctx context.Context, sel ast.SelectionSet, obj *model.Parameter) graphql.Marshaler {
@@ -11467,6 +12042,18 @@ func (ec *executionContext) _ParameterOptions(ctx context.Context, sel ast.Selec
 		case "trackUnchecked":
 
 			out.Values[i] = ec._ParameterOptions_trackUnchecked(ctx, field, obj)
+
+		case "gridColumns":
+
+			out.Values[i] = ec._ParameterOptions_gridColumns(ctx, field, obj)
+
+		case "sectionHeader":
+
+			out.Values[i] = ec._ParameterOptions_sectionHeader(ctx, field, obj)
+
+		case "metricCategories":
+
+			out.Values[i] = ec._ParameterOptions_metricCategories(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -13185,6 +13772,58 @@ func (ec *executionContext) marshalNMetadata2githubᚗcomᚋobserviqᚋbindplane
 	return ec._Metadata(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNMetricCategory2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricCategory(ctx context.Context, sel ast.SelectionSet, v model.MetricCategory) graphql.Marshaler {
+	return ec._MetricCategory(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMetricOption2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricOption(ctx context.Context, sel ast.SelectionSet, v model.MetricOption) graphql.Marshaler {
+	return ec._MetricOption(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMetricOption2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricOptionᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MetricOption) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMetricOption2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricOption(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNParameter2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameter(ctx context.Context, sel ast.SelectionSet, v model.Parameter) graphql.Marshaler {
 	return ec._Parameter(ctx, sel, &v)
 }
@@ -14045,6 +14684,53 @@ func (ec *executionContext) marshalOMap2map(ctx context.Context, sel ast.Selecti
 	}
 	res := graphql.MarshalMap(v)
 	return res
+}
+
+func (ec *executionContext) marshalOMetricCategory2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MetricCategory) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMetricCategory2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricCategory(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOParameter2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Parameter) graphql.Marshaler {

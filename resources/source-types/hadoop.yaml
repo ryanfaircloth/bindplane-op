@@ -73,6 +73,8 @@ spec:
       description: Enable to collect datanode logs.
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -97,6 +99,8 @@ spec:
       description: Enable to collect resource manager logs.
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -121,6 +125,8 @@ spec:
       description: Enable to collect namenode logs.
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -148,6 +154,8 @@ spec:
         - beginning
         - end
       default: end
+      options:
+        gridColumns: 12
       advancedConfig: true
       relevantIf:
         - name: enable_logs

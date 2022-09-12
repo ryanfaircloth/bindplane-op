@@ -66,10 +66,26 @@ spec:
       type: bool
       default: true
 
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      advancedConfig: true
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+
     - name: enable_server_log
       label: Server Logs
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -93,6 +109,8 @@ spec:
       label: Controller Logs
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -116,6 +134,8 @@ spec:
       label: State Change Logs
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -139,6 +159,8 @@ spec:
       label: Log Cleaner Logs
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -155,20 +177,6 @@ spec:
           operator: equals
           value: true
         - name: enable_log_cleaner_log
-          operator: equals
-          value: true
-
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      advancedConfig: true
-      relevantIf:
-        - name: enable_logs
           operator: equals
           value: true
 

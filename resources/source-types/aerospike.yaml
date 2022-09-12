@@ -71,6 +71,8 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
+      options:
+        sectionHeader: true
       advancedConfig: true
 
     - name: username
@@ -104,7 +106,7 @@ spec:
       advancedConfig: true
 
     - name: metric_filtering
-      label: Metric Filtering
+      label: Filtering
       description: Enable and disable Aerospike metrics.
       type: bool
       default: false
@@ -112,23 +114,30 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
+      options:
+        sectionHeader: true
       advancedConfig: true
 
     - name: disable_metrics
-      label: Metrics
       description: Toggle the metrics you wish to collect on and off.
-      type: enums
+      type: metrics
+      default: []
       options:
-        trackUnchecked: true
-      validValues:
-        - aerospike.namespace.disk.available
-        - aerospike.namespace.memory.free
-        - aerospike.namespace.memory.usage
-        - aerospike.namespace.scan.count
-        - aerospike.namespace.transaction.count
-        - aerospike.node.connection.count
-        - aerospike.node.connection.open
-        - aerospike.node.memory.free
+        metricCategories:
+          - label: Namespace
+            column: 0
+            metrics:
+              - name: aerospike.namespace.disk.available
+              - name: aerospike.namespace.memory.free
+              - name: aerospike.namespace.memory.usage
+              - name: aerospike.namespace.scan.count
+              - name: aerospike.namespace.transaction.count
+          - label: Node
+            column: 1
+            metrics:
+              - name: aerospike.node.connection.count
+              - name: aerospike.node.connection.open
+              - name: aerospike.node.memory.free
       relevantIf:
         - name: enable_metrics
           operator: equals

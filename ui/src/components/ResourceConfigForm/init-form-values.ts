@@ -1,9 +1,18 @@
-import { FormValues } from ".";
+import { FormValues, satisfiesRelevantIf } from ".";
 import {
   ParameterDefinition,
   Parameter,
   ResourceConfiguration,
+  ParameterType,
 } from "../../graphql/generated";
+import { validateNameField } from "../../utils/forms/validate-name-field";
+import {
+  validateIntField,
+  validateMapField,
+  validateStringField,
+  validateStringsField,
+  validateYamlField,
+} from "./validation-functions";
 
 export function initFormValues(
   definitions: ParameterDefinition[],
@@ -33,4 +42,65 @@ export function initFormValues(
     defaults.processors = processors;
   }
   return defaults;
+}
+
+export function initFormErrors(
+  definitions: ParameterDefinition[],
+  initValues: Record<string, any>,
+  kind: "processor" | "destination" | "source",
+  includeNameField?: boolean,
+  existingNames?: string[]
+) {
+  const initErrors: Record<string, null | string> = {};
+
+  if (includeNameField) {
+    initErrors.name = validateNameField(initValues.name, kind, existingNames);
+  }
+
+  for (const definition of definitions) {
+    if (!satisfiesRelevantIf(initValues, definition)) {
+      initErrors[definition.name] = null;
+      continue;
+    }
+
+    switch (definition.type) {
+      case ParameterType.Map:
+        initErrors[definition.name] = validateMapField(
+          initValues[definition.name],
+          definition.required
+        );
+        break;
+
+      case ParameterType.String:
+        initErrors[definition.name] = validateStringField(
+          initValues[definition.name],
+          definition.required
+        );
+        break;
+      case ParameterType.Strings:
+        initErrors[definition.name] = validateStringsField(
+          initValues[definition.name],
+          definition.required
+        );
+        break;
+
+      case ParameterType.Yaml:
+        initErrors[definition.name] = validateYamlField(
+          initValues[definition.name],
+          definition.required
+        );
+        break;
+
+      case ParameterType.Int:
+        initErrors[definition.name] = validateIntField(
+          definition,
+          initValues[definition.name]
+        );
+        break;
+
+      default:
+        initErrors[definition.name] = null;
+    }
+  }
+  return initErrors;
 }

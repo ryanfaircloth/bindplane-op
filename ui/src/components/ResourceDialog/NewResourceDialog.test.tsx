@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { ResourceDialog } from ".";
+import { NewResourceDialog } from ".";
 import {
   Destination1,
   ResourceType1,
@@ -9,7 +9,8 @@ import {
 describe("ResourceDialog", () => {
   it("renders without error", () => {
     render(
-      <ResourceDialog
+      <NewResourceDialog
+        onClose={() => {}}
         resourceTypes={[ResourceType1, ResourceType2]}
         title={""}
         kind={"source"}
@@ -20,7 +21,8 @@ describe("ResourceDialog", () => {
 
   it("renders ResourceTypes", () => {
     render(
-      <ResourceDialog
+      <NewResourceDialog
+        onClose={() => {}}
         resourceTypes={[ResourceType1, ResourceType2]}
         title={""}
         kind={"source"}
@@ -34,7 +36,8 @@ describe("ResourceDialog", () => {
 
   it("displays ResourceType form when clicking next", () => {
     render(
-      <ResourceDialog
+      <NewResourceDialog
+        onClose={() => {}}
         resourceTypes={[ResourceType1, ResourceType2]}
         title={""}
         kind={"source"}
@@ -48,7 +51,8 @@ describe("ResourceDialog", () => {
 
   it("will offer to use an existing destination", () => {
     render(
-      <ResourceDialog
+      <NewResourceDialog
+        onClose={() => {}}
         resourceTypes={[ResourceType1, ResourceType2]}
         resources={[Destination1]}
         title={""}

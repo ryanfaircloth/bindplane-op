@@ -24,16 +24,19 @@ spec:
       label: Load Metrics
       description: Enable to collect load metrics. Compatible with all platforms.
       type: bool
+      options:
+        sectionHeader: true
       default: true
 
     - name: load_metric_filtering
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - system.cpu.load_average.15m
-        - system.cpu.load_average.1m
-        - system.cpu.load_average.5m
+        metricCategories:
+          - label: Load Metrics
+            metrics:
+              - name: system.cpu.load_average.15m
+              - name: system.cpu.load_average.1m
+              - name: system.cpu.load_average.5m
       default: []
       relevantIf:
         - name: enable_load
@@ -47,15 +50,18 @@ spec:
       description: Enable to collect filesystem metrics. Compatible with all platforms.
       type: bool
       default: true
+      options:
+        sectionHeader: true
 
     - name: filesystem_metric_filtering
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - system.filesystem.inodes.usage
-        - system.filesystem.usage
-        - system.filesystem.utilization
+        metricCategories:
+          - label: Filesystem Metrics
+            metrics:
+              - name: system.filesystem.inodes.usage
+              - name: system.filesystem.usage
+              - name: system.filesystem.utilization
       default: []
       relevantIf:
         - name: enable_filesystem
@@ -68,15 +74,18 @@ spec:
       label: Memory Metrics
       description: Enable to collect memory metrics. Compatible with all platforms.
       type: bool
+      options:
+        sectionHeader: true
       default: true
 
     - name: memory_metrics_filtering
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - system.memory.usage
-        - system.memory.utilization
+        metricCategories:
+          - label: Memory Metrics
+            metrics:
+              - name: system.memory.usage
+              - name: system.memory.utilization
       default: []
       relevantIf:
         - name: enable_memory
@@ -90,19 +99,22 @@ spec:
       description: Enable to collect network metrics. Compatible with all platforms.
       type: bool
       default: true
+      options:
+        sectionHeader: true
 
     - name: network_metrics_filtering
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - system.network.connections
-        - system.network.conntrack.count
-        - system.network.conntrack.max
-        - system.network.dropped
-        - system.network.errors
-        - system.network.io
-        - system.network.packets
+        metricCategories:
+          - label: Network Metrics
+            metrics:
+              - name: system.network.connections
+              - name: system.network.conntrack.count
+              - name: system.network.conntrack.max
+              - name: system.network.dropped
+              - name: system.network.errors
+              - name: system.network.io
+              - name: system.network.packets
       default: []
       relevantIf:
         - name: enable_network
@@ -116,18 +128,21 @@ spec:
       description: Enable to collect paging metrics. Compatible with all platforms.
       type: bool
       default: true
+      options:
+        sectionHeader: true
 
     - name: paging_metrics_filtering
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - system.paging.faults
-        - system.paging.operations
-        - system.paging.operations.page_in
-        - system.paging.operations.page_out
-        - system.paging.usage
-        - system.paging.utilization
+        metricCategories:
+          - label: Paging Metrics
+            metrics:
+              - name: system.paging.faults
+              - name: system.paging.operations
+              - name: system.paging.operations.page_in
+              - name: system.paging.operations.page_out
+              - name: system.paging.usage
+              - name: system.paging.utilization
       default: []
       relevantIf:
         - name: enable_paging
@@ -141,14 +156,17 @@ spec:
       description: Enable to collect CPU metrics. Compatible with Linux and Windows.
       type: bool
       default: false
+      options:
+        sectionHeader: true
 
     - name: cpu_metrics_filtering
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - system.cpu.time
-        - system.cpu.utilization
+        metricCategories:
+          - label: CPU Metrics
+            metrics:
+              - name: system.cpu.time
+              - name: system.cpu.utilization
       default: []
       relevantIf:
         - name: enable_cpu
@@ -162,19 +180,22 @@ spec:
       description: Enable to collect disk metrics. Compatible with Linux and Windows.
       type: bool
       default: false
+      options:
+        sectionHeader: true
 
     - name: disk_metrics_filtering
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - system.disk.io
-        - system.disk.io_time
-        - system.disk.merged
-        - system.disk.operation_time
-        - system.disk.operations
-        - system.disk.pending_operations
-        - system.disk.weighted_io_time
+        metricCategories:
+          - label: Disk Metrics
+            metrics:
+              - name: system.disk.io
+              - name: system.disk.io_time
+              - name: system.disk.merged
+              - name: system.disk.operation_time
+              - name: system.disk.operations
+              - name: system.disk.pending_operations
+              - name: system.disk.weighted_io_time
       default: []
       relevantIf:
         - name: enable_disk
@@ -188,14 +209,17 @@ spec:
       description: Enable to collect process count metrics. Compatible with Linux only.
       type: bool
       default: false
+      options:
+        sectionHeader: true
 
     - name: processes_metrics_filtering
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - system.processes.count
-        - system.processes.created
+        metricCategories:
+          - label: Processes Metrics
+            metrics:
+              - name: system.processes.count
+              - name: system.processes.created
       default: []
       relevantIf:
         - name: enable_processes
@@ -208,16 +232,19 @@ spec:
       description: Enable to collect process metrics. Compatible with Linux and Windows. The collector must be running as root (Linux) and Administrator (Windows).
       type: bool
       default: true
+      options:
+        sectionHeader: true
 
     - name: process_metrics_filtering
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - process.cpu.time
-        - process.disk.io
-        - process.memory.physical_usage
-        - process.memory.virtual_usage
+        metricCategories:
+          - label: Process Metrics
+            metrics:
+              - name: process.cpu.time
+              - name: process.disk.io
+              - name: process.memory.physical_usage
+              - name: process.memory.virtual_usage
       default: []
       relevantIf:
         - name: enable_process
@@ -230,6 +257,8 @@ spec:
       description: Enable to configure filtering for process metrics.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_process
           operator: equals

@@ -61,15 +61,43 @@ spec:
           value: true
 
     # Logs
+
     - name: enable_logs
       label: Enable Logs
       type: bool
       default: true
 
+    - name: timezone
+      label: Timezone
+      description: The timezone to use when parsing timestamps.
+      type: timezone
+      default: "UTC"
+      advancedConfig: true
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      advancedConfig: true
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+
     - name: enable_system_logs
       label: System Logs
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -94,6 +122,8 @@ spec:
       label: Debug Logs
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -115,9 +145,11 @@ spec:
           value: true
 
     - name: enable_gc_logs
-      label: Debug Logs
+      label: Garbage Collection Logs
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -130,36 +162,13 @@ spec:
       default:
         - "/var/log/cassandra/gc.log"
       required: true
+      options:
+        gridColumns: 6
       relevantIf:
         - name: enable_logs
           operator: equals
           value: true
         - name: enable_gc_logs
-          operator: equals
-          value: true
-
-    - name: timezone
-      label: Timezone
-      description: The timezone to use when parsing timestamps.
-      type: timezone
-      default: "UTC"
-      advancedConfig: true
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
-
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      advancedConfig: true
-      relevantIf:
-        - name: enable_logs
           operator: equals
           value: true
 

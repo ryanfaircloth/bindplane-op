@@ -25,6 +25,8 @@ spec:
       description: Whether or not to use TLS.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       advancedConfig: true
 
     - name: insecure_skip_verify
@@ -58,6 +60,8 @@ spec:
       description: Whether or not to use mutual TLS authentication.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_tls
           operator: equals

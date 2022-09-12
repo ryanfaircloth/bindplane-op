@@ -11,15 +11,12 @@ import { isEmpty } from "lodash";
 import { memo } from "react";
 
 import mixins from "../../../styles/mixins.module.scss";
-import styles from "./parameter-input.module.scss";
 
 const EnumsParamInputComponent: React.FC<ParamInputProps<string[]>> = ({
   definition,
   value,
   onValueChange,
 }) => {
-  const indent = definition.relevantIf != null;
-
   function handleToggleValue(toggleValue: string) {
     const newValue = [...(value ?? [])];
 
@@ -39,12 +36,10 @@ const EnumsParamInputComponent: React.FC<ParamInputProps<string[]>> = ({
 
   return (
     <>
-      <InputLabel className={indent ? styles.indent : undefined}>
-        {definition.label}
-      </InputLabel>
+      <InputLabel>{definition.label}</InputLabel>
+
       <FormHelperText
         className={classes([
-          indent ? styles.indent : undefined,
           isEmpty(definition.description) ? undefined : mixins["mb-1"],
         ])}
       >
@@ -64,9 +59,6 @@ const EnumsParamInputComponent: React.FC<ParamInputProps<string[]>> = ({
                     ? !value?.includes(vv)
                     : value?.includes(vv)
                 }
-                classes={{
-                  root: definition.relevantIf ? styles.indent : undefined,
-                }}
               />
             }
             label={vv}

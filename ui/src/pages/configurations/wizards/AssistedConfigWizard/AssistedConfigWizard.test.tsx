@@ -47,6 +47,9 @@ const dummySourceType: SourceTypesQuery["sourceTypes"][0] = {
         options: {
           creatable: null,
           trackUnchecked: null,
+          sectionHeader: null,
+          gridColumns: null,
+          metricCategories: null,
         },
       },
       {
@@ -62,6 +65,9 @@ const dummySourceType: SourceTypesQuery["sourceTypes"][0] = {
         options: {
           creatable: null,
           trackUnchecked: null,
+          sectionHeader: null,
+          gridColumns: null,
+          metricCategories: null,
         },
       },
     ],
@@ -99,6 +105,9 @@ const dummyDestinationType: DestinationsAndTypesQuery["destinationTypes"][0] = {
         options: {
           creatable: null,
           trackUnchecked: null,
+          sectionHeader: null,
+          gridColumns: null,
+          metricCategories: null,
         },
       },
       {
@@ -114,6 +123,9 @@ const dummyDestinationType: DestinationsAndTypesQuery["destinationTypes"][0] = {
         options: {
           creatable: null,
           trackUnchecked: null,
+          sectionHeader: null,
+          gridColumns: null,
+          metricCategories: null,
         },
       },
     ],
@@ -271,11 +283,17 @@ describe("AssistedConfigWizard", () => {
     expect(destinationButton).toBeInTheDocument();
     destinationButton.click();
 
+    // Add required name field
+    fireEvent.change(screen.getByTestId("name-field"), {
+      target: { value: "blah" },
+    });
+
     // Save it
     screen.getByTestId("resource-form-save").click();
 
     // Verify accordion is present
-    expect(screen.getByTestId("destination-accordion")).toBeInTheDocument();
+    const accordion = await screen.findByTestId("destination-accordion");
+    expect(accordion).toBeInTheDocument();
   });
 
   it("can remove a destination", async () => {
@@ -297,6 +315,11 @@ describe("AssistedConfigWizard", () => {
     const destinationButton = await screen.findByText("Test Destination");
     expect(destinationButton).toBeInTheDocument();
     destinationButton.click();
+
+    // Add required name field
+    fireEvent.change(screen.getByTestId("name-field"), {
+      target: { value: "blah" },
+    });
 
     // Save it
     screen.getByTestId("resource-form-save").click();

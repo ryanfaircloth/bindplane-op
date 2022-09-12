@@ -2,7 +2,7 @@ import { useSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 import { useGetDestinationWithTypeQuery } from "../../../graphql/generated";
 import { BPDestination } from "../../../utils/classes";
-import { EditResourceDialog } from "../../EditResourceDialog";
+import { EditResourceDialog } from "../../ResourceDialog/EditResourceDialog";
 
 interface EditDestinationProps {
   name: string;
@@ -59,21 +59,24 @@ export const EditDestinationDialog: React.FC<EditDestinationProps> = ({
     }
   }
 
-  function handleCancel() {
+  function handleClose() {
     setOpen(false);
     onCancel();
   }
 
   return (
     <EditResourceDialog
+      displayName={data?.destinationWithType.destination?.metadata.name ?? ""}
+      description={
+        data?.destinationWithType.destinationType?.metadata.description ?? ""
+      }
       onSave={handleSave}
-      onCancel={handleCancel}
+      onClose={handleClose}
+      onCancel={handleClose}
       parameters={data?.destinationWithType.destination?.spec.parameters ?? []}
       parameterDefinitions={
         data?.destinationWithType.destinationType?.spec.parameters ?? []
       }
-      title={name}
-      description={""}
       kind={"destination"}
       open={open}
     />

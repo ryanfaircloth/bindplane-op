@@ -47,6 +47,17 @@ gql`
           options {
             creatable
             trackUnchecked
+            gridColumns
+            sectionHeader
+            metricCategories {
+              label
+              column
+              metrics {
+                name
+                description
+                kpi
+              }
+            }
           }
           documentation {
             text

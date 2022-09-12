@@ -19,6 +19,8 @@ spec:
       description: Enable to collect metrics.
       type: bool
       default: true
+      options:
+        gridColumns: 12
 
     - name: username
       label: Username
@@ -99,17 +101,9 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
-      advancedConfig: true
-
-    - name: insecure_skip_verify
-      label: Skip TLS Certificate Verification
-      description: Enable to skip TLS certificate verification.
-      type: bool
-      default: false
-      relevantIf:
-        - name: enable_tls
-          operator: equals
-          value: true
+      options:
+        gridColumns: 12
+        sectionHeader: true
       advancedConfig: true
 
     - name: ca_file
@@ -148,30 +142,45 @@ spec:
           value: true
       advancedConfig: true
 
+    - name: insecure_skip_verify
+      label: Skip TLS Certificate Verification
+      description: Enable to skip TLS certificate verification.
+      type: bool
+      default: false
+      relevantIf:
+        - name: enable_tls
+          operator: equals
+          value: true
+      advancedConfig: true
+
     - name: metric_filtering
-      label: Metric Filtering
+      label: Filtering
       type: bool
       default: false
       relevantIf:
         - name: enable_metrics
           operator: equals
           value: true
+      options:
+        gridColumns: 12
+        sectionHeader: true
       advancedConfig: true
 
     - name: disable_metrics
       label: Metrics
-      description: Toggle the metrics you wish to collect on and off.
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - postgresql.backends
-        - postgresql.blocks_read
-        - postgresql.commits
-        - postgresql.db_size
-        - postgresql.operations
-        - postgresql.rollbacks
-        - postgresql.rows
+        metricCategories:
+          - label: Metrics
+            metrics:
+              - name: postgresql.backends
+              - name: postgresql.blocks_read
+              - name: postgresql.commits
+              - name: postgresql.db_size
+              - name: postgresql.operations
+              - name: postgresql.rollbacks
+              - name: postgresql.rows
+      default: []
       relevantIf:
         - name: enable_metrics
           operator: equals
@@ -188,6 +197,8 @@ spec:
       description: Enable to collect logs.
       type: bool
       default: true
+      options:
+        gridColumns: 12
 
     - name: postgresql_log_path
       label: Log Paths

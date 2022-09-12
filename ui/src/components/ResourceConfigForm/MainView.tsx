@@ -1,10 +1,7 @@
 import { Grid, Button, Typography } from "@mui/material";
 import { isFunction } from "lodash";
 import { ParameterDefinition } from "../../graphql/generated";
-import { classes } from "../../utils/styles";
 import {
-  ButtonFooter,
-  FormTitle,
   ParameterInput,
   ResourceNameInput,
   satisfiesRelevantIf,
@@ -13,13 +10,19 @@ import {
 } from ".";
 import { InlineProcessorContainer } from "./InlineProcessorContainer";
 import { useResourceFormValues } from "./ResourceFormContext";
+import { useResourceDialog } from "../ResourceDialog/ResourceDialogContext";
+import { memo, useMemo } from "react";
+import { TitleSection } from "../ResourceDialog/TitleSection";
+import { ContentSection } from "../ResourceDialog/ContentSection";
+import { ActionsSection } from "../ResourceDialog/ActionSection";
+import { initFormErrors } from "./init-form-values";
 
 import mixins from "../../styles/mixins.module.scss";
 
 interface MainProps {
-  title: string;
-  description: string;
   kind: "source" | "destination" | "processor";
+  displayName: string;
+  description: string;
   formValues: { [key: string]: any };
   includeNameField?: boolean;
   existingResourceNames?: string[];
@@ -35,10 +38,10 @@ interface MainProps {
   disableSave?: boolean;
 }
 
-export const MainView: React.FC<MainProps> = ({
-  title,
-  description,
+export const MainViewComponent: React.FC<MainProps> = ({
   kind,
+  displayName,
+  description,
   formValues,
   includeNameField,
   existingResourceNames,
@@ -52,102 +55,115 @@ export const MainView: React.FC<MainProps> = ({
   onEditProcessor,
   disableSave,
 }) => {
-  const { errors } = useValidationContext();
+  const { touchAll, setErrors } = useValidationContext();
   const { setFormValues } = useResourceFormValues();
+  const { purpose, onClose } = useResourceDialog();
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function handleSubmit() {
+    const errors = initFormErrors(
+      parameterDefinitions,
+      formValues,
+      kind,
+      includeNameField
+    );
+
+    if (!isValid(errors)) {
+      touchAll();
+      setErrors(errors);
+      return;
+    }
 
     isFunction(onSave) && onSave(formValues);
   }
 
   const primaryButton: JSX.Element = (
     <Button
-      disabled={!isValid(errors) || disableSave}
+      disabled={disableSave}
       type="submit"
       variant="contained"
       data-testid="resource-form-save"
+      onClick={handleSubmit}
     >
       {saveButtonLabel ?? "Save"}
     </Button>
   );
 
-  const backButton: JSX.Element = (
+  const backButton: JSX.Element | null = isFunction(onBack) ? (
     <Button variant="contained" color="secondary" onClick={onBack}>
       Back
     </Button>
-  );
+  ) : null;
 
-  const deleteButton: JSX.Element | undefined = isFunction(onDelete) ? (
-    <Button
-      variant="outlined"
-      color="error"
-      onClick={onDelete}
-      classes={{ root: mixins["mr-2"] }}
-    >
+  const deleteButton: JSX.Element | null = isFunction(onDelete) ? (
+    <Button variant="outlined" color="error" onClick={onDelete}>
       Delete
     </Button>
-  ) : undefined;
+  ) : null;
+
+  const title = useMemo(() => {
+    const capitalizedResource = kind[0].toUpperCase() + kind.slice(1);
+    const action = purpose === "create" ? "Add" : "Edit";
+    return `${action} ${capitalizedResource}: ${displayName}`;
+  }, [displayName, kind, purpose]);
 
   return (
     <>
-      <FormTitle title={title} description={description} />
+      <TitleSection title={title} description={description} onClose={onClose} />
 
-      <form onSubmit={handleSubmit} data-testid="resource-form">
-        <Grid
-          container
-          direction={"column"}
-          spacing={3}
-          className={classes([mixins["form-width"], mixins["mb-5"]])}
-        >
-          {includeNameField && (
-            <Grid item>
-              <ResourceNameInput
-                kind={kind}
-                value={formValues.name}
-                onValueChange={(v: string) =>
-                  setFormValues((prev) => ({ ...prev, name: v }))
+      <ContentSection>
+        <form data-testid="resource-form">
+          <Grid container spacing={3} className={mixins["mb-5"]}>
+            {includeNameField && (
+              <Grid item xs={6}>
+                <ResourceNameInput
+                  kind={kind}
+                  value={formValues.name}
+                  onValueChange={(v: string) =>
+                    setFormValues((prev) => ({ ...prev, name: v }))
+                  }
+                  existingNames={existingResourceNames}
+                />
+              </Grid>
+            )}
+
+            <Grid item xs={12}>
+              <Typography fontWeight={600} fontSize={24}>
+                Configure
+              </Typography>
+            </Grid>
+
+            {parameterDefinitions.length === 0 ? (
+              <Grid item>
+                <Typography>No additional configuration needed.</Typography>
+              </Grid>
+            ) : (
+              parameterDefinitions.map((p) => {
+                if (satisfiesRelevantIf(formValues, p)) {
+                  return <ParameterInput key={p.name} definition={p} />;
                 }
-                existingNames={existingResourceNames}
-              />
-            </Grid>
-          )}
-          <Grid item>
-            <Typography fontWeight={600}>Configure</Typography>
+
+                return null;
+              })
+            )}
           </Grid>
-          {parameterDefinitions.length === 0 ? (
-            <Grid item>
-              <Typography>No additional configuration needed.</Typography>
-            </Grid>
-          ) : (
-            parameterDefinitions.map((p) => {
-              if (satisfiesRelevantIf(formValues, p)) {
-                return (
-                  <Grid key={p.name} item>
-                    <ParameterInput definition={p} />
-                  </Grid>
-                );
-              }
 
-              return null;
-            })
+          {enableProcessors && (
+            <InlineProcessorContainer
+              processors={formValues.processors ?? []}
+              onAddProcessor={onAddProcessor}
+              onEditProcessor={onEditProcessor}
+            />
           )}
-        </Grid>
+        </form>
+      </ContentSection>
 
-        {enableProcessors && (
-          <InlineProcessorContainer
-            processors={formValues.processors ?? []}
-            onAddProcessor={onAddProcessor}
-            onEditProcessor={onEditProcessor}
-          />
-        )}
-
-        <ButtonFooter
-          backButton={backButton}
-          secondaryButton={deleteButton ?? <></>}
-          primaryButton={primaryButton}
-        />
-      </form>
+      <ActionsSection>
+        {deleteButton}
+        {backButton}
+        {primaryButton}
+      </ActionsSection>
     </>
   );
 };
+
+export const MainView = memo(MainViewComponent);

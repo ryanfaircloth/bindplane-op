@@ -14,8 +14,6 @@ import { validateMapField } from "../validation-functions";
 import { useValidationContext } from "../ValidationContext";
 import { ParamInputProps } from "./ParameterInput";
 
-import styles from "./parameter-input.module.scss";
-
 const MapParamInputComponent: React.FC<
   ParamInputProps<Record<string, string>>
 > = ({ definition, value, onValueChange }) => {
@@ -23,8 +21,6 @@ const MapParamInputComponent: React.FC<
   const [controlValue, setControlValue] = useState<Tuple[]>(initValue);
 
   const { errors, setError, touched, touch } = useValidationContext();
-
-  const indent = definition.relevantIf != null;
 
   const onChangeInput = useMemo(() => {
     return function (
@@ -106,38 +102,22 @@ const MapParamInputComponent: React.FC<
 
   return (
     <>
-      <label
-        className={indent ? styles.indent : undefined}
-        aria-required={definition.required}
-        htmlFor={definition.name}
-      >
+      <label aria-required={definition.required} htmlFor={definition.name}>
         {definition.label}
         {definition.required && " *"}
       </label>
 
       {touched[definition.name] && errors[definition.name] && (
-        <FormHelperText
-          className={indent ? styles.indent : undefined}
-          key={"error-text"}
-          error
-        >
+        <FormHelperText key={"error-text"} error>
           {errors[definition.name]}
         </FormHelperText>
       )}
 
-      <FormHelperText
-        key={"description-text"}
-        className={indent ? styles.indent : undefined}
-      >
+      <FormHelperText key={"description-text"}>
         {definition.description}
       </FormHelperText>
 
-      <Grid
-        container
-        spacing={1}
-        marginY={1}
-        className={indent ? styles.indent : undefined}
-      >
+      <Grid container spacing={1} marginY={1}>
         <Grid item xs={6}>
           <Typography marginLeft={4} fontWeight={600}>
             Key
@@ -150,7 +130,7 @@ const MapParamInputComponent: React.FC<
         </Grid>
       </Grid>
 
-      <Stack spacing={1} className={indent ? styles.indent : undefined}>
+      <Stack spacing={1}>
         {controlValue.map(([k, v], rowIndex) => {
           return (
             <Stack

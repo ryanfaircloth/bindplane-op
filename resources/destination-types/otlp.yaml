@@ -18,7 +18,7 @@ spec:
 
     - name: hostname
       label: Hostname
-      description: Hostname or IP address to which the exporter is going to send OTLP data.
+      description: Hostname or IP address where the exporter will send OTLP data.
       type: string
       default: ""
       required: true
@@ -48,6 +48,8 @@ spec:
       description: Whether or not to use TLS.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       advancedConfig: true
 
     - name: insecure_skip_verify

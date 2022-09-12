@@ -58,6 +58,8 @@ spec:
       label: Enable Authentication
       type: bool
       default: false
+      options:
+        sectionHeader: true
       advancedConfig: true
 
     - name: auth_type
@@ -70,6 +72,8 @@ spec:
         #- tls
         - kerberos
       default: basic
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_auth
           operator: equals

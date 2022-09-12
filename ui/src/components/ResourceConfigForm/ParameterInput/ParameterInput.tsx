@@ -1,3 +1,4 @@
+import { Grid } from "@mui/material";
 import { useMemo } from "react";
 import {
   BoolParamInput,
@@ -5,6 +6,7 @@ import {
   EnumsParamInput,
   IntParamInput,
   MapParamInput,
+  MetricsParamInput,
   StringParamInput,
   StringsParamInput,
   TimezoneParamInput,
@@ -30,78 +32,133 @@ export const ParameterInput: React.FC<{ definition: ParameterDefinition }> = ({
     [definition.name, setFormValues]
   );
 
-  switch (definition.type) {
-    case ParameterType.String:
-      return (
-        <StringParamInput
-          definition={definition}
-          value={formValues[definition.name]}
-          onValueChange={onValueChange}
-        />
-      );
-    case ParameterType.Strings:
-      return (
-        <StringsParamInput
-          definition={definition}
-          value={formValues[definition.name]}
-          onValueChange={onValueChange}
-        />
-      );
-    case ParameterType.Enum:
-      return (
-        <EnumParamInput
-          definition={definition}
-          value={formValues[definition.name]}
-          onValueChange={onValueChange}
-        />
-      );
-    case ParameterType.Enums:
-      return (
-        <EnumsParamInput
-          definition={definition}
-          value={formValues[definition.name]}
-          onValueChange={onValueChange}
-        />
-      );
-    case ParameterType.Bool:
-      return (
-        <BoolParamInput
-          definition={definition}
-          value={formValues[definition.name]}
-          onValueChange={onValueChange}
-        />
-      );
-    case ParameterType.Int:
-      return (
-        <IntParamInput
-          definition={definition}
-          value={formValues[definition.name]}
-          onValueChange={onValueChange}
-        />
-      );
-    case ParameterType.Map:
-      return (
-        <MapParamInput
-          definition={definition}
-          value={formValues[definition.name]}
-          onValueChange={onValueChange}
-        />
-      );
-    case ParameterType.Yaml:
-      return (
-        <YamlParamInput
-          definition={definition}
-          value={formValues[definition.name]}
-          onValueChange={onValueChange}
-        />
-      );
-    case ParameterType.Timezone:
-      return (
-        <TimezoneParamInput
-          definition={definition}
-          value={formValues[definition.name]}
-          onValueChange={onValueChange}
-        />
-      );
-  }
+  const Control: JSX.Element = useMemo(() => {
+    switch (definition.type) {
+      case ParameterType.String:
+        return (
+          <StringParamInput
+            definition={definition}
+            value={formValues[definition.name]}
+            onValueChange={onValueChange}
+          />
+        );
+
+      case ParameterType.Strings:
+        return (
+          <StringsParamInput
+            definition={definition}
+            value={formValues[definition.name]}
+            onValueChange={onValueChange}
+          />
+        );
+
+      case ParameterType.Enum:
+        return (
+          <EnumParamInput
+            definition={definition}
+            value={formValues[definition.name]}
+            onValueChange={onValueChange}
+          />
+        );
+
+      case ParameterType.Enums:
+        return (
+          <EnumsParamInput
+            definition={definition}
+            value={formValues[definition.name]}
+            onValueChange={onValueChange}
+          />
+        );
+
+      case ParameterType.Bool:
+        return (
+          <BoolParamInput
+            definition={definition}
+            value={formValues[definition.name]}
+            onValueChange={onValueChange}
+          />
+        );
+
+      case ParameterType.Int:
+        return (
+          <IntParamInput
+            definition={definition}
+            value={formValues[definition.name]}
+            onValueChange={onValueChange}
+          />
+        );
+
+      case ParameterType.Map:
+        return (
+          <MapParamInput
+            definition={definition}
+            value={formValues[definition.name]}
+            onValueChange={onValueChange}
+          />
+        );
+
+      case ParameterType.Yaml:
+        return (
+          <YamlParamInput
+            definition={definition}
+            value={formValues[definition.name]}
+            onValueChange={onValueChange}
+          />
+        );
+
+      case ParameterType.Timezone:
+        return (
+          <TimezoneParamInput
+            definition={definition}
+            value={formValues[definition.name]}
+            onValueChange={onValueChange}
+          />
+        );
+
+      case ParameterType.Metrics:
+        return (
+          <MetricsParamInput
+            definition={definition}
+            value={formValues[definition.name]}
+            onValueChange={onValueChange}
+          />
+        );
+    }
+  }, [definition, formValues, onValueChange]);
+
+  const gridColumns = useMemo(() => {
+    if (isMetricsType(definition)) {
+      return 12;
+    }
+
+    if (isTelemetryHeader(definition)) {
+      return 12;
+    }
+
+    if (isSectionHeader(definition)) {
+      return 12;
+    }
+
+    return definition.options.gridColumns ?? 6;
+  }, [definition]);
+
+  return (
+    <Grid item xs={gridColumns}>
+      {Control}
+    </Grid>
+  );
 };
+
+function isTelemetryHeader(definition: ParameterDefinition) {
+  return ["enable_metrics", "enable_logs", "enable_traces"].includes(
+    definition.name
+  );
+}
+
+function isSectionHeader(definition: ParameterDefinition) {
+  return definition.options.sectionHeader === true;
+}
+
+function isMetricsType(definition: ParameterDefinition) {
+  return definition.type === "metrics";
+}

@@ -18,6 +18,8 @@ spec:
       description: Enable to send metrics.
       type: bool
       default: true
+      options:
+        gridColumns: 12
 
     - name: hostname
       label: Hostname
@@ -74,7 +76,7 @@ spec:
           value: true
       advancedConfig: true
 
-    - name: strict_tls_verify
+    - name: metrics_strict_tls_verify
       label: Strict TLS Certificate Verification
       description: Enable to require TLS certificate verification.
       type: bool
@@ -84,15 +86,18 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
+      options:
+        gridColumns: 12
+        sectionHeader: true
 
-    - name: ca_file
+    - name: metrics_ca_file
       label: TLS Certificate Authority File
       description: Certificate authority used to validate TLS certificates. Not required if the collector's operating system already trusts the certificate authority.
       type: string
       required: false
       default: ""
       relevantIf:
-        - name: strict_tls_verify
+        - name: metrics_strict_tls_verify
           operator: equals
           value: true
         - name: enable_metrics
@@ -100,13 +105,13 @@ spec:
           value: true
       advancedConfig: true
 
-    - name: mutual_tls
+    - name: metrics_mutual_tls
       label: Mutual TLS Authentication
       description: Enable to require TLS mutual authentication.
       type: bool
       default: false
       relevantIf:
-        - name: strict_tls_verify
+        - name: metrics_strict_tls_verify
           operator: equals
           value: true
         - name: enable_metrics
@@ -114,17 +119,17 @@ spec:
           value: true
       advancedConfig: true
 
-    - name: cert_file
+    - name: metrics_mtls_cert_file
       label: Mutual TLS Client Certificate File
       description: A TLS certificate used for client authentication, if mutual TLS is enabled.
       type: string
       required: true
       default: ""
       relevantIf:
-        - name: strict_tls_verify
+        - name: metrics_strict_tls_verify
           operator: equals
           value: true
-        - name: mutual_tls
+        - name: metrics_mutual_tls
           operator: equals
           value: true
         - name: enable_metrics
@@ -132,17 +137,17 @@ spec:
           value: true
       advancedConfig: true
 
-    - name: key_file
+    - name: metrics_mtls_key_file
       label: Mutual TLS Client Private Key File
       description: A TLS private key used for client authentication, if mutual TLS is enabled.
       type: string
       required: true
       default: ""
       relevantIf:
-        - name: strict_tls_verify
+        - name: metrics_strict_tls_verify
           operator: equals
           value: true
-        - name: mutual_tls
+        - name: metrics_mutual_tls
           operator: equals
           value: true
         - name: enable_metrics
@@ -151,7 +156,7 @@ spec:
       advancedConfig: true
 
     - name: metric_filtering
-      label: Metric Filtering
+      label: Filtering
       type: bool
       default: false
       relevantIf:
@@ -159,48 +164,74 @@ spec:
           operator: equals
           value: true
       advancedConfig: true
+      options:
+        sectionHeader: true
+        gridColumns: 12
 
     - name: disable_metrics
       label: Metrics
       description: Toggle the metrics you wish to collect on and off.
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - vcenter.cluster.cpu.effective
-        - vcenter.cluster.cpu.limit
-        - vcenter.cluster.host.count
-        - vcenter.cluster.memory.effective
-        - vcenter.cluster.memory.limit
-        - vcenter.cluster.memory.used
-        - vcenter.cluster.vm.count
-        - vcenter.datastore.disk.usage
-        - vcenter.datastore.disk.utilization
-        - vcenter.host.cpu.usage
-        - vcenter.host.cpu.utilization
-        - vcenter.host.disk.latency.avg
-        - vcenter.host.disk.latency.max
-        - vcenter.host.disk.throughput
-        - vcenter.host.memory.usage
-        - vcenter.host.memory.utilization
-        - vcenter.host.network.packet.count
-        - vcenter.host.network.packet.errors
-        - vcenter.host.network.throughput
-        - vcenter.host.network.usage
-        - vcenter.resource_pool.cpu.shares
-        - vcenter.resource_pool.cpu.usage
-        - vcenter.resource_pool.memory.shares
-        - vcenter.resource_pool.memory.usage
-        - vcenter.vm.disk.latency.avg
-        - vcenter.vm.disk.latency.max
-        - vcenter.vm.disk.throughput
-        - vcenter.vm.disk.usage
-        - vcenter.vm.disk.utilization
-        - vcenter.vm.memory.ballooned
-        - vcenter.vm.memory.usage
-        - vcenter.vm.network.packet.count
-        - vcenter.vm.network.throughput
-        - vcenter.vm.network.usage
+        metricCategories:
+          - label: Cluster
+            column: 0
+            metrics:
+              - name: vcenter.cluster.cpu.effective
+              - name: vcenter.cluster.cpu.limit
+              - name: vcenter.cluster.host.count
+              - name: vcenter.cluster.memory.effective
+              - name: vcenter.cluster.memory.limit
+              - name: vcenter.cluster.memory.used
+              - name: vcenter.cluster.vm.count
+
+          - label: Host
+            column: 0
+            metrics:
+              - name: vcenter.host.cpu.usage
+              - name: vcenter.host.cpu.utilization
+              - name: vcenter.host.disk.latency.avg
+              - name: vcenter.host.disk.latency.max
+              - name: vcenter.host.disk.throughput
+              - name: vcenter.host.memory.usage
+              - name: vcenter.host.memory.utilization
+              - name: vcenter.host.network.packet.count
+              - name: vcenter.host.network.packet.errors
+              - name: vcenter.host.network.throughput
+              - name: vcenter.host.network.usage
+
+          - label: Datastore
+            column: 1
+            metrics:
+              - name: vcenter.datastore.disk.usage
+              - name: vcenter.datastore.disk.utilization
+
+          - label: Resource
+            column: 1
+            metrics:
+              - name: vcenter.resource_pool.cpu.shares
+              - name: vcenter.resource_pool.cpu.usage
+              - name: vcenter.resource_pool.memory.shares
+              - name: vcenter.resource_pool.memory.usage
+
+          - label: Vm.memory
+            column: 1
+            metrics:
+              - name: vcenter.vm.memory.ballooned
+              - name: vcenter.vm.memory.usage
+          - label: Vm.disk
+            column: 1
+            metrics:
+              - name: vcenter.vm.disk.latency.avg
+              - name: vcenter.vm.disk.latency.max
+              - name: vcenter.vm.disk.throughput
+              - name: vcenter.vm.disk.usage
+              - name: vcenter.vm.disk.utilization
+
+          - label: Vm.network
+            column: 1
+            metrics:
+              - name: vcenter.vm.network.packet.count
       default: []
       relevantIf:
         - name: enable_metrics
@@ -217,6 +248,8 @@ spec:
       description: Enable to collect vCenter logs.
       type: bool
       default: true
+      options:
+        gridColumns: 12
 
     - name: listen_port
       label: Listening Port
@@ -241,17 +274,19 @@ spec:
           value: true
 
     - name: enable_tls_logs
-      label: Enable TLS (Syslog)
+      label: Enable TLS
       description: Whether or not to use TLS when receiving incoming syslog.
       type: bool
       default: false
       advancedConfig: true
+      options:
+        gridColumns: 12
       relevantIf:
         - name: enable_logs
           operator: equals
           value: true
 
-    - name: cert_file
+    - name: logs_cert_file
       label: TLS Certificate File
       description: Path to the x509 PEM certificate.
       type: string
@@ -266,7 +301,7 @@ spec:
           value: true
       advancedConfig: true
 
-    - name: key_file
+    - name: logs_key_file
       label: TLS Private Key File
       description: Path to the x509 PEM private key.
       type: string
@@ -291,17 +326,17 @@ spec:
           collection_interval: {{ .collection_interval }}m
           tls:
             insecure: false
-            {{ if .strict_tls_verify }}
+            {{ if .metrics_strict_tls_verify }}
             insecure_skip_verify: false
-            {{ if .ca_file }}
-            ca_file: {{ .ca_file }}
+            {{ if .metrics_ca_file }}
+            ca_file: {{ .metrics_ca_file }}
             {{ end }}
             {{ else }}
             insecure_skip_verify: true
             {{ end }}
-            {{ if .mutual_tls }}
-            cert_file: "{{ .cert_file }}"
-            key_file: "{{ .key_file }}"
+            {{ if .metrics_mutual_tls }}
+            cert_file: "{{ .metrics_mtls_cert_file }}"
+            key_file: "{{ .metrics_mtls_key_file }}"
             {{ end }}
 
         {{ if .metric_filtering }}
@@ -330,8 +365,8 @@ spec:
             listen_ip: {{ .listen_ip }}
             {{ if .enable_tls_logs }}
             enable_tls: {{ .enable_tls_logs }}
-            certificate_file: "{{ .cert_file }}"
-            key_file: "{{ .key_file }}"
+            certificate_file: "{{ .logs_cert_file }}"
+            key_file: "{{ .logs_key_file }}"
             {{ end }}
       {{ end }}
 

@@ -17,12 +17,12 @@ export const Default = Template.bind({});
 export const RelevantIf = Template.bind({});
 
 Default.args = {
-  title: ResourceType1.metadata.displayName!,
+  displayName: ResourceType1.metadata.displayName!,
   description: ResourceType1.metadata.description!,
   parameterDefinitions: ResourceType1.spec.parameters,
 };
 RelevantIf.args = {
-  title: ResourceType2.metadata.displayName!,
+  displayName: ResourceType2.metadata.displayName!,
   description: ResourceType2.metadata.description!,
   parameterDefinitions: ResourceType2.spec.parameters,
 };

@@ -85,7 +85,7 @@ describe("ResourceForm component", () => {
     render(
       <ResourceConfigForm
         kind="destination"
-        title={ResourceType2.metadata.displayName!}
+        displayName={ResourceType2.metadata.displayName!}
         description={ResourceType2.metadata.description!}
         parameterDefinitions={ResourceType2.spec.parameters}
       />
@@ -98,7 +98,7 @@ describe("ResourceForm component", () => {
     render(
       <ResourceConfigForm
         kind="destination"
-        title={ResourceType2.metadata.displayName!}
+        displayName={ResourceType2.metadata.displayName!}
         description={ResourceType2.metadata.description!}
         parameterDefinitions={ResourceType2.spec.parameters}
       />
@@ -113,7 +113,7 @@ describe("ResourceForm component", () => {
 
   it("maintains stateful formValues as correctType", async () => {
     const expectedValues = {
-      name: "",
+      name: "some-name",
       string_name: "default-value",
       string_required_name: "default-required-value",
       enum_name: "option1",
@@ -133,12 +133,16 @@ describe("ResourceForm component", () => {
       <ResourceConfigForm
         onSave={onSave}
         kind="source"
-        title={ResourceType1.metadata.displayName!}
+        displayName={ResourceType1.metadata.displayName!}
         description={ResourceType1.metadata.description!}
         parameterDefinitions={ResourceType1.spec.parameters}
         includeNameField
       />
     );
+
+    fireEvent.change(screen.getByLabelText("Name *"), {
+      target: { value: "some-name" },
+    });
 
     screen.getByText("Save").click();
 
@@ -148,7 +152,7 @@ describe("ResourceForm component", () => {
 
   it("maintains stateful formValues as correctType after change", async () => {
     const expectedValues = {
-      name: "",
+      name: "some-name",
       string_name: "default-value",
       string_required_name: "default-required-value",
       enum_name: "option1",
@@ -168,7 +172,7 @@ describe("ResourceForm component", () => {
       <ResourceConfigForm
         onSave={onSave}
         kind="source"
-        title={ResourceType1.metadata.displayName!}
+        displayName={ResourceType1.metadata.displayName!}
         description={ResourceType1.metadata.description!}
         parameterDefinitions={ResourceType1.spec.parameters}
         includeNameField
@@ -179,32 +183,44 @@ describe("ResourceForm component", () => {
       target: { value: 50 },
     });
 
+    fireEvent.change(screen.getByLabelText("Name *"), {
+      target: { value: "some-name" },
+    });
+
     screen.getByText("Save").click();
 
     await waitFor(() => saveDone === true);
     expect(values).toEqual(expectedValues);
   });
 
-  it("disables save button when name field has an error", async () => {
+  it("will not submit when the form has an error", async () => {
+    var saveCalled: boolean = false;
     render(
       <ResourceConfigForm
-        onSave={() => {}}
+        onSave={() => {
+          saveCalled = true;
+        }}
         kind="destination"
-        title={ResourceType1.metadata.displayName!}
+        displayName={ResourceType1.metadata.displayName!}
         description={ResourceType1.metadata.description!}
         parameterDefinitions={ResourceType1.spec.parameters}
         includeNameField
       />
     );
 
-    const nameField = screen.getByTestId("name-field");
-    // this is an invalid name and should make the save button disabled
-    fireEvent.change(nameField, { target: { value: "dest-" } });
+    screen.getByText("Save").click();
+    screen.getByText("Required.");
 
-    expect(screen.getByTestId("resource-form-save")).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("Name *"), {
+      target: { value: "some-name" },
+    });
+
+    screen.getByText("Save").click();
+    await waitFor(() => expect(saveCalled).toBeTruthy());
   });
 
   it("strings type parameter validation", async () => {
+    var saveCalled: boolean = false;
     const label = "p1 label";
     const definitions: ParameterDefinition[] = [
       {
@@ -219,21 +235,26 @@ describe("ResourceForm component", () => {
 
     render(
       <ResourceConfigForm
-        onSave={() => {}}
+        onSave={() => {
+          saveCalled = true;
+        }}
         kind="destination"
-        title={"Title"}
+        displayName={"Title"}
         description={ResourceType1.metadata.description!}
         parameterDefinitions={definitions}
       />
     );
 
-    expect(screen.getByTestId("resource-form-save")).toBeDisabled();
+    // TODO dsvanlani
+    screen.getByText("Save").click();
+    screen.getByText("Required.");
 
     const input = screen.getByLabelText(`${label} *`);
     fireEvent.change(input, { target: { value: "/tmp.file.log" } });
     fireEvent.keyDown(input, { key: "Enter", code: "Enter", charCode: 13 });
 
-    expect(screen.getByTestId("resource-form-save")).not.toBeDisabled();
+    screen.getByText("Save").click();
+    await waitFor(() => expect(saveCalled).toBeTruthy());
   });
 
   describe("map type parameter validation", () => {
@@ -246,26 +267,34 @@ describe("ResourceForm component", () => {
       options: {},
     };
 
-    it("disables save button initially if required", () => {
+    it("blocks submission initially if required", () => {
+      var saveCalled: boolean = false;
+
       render(
         <ResourceConfigForm
-          onSave={() => {}}
+          onSave={() => {
+            saveCalled = true;
+          }}
           kind="destination"
-          title={"Title"}
+          displayName={"Title"}
           description={ResourceType1.metadata.description!}
           parameterDefinitions={[mapParameter]}
         />
       );
 
-      expect(screen.getByTestId("resource-form-save")).toBeDisabled();
+      screen.getByText("Save").click();
+      expect(saveCalled).toBeFalsy();
     });
 
-    it("enables save button when one non empty key is specified", () => {
+    it("enables form submission when one non empty key is specified", async () => {
+      var saveCalled: boolean = false;
       render(
         <ResourceConfigForm
-          onSave={() => {}}
+          onSave={() => {
+            saveCalled = true;
+          }}
           kind="destination"
-          title={"Title"}
+          displayName={"Title"}
           description={ResourceType1.metadata.description!}
           parameterDefinitions={[mapParameter]}
         />
@@ -275,7 +304,8 @@ describe("ResourceForm component", () => {
       fireEvent.change(firstKey, { target: { value: "blah" } });
       fireEvent.blur(firstKey);
 
-      expect(screen.getByTestId("resource-form-save")).not.toBeDisabled();
+      screen.getByText("Save").click();
+      await waitFor(() => expect(saveCalled).toBeTruthy());
     });
   });
 });
@@ -481,8 +511,8 @@ describe("Processors section", () => {
   it("displays a processors section with enableProcessors", () => {
     render(
       <ResourceConfigForm
+        displayName={ResourceType2.metadata.displayName!}
         kind="source"
-        title={ResourceType2.metadata.displayName!}
         description={ResourceType2.metadata.description!}
         parameterDefinitions={ResourceType2.spec.parameters}
         enableProcessors
@@ -531,7 +561,7 @@ describe("Processors section", () => {
         <MockedProvider mocks={processorMocks} addTypename={false}>
           <ResourceConfigForm
             kind="source"
-            title={ResourceType2.metadata.displayName!}
+            displayName={ResourceType2.metadata.displayName!}
             description={ResourceType2.metadata.description!}
             parameterDefinitions={ResourceType2.spec.parameters}
             enableProcessors
@@ -551,8 +581,10 @@ describe("Processors section", () => {
     screen.getByText(ProcessorTypeMetric.metadata.displayName!).click();
 
     // On the configuration page
-    await screen.findByText("Add a processor");
-    screen.getByText("Add Processor").click();
+    await screen.findByText(
+      `Add Processor: ${ProcessorTypeMetric.metadata.displayName}`
+    );
+    screen.getByText("Save").click();
 
     // Expect to see it in the main view
     await screen.findByText("Processors");
@@ -565,7 +597,7 @@ describe("Processors section", () => {
         <MockedProvider mocks={processorMocks} addTypename={false}>
           <ResourceConfigForm
             kind="source"
-            title={ResourceType2.metadata.displayName!}
+            displayName={ResourceType2.metadata.displayName!}
             description={ResourceType2.metadata.description!}
             parameterDefinitions={ResourceType2.spec.parameters}
             enableProcessors

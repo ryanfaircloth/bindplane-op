@@ -35,6 +35,8 @@ spec:
       description: Whether or not to use TLS.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       advancedConfig: true
 
     - name: insecure_skip_verify

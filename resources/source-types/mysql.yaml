@@ -96,11 +96,27 @@ spec:
       type: bool
       default: true
 
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+      advancedConfig: true
+
     - name: enable_general_log
       label: Enable General Log
       description: Enable to read and parse the general log file.
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -113,6 +129,9 @@ spec:
       default:
         - "/var/log/mysql/general.log"
       relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
         - name: enable_general_log
           operator: equals
           value: true
@@ -123,6 +142,8 @@ spec:
       description: Enable to read and parse the slow query log.
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -135,6 +156,9 @@ spec:
       default:
         - "/var/log/mysql/slow*.log"
       relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
         - name: enable_slow_log
           operator: equals
           value: true
@@ -145,6 +169,8 @@ spec:
       description: Enable to read and parse the error log.
       type: bool
       default: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -162,21 +188,10 @@ spec:
         # Default log path for Debian / Ubuntu
         - "/var/log/mysql/error.log"
       relevantIf:
-        - name: enable_error_log
+        - name: enable_logs
           operator: equals
           value: true
-      advancedConfig: true
-
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      relevantIf:
-        - name: enable_logs
+        - name: enable_error_log
           operator: equals
           value: true
       advancedConfig: true

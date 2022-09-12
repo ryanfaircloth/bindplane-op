@@ -79,6 +79,8 @@ spec:
       description: Whether or not to use TLS when connecting to CouchDB.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       advancedConfig: true
       relevantIf:
         - name: enable_metrics
@@ -90,6 +92,8 @@ spec:
       description: Enable to require TLS certificate verification.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       advancedConfig: true
       relevantIf:
         - name: enable_tls
@@ -122,6 +126,8 @@ spec:
       description: Enable to require TLS mutual authentication.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: strict_tls_verify
           operator: equals
@@ -178,9 +184,11 @@ spec:
 
       # Metric Filtering
     - name: metric_filtering
-      label: Metric Filtering
+      label: Filtering
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_metrics
           operator: equals
@@ -188,20 +196,21 @@ spec:
       advancedConfig: true
 
     - name: disable_metrics
-      label: Metrics
       description: Toggle the metrics you wish to collect on and off.
-      type: enums
+      type: metrics
+      default: []
       options:
-        trackUnchecked: true
-      validValues:
-        - couchdb.average_request_time
-        - couchdb.database.open
-        - couchdb.database.operations
-        - couchdb.file_descriptor.open
-        - couchdb.httpd.bulk_requests
-        - couchdb.httpd.requests
-        - couchdb.httpd.responses
-        - couchdb.httpd.views
+        metricCategories:
+          - label: Metrics
+            metrics:
+              - name: couchdb.average_request_time
+              - name: couchdb.database.open
+              - name: couchdb.database.operations
+              - name: couchdb.file_descriptor.open
+              - name: couchdb.httpd.bulk_requests
+              - name: couchdb.httpd.requests
+              - name: couchdb.httpd.responses
+              - name: couchdb.httpd.views
       relevantIf:
         - name: enable_metrics
           operator: equals

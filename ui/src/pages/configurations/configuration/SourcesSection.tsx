@@ -10,9 +10,9 @@ import {
   useSourceTypesQuery,
 } from "../../../graphql/generated";
 import { SourceCard } from "./SourceCard";
-import { ResourceDialog } from "../../../components/ResourceDialog";
+import { NewResourceDialog } from "../../../components/ResourceDialog";
 import { applyResources } from "../../../utils/rest/apply-resources";
-import { EditResourceDialog } from "../../../components/EditResourceDialog";
+import { EditResourceDialog } from "../../../components/ResourceDialog/EditResourceDialog";
 import { ConfirmDeleteResourceDialog } from "../../../components/ConfirmDeleteResourceDialog";
 import { useSnackbar } from "notistack";
 import { ShowPageConfig } from ".";
@@ -157,15 +157,14 @@ const SourcesSectionComponent: React.FC<{
       </CardContainer>
 
       <EditResourceDialog
+        displayName={sourceType?.metadata.displayName ?? ""}
+        description={sourceType?.metadata.description ?? ""}
         fullWidth
         maxWidth="sm"
-        title={sourceType?.metadata.displayName ?? ""}
-        description={sourceType?.metadata.description ?? ""}
         kind="source"
         parameterDefinitions={sourceType?.spec.parameters ?? []}
         parameters={sources[editingSourceIx]?.parameters ?? []}
         processors={sources[editingSourceIx]?.processors}
-        telemetryTypes={sourceType?.spec.telemetryTypes}
         enableProcessors
         open={editingSourceIx !== -1}
         onClose={() => setEditingSourceIx(-1)}
@@ -174,6 +173,7 @@ const SourcesSectionComponent: React.FC<{
         }}
         onDelete={() => setConfirmDeleteOpen(true)}
         onSave={onEditSourceSave}
+        telemetryTypes={sourceType?.spec.telemetryTypes}
       />
 
       <ConfirmDeleteResourceDialog
@@ -185,8 +185,7 @@ const SourcesSectionComponent: React.FC<{
         <Typography>Are you sure you want to remove this source?</Typography>
       </ConfirmDeleteResourceDialog>
 
-      <ResourceDialog
-        title={"Add a Source"}
+      <NewResourceDialog
         kind="source"
         resourceTypes={data?.sourceTypes ?? []}
         open={addDialogOpen}

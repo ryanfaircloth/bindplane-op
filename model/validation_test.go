@@ -144,6 +144,14 @@ func TestSourceTypeValidate(t *testing.T) {
 			testfile:               "sourcetype-warnings.yaml",
 			expectValidateWarnings: "11 warnings occurred:\n\t* SourceType Postgresql icon cannot be read: stat [filename]: no such file or directory\n\t* start_at parameter with label: Start Reading At should use label: Start At\n\t* start_at parameter with description: Start reading logs from 'start' or 'end'. should use description: Start reading logs from 'beginning' or 'end'.\n\t* start_at parameter with validValues: [start,end] should have validValues: [beginning,end]\n\t* start_at parameter with default: start should have default: end\n\t* start_at parameter with advancedConfig: false should have advancedConfig: true\n\t* collection_interval parameter with label: Collection Interval (s) should use label: Collection Interval\n\t* collection_interval parameter with description: How often to scrape for metrics. should use description: How often (seconds) to scrape for metrics.\n\t* collection_interval parameter with type: string should have type: int\n\t* collection_interval parameter with default: sixty should have default: 60\n\t* collection_interval parameter with advancedConfig: false should have advancedConfig: true\n\n",
 		},
+		{
+			testfile:           "sourcetype-bad-malformed-metrics.yaml",
+			expectErrorMessage: "3 errors occurred:\n\t* default is required for parameter type 'metrics'\n\t* metric category value is neither 0 nor 1\n\t* missing required field metrics on metricCategory\n\n",
+		},
+		{
+			testfile:           "sourcetype-bad-malformed-metrics-options.yaml",
+			expectErrorMessage: "3 errors occurred:\n\t* missing required name field for metric option\n\t* missing required name field for metric option\n\t* missing required name field for metric option\n\n",
+		},
 	}
 
 	for _, test := range tests {

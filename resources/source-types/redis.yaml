@@ -13,7 +13,6 @@ spec:
     - windows
   parameters:
     # Metrics
-    #
     - name: enable_metrics
       label: Enable Metrics
       description: Enable to collect metrics.
@@ -73,6 +72,8 @@ spec:
       description: Whether or not to use TLS.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_metrics
           operator: equals

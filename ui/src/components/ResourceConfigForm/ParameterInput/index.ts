@@ -11,6 +11,7 @@ export {
   tupleArrayToMap,
   valueToTupleArray,
 } from "./MapParamInput";
+export { MetricsParamInput } from "./MetricsParamInput";
 export type { Tuple } from "./MapParamInput";
 export { YamlParamInput } from "./YamlParamInput";
 export { ResourceNameInput } from "./ResourceNameParamInput";

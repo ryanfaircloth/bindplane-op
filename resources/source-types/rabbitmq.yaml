@@ -70,6 +70,8 @@ spec:
       description: Whether or not to use TLS.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_metrics
           operator: equals
@@ -124,9 +126,11 @@ spec:
       advancedConfig: true
 
     - name: metric_filtering
-      label: Metric Filtering
+      label: Filtering
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_metrics
           operator: equals
@@ -136,16 +140,18 @@ spec:
     - name: disable_metrics
       label: Metrics
       description: Toggle the metrics you wish to collect on and off.
-      type: enums
+      type: metrics
+      default: []
       options:
-        trackUnchecked: true
-      validValues:
-        - rabbitmq.consumer.count
-        - rabbitmq.message.delivered
-        - rabbitmq.message.published
-        - rabbitmq.message.acknowledged
-        - rabbitmq.message.dropped
-        - rabbitmq.message.current
+        metricCategories:
+          - label: Metrics
+            metrics:
+              - name: rabbitmq.consumer.count
+              - name: rabbitmq.message.delivered
+              - name: rabbitmq.message.published
+              - name: rabbitmq.message.acknowledged
+              - name: rabbitmq.message.dropped
+              - name: rabbitmq.message.current
       relevantIf:
         - name: enable_metrics
           operator: equals

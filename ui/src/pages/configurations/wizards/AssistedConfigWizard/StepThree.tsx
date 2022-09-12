@@ -17,7 +17,7 @@ import { AssistedWizardFormValues, ResourceConfigurationAction } from ".";
 import { PlusCircleIcon } from "../../../../components/Icons";
 import {
   DialogResource,
-  ResourceDialog,
+  NewResourceDialog,
 } from "../../../../components/ResourceDialog";
 import { useWizard } from "../../../../components/Wizard/WizardContext";
 import {
@@ -33,7 +33,7 @@ import {
   UpdateStatus,
 } from "../../../../types/resources";
 import { applyResources } from "../../../../utils/rest/apply-resources";
-import { EditResourceDialog } from "../../../../components/EditResourceDialog";
+import { EditResourceDialog } from "../../../../components/ResourceDialog/EditResourceDialog";
 import { classes } from "../../../../utils/styles";
 import { ConfirmDeleteResourceDialog } from "../../../../components/ConfirmDeleteResourceDialog";
 import { useSnackbar } from "notistack";
@@ -75,6 +75,17 @@ gql`
           options {
             creatable
             trackUnchecked
+            sectionHeader
+            gridColumns
+            metricCategories {
+              label
+              column
+              metrics {
+                name
+                description
+                kpi
+              }
+            }
           }
         }
         supportedPlatforms
@@ -256,10 +267,10 @@ export const StepThree: React.FC = () => {
 
     return (
       <EditResourceDialog
+        displayName={formValues.destination.resourceConfiguration.name!}
+        description={currentDestinationType.metadata.description ?? ""}
         fullWidth
         maxWidth="sm"
-        title={formValues.destination.resourceConfiguration.name!}
-        description={currentDestinationType.metadata.description ?? ""}
         parameterDefinitions={currentDestinationType.spec.parameters}
         parameters={
           formValues.destination?.resourceConfiguration.parameters ?? []
@@ -415,7 +426,7 @@ export const StepThree: React.FC = () => {
         </Typography>
       </ConfirmDeleteResourceDialog>
 
-      <ResourceDialog
+      <NewResourceDialog
         title="Choose a Destination"
         kind="destination"
         open={addDestinationOpen}

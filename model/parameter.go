@@ -37,6 +37,7 @@ const (
 	yamlType     = "yaml"
 	mapType      = "map"
 	timezoneType = "timezone"
+	metricsType  = "metrics"
 )
 
 // ParameterDefinition is a basic description of a definition's parameter. This implementation comes directly from
@@ -79,6 +80,33 @@ type ParameterOptions struct {
 	// TrackUnchecked will modify the "enums" parameter to store the
 	// unchecked values as the value.
 	TrackUnchecked bool `json:"trackUnchecked" yaml:"trackUnchecked"`
+
+	// GridColumns will specify the number of flex-grid columns the
+	// control will take up, must be an integer between 1 and 12 or
+	// unspecified.
+	GridColumns *int `json:"gridColumns,omitempty" yaml:"gridColumns,omitempty"`
+
+	// SectionHeader is used to indicate that the bool parameter input is
+	// a switch for further configuration for UI styling.
+	SectionHeader *bool `json:"sectionHeader,omitempty" yaml:"sectionHeader,omitempty"`
+
+	MetricCategories []MetricCategory `json:"metricCategories" yaml:"metricCategories"`
+}
+
+// MetricCategory consists of the label, optional column, and metrics for a metricsType Parameter
+type MetricCategory struct {
+	Label string `json:"label" yaml:"label"`
+	// 0 or 1
+	Column int `json:"column" yaml:"column"`
+
+	Metrics []MetricOption `json:"metrics" yaml:"metrics"`
+}
+
+// MetricOption is an individual metric that can be specified for a metricsType Parameter
+type MetricOption struct {
+	Name        string  `json:"name" yaml:"name"`
+	Description *string `json:"description" yaml:"description"`
+	KPI         *bool   `json:"kpi" yaml:"kpi"`
 }
 
 // RelevantIfCondition specifies a condition under which a parameter is deemed relevant.
@@ -105,13 +133,11 @@ func (p ParameterDefinition) validateDefinition(kind Kind, errs validation.Error
 		errs.Add(err)
 	}
 
-	if err := p.validateOptions(); err != nil {
-		errs.Add(err)
-	}
-
 	if err := p.validateDefault(); err != nil {
 		errs.Add(err)
 	}
+
+	p.validateOptions(errs)
 
 	p.validateSpecialParameters(kind, errs)
 }
@@ -196,7 +222,7 @@ func (p ParameterDefinition) validateType() error {
 		)
 	}
 	switch p.Type {
-	case stringType, intType, boolType, stringsType, enumType, enumsType, mapType, yamlType, timezoneType: // ok
+	case stringType, intType, boolType, stringsType, enumType, enumsType, mapType, yamlType, timezoneType, metricsType: // ok
 	default:
 		return errors.NewError(
 			fmt.Sprintf("invalid type '%s' for '%s'", p.Type, p.Name),
@@ -206,21 +232,17 @@ func (p ParameterDefinition) validateType() error {
 	return nil
 }
 
-func (p ParameterDefinition) validateOptions() error {
-	err := &multierror.Error{}
-
+func (p ParameterDefinition) validateOptions(errs validation.Errors) {
 	if p.Options.Creatable && p.Type != "enum" {
-		multierror.Append(err,
+		errs.Add(
 			errors.NewError(
 				fmt.Sprintf("creatable is true for parameter of type '%s'", p.Type),
 				"remove 'creatable' field or change type to 'enum'",
-			),
-		)
+			))
 	}
 
 	if p.Options.TrackUnchecked && p.Type != "enums" {
-		multierror.Append(
-			err,
+		errs.Add(
 			errors.NewError(
 				fmt.Sprintf("trackUnchecked is true for parameter of type `%s`", p.Type),
 				"remove 'trackUnchecked' field or change type to 'enums`",
@@ -228,7 +250,71 @@ func (p ParameterDefinition) validateOptions() error {
 		)
 	}
 
-	return err.ErrorOrNil()
+	p.validateMetricCategories(errs)
+}
+
+func (p ParameterDefinition) validateMetricCategories(errs validation.Errors) {
+	switch p.Type {
+	case metricsType:
+		if p.Options.MetricCategories == nil {
+			errs.Add(
+				errors.NewError("options.metricCategories is required for type metrics",
+					"include a metricCategories field under options or change the type from 'metrics'",
+				),
+			)
+		}
+
+		for _, category := range p.Options.MetricCategories {
+			category.validateMetricCategory(errs)
+		}
+
+	default:
+		if p.Options.MetricCategories != nil {
+			errs.Add(
+				errors.NewError(fmt.Sprintf("options.metricCategories is not a valid option for type '%s'", p.Type),
+					"remove metricCategories field under options or change the type to 'metrics'",
+				),
+			)
+		}
+
+	}
+
+}
+
+func (m *MetricCategory) validateMetricCategory(errs validation.Errors) {
+	if m.Label == "" {
+		errs.Add(
+			errors.NewError(
+				"missing required field Label in metric category",
+				"make sure all metric categories contain a label field",
+			))
+	}
+
+	if m.Column != 0 && m.Column != 1 {
+		errs.Add(
+			errors.NewError(
+				"metric category value is neither 0 nor 1",
+				"make sure metric category column field is either 0 or 1",
+			))
+	}
+
+	if m.Metrics == nil || len(m.Metrics) == 0 {
+		errs.Add(
+			errors.NewError(
+				"missing required field metrics on metricCategory",
+				"add a an array of MetricOptions to the metricCategory",
+			))
+	}
+
+	for _, metricOption := range m.Metrics {
+		if metricOption.Name == "" {
+			errs.Add(
+				errors.NewError(
+					"missing required name field for metric option",
+					"add a name field for each metric option in a metric category",
+				))
+		}
+	}
 }
 
 func (p ParameterDefinition) validateValidValues() error {
@@ -252,12 +338,17 @@ func (p ParameterDefinition) validateValidValues() error {
 }
 
 func (p ParameterDefinition) validateDefault() error {
-	if p.Default == nil {
+	switch {
+	case p.Type == metricsType && p.Default == nil:
+		return errors.NewError(
+			"default is required for parameter type 'metrics'",
+			"set the default value to an empty array",
+		)
+	case p.Default == nil:
 		return nil
+	default:
+		return p.validateValueType(parameterFieldDefault, p.Default)
 	}
-
-	// Validate that Default corresponds to Type
-	return p.validateValueType(parameterFieldDefault, p.Default)
 }
 
 type parameterFieldType string
@@ -289,6 +380,8 @@ func (p ParameterDefinition) validateValueType(fieldType parameterFieldType, val
 		return p.validateYamlValue(fieldType, value)
 	case timezoneType:
 		return p.validateTimezoneType(fieldType, value)
+	case metricsType:
+		return p.validateMetricsType(fieldType, value)
 	default:
 		return errors.NewError(
 			"invalid type for parameter",
@@ -446,6 +539,10 @@ func (p ParameterDefinition) validateTimezoneType(fieldType parameterFieldType, 
 	}
 
 	return nil
+}
+
+func (p ParameterDefinition) validateMetricsType(fieldType parameterFieldType, value any) error {
+	return p.validateStringArrayValue(fieldType, value)
 }
 
 func (p ParameterDefinition) validateYamlValue(fieldType parameterFieldType, value any) error {

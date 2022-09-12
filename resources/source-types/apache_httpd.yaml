@@ -57,6 +57,8 @@ spec:
       type: bool
       default: false
       advancedConfig: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_metrics
           operator: equals
@@ -68,6 +70,8 @@ spec:
       type: bool
       default: false
       advancedConfig: true
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_tls
           operator: equals
@@ -99,6 +103,8 @@ spec:
       description: Enable to require TLS mutual authentication.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: strict_tls_verify
           operator: equals
@@ -154,9 +160,11 @@ spec:
       advancedConfig: true
 
     - name: metric_filtering
-      label: Metric Filtering
+      label: Filtering
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_metrics
           operator: equals
@@ -164,18 +172,18 @@ spec:
       advancedConfig: true
 
     - name: disable_metrics
-      label: Metrics
-      description: Toggle the metrics you wish to collect on and off.
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - apache.current_connections
-        - apache.requests
-        - apache.scoreboard
-        - apache.traffic
-        - apache.uptime
-        - apache.workers
+        metricCategories:
+          - label: Metrics
+            metrics:
+              - name: apache.current_connections
+              - name: apache.requests
+              - name: apache.scoreboard
+              - name: apache.traffic
+              - name: apache.uptime
+              - name: apache.workers
+      default: []
       relevantIf:
         - name: enable_metrics
           operator: equals

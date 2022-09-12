@@ -12,10 +12,22 @@ spec:
     - linux
     - windows
   parameters:
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      advancedConfig: true
+
     - name: enable_audit_log
       label: Audit Logs
       type: bool
       default: true
+      options:
+        sectionHeader: true
 
     - name: audit_log_path
       label: Audit Log Path(s)
@@ -33,6 +45,8 @@ spec:
       label: Alert Logs
       type: bool
       default: true
+      options:
+        sectionHeader: true
 
     - name: alert_log_path
       label: Alert Log Path(s)
@@ -50,6 +64,8 @@ spec:
       label: Listener Logs
       type: bool
       default: true
+      options:
+        sectionHeader: true
 
     - name: listener_log_path
       label: Listenr Log Path(s)
@@ -62,16 +78,6 @@ spec:
         - name: enable_listener_log
           operator: equals
           value: true
-
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      advancedConfig: true
 
   logs:
     receivers: |

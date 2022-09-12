@@ -30,9 +30,11 @@ spec:
           value: true
 
     - name: metric_filtering
-      label: Metric Filtering
+      label: Filtering
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_metrics
           operator: equals
@@ -42,22 +44,33 @@ spec:
     - name: disable_metrics
       label: Metrics
       description: Toggle the metrics you wish to collect on and off.
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - iis.connection.active
-        - iis.connection.anonymous
-        - iis.connection.attempt.count
-        - iis.network.blocked
-        - iis.network.file.count
-        - iis.network.io
-        - iis.request.count
-        - iis.request.queue.age.max
-        - iis.request.queue.count
-        - iis.request.rejected
-        - iis.thread.active
-        - iis.uptime
+        metricCategories:
+          - label: Connection
+            metrics:
+              - name: iis.connection.active
+              - name: iis.connection.anonymous
+              - name: iis.connection.attempt.count
+          - label: Network
+            column: 1
+            metrics:
+              - name: iis.network.blocked
+              - name: iis.network.file.count
+              - name: iis.network.io
+          - label: Request
+            column: 1
+            metrics:
+              - name: iis.request.count
+              - name: iis.request.queue.age.max
+              - name: iis.request.queue.count
+              - name: iis.request.rejected
+          - label: Thread
+            metrics:
+              - name: iis.thread.active
+          - label: Uptime
+            metrics:
+              - name: iis.uptime
       default: []
       relevantIf:
         - name: enable_metrics

@@ -148,6 +148,7 @@ const (
 	ParameterTypeMap      ParameterType = "map"
 	ParameterTypeYaml     ParameterType = "yaml"
 	ParameterTypeTimezone ParameterType = "timezone"
+	ParameterTypeMetrics  ParameterType = "metrics"
 )
 
 var AllParameterType = []ParameterType{
@@ -160,11 +161,12 @@ var AllParameterType = []ParameterType{
 	ParameterTypeMap,
 	ParameterTypeYaml,
 	ParameterTypeTimezone,
+	ParameterTypeMetrics,
 }
 
 func (e ParameterType) IsValid() bool {
 	switch e {
-	case ParameterTypeString, ParameterTypeStrings, ParameterTypeInt, ParameterTypeBool, ParameterTypeEnum, ParameterTypeEnums, ParameterTypeMap, ParameterTypeYaml, ParameterTypeTimezone:
+	case ParameterTypeString, ParameterTypeStrings, ParameterTypeInt, ParameterTypeBool, ParameterTypeEnum, ParameterTypeEnums, ParameterTypeMap, ParameterTypeYaml, ParameterTypeTimezone, ParameterTypeMetrics:
 		return true
 	}
 	return false

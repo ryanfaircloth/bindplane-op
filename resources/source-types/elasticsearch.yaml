@@ -108,6 +108,8 @@ spec:
       label: Enable TLS
       description: Whether or not to use TLS when connecting to Elasticsearch.
       type: bool
+      options:
+        sectionHeader: true
       default: true
       advancedConfig: true
       relevantIf:
@@ -120,6 +122,8 @@ spec:
       description: Enable to require TLS certificate verification.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       advancedConfig: true
       relevantIf:
         - name: enable_tls
@@ -143,6 +147,8 @@ spec:
       description: Enable to require TLS mutual authentication.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: strict_tls_verify
           operator: equals
@@ -174,9 +180,11 @@ spec:
       advancedConfig: true
 
     - name: metric_filtering
-      label: Metric Filtering
+      label: Filtering
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: enable_metrics
           operator: equals
@@ -184,56 +192,68 @@ spec:
       advancedConfig: true
 
     - name: disable_metrics
-      label: Metrics
       description: Toggle the metrics you wish to collect on and off.
-      type: enums
+      type: metrics
+      default: []
       options:
-        trackUnchecked: true
-      validValues:
-        - elasticsearch.breaker.memory.estimated
-        - elasticsearch.breaker.memory.limit
-        - elasticsearch.breaker.tripped
-        - elasticsearch.cluster.data_nodes
-        - elasticsearch.cluster.health
-        - elasticsearch.cluster.nodes
-        - elasticsearch.cluster.shards
-        - elasticsearch.node.cache.evictions
-        - elasticsearch.node.cache.memory.usage
-        - elasticsearch.node.cluster.connections
-        - elasticsearch.node.cluster.io
-        - elasticsearch.node.disk.io.read
-        - elasticsearch.node.disk.io.write
-        - elasticsearch.node.documents
-        - elasticsearch.node.fs.disk.available
-        - elasticsearch.node.http.connections
-        - elasticsearch.node.open_files
-        - elasticsearch.node.operations.completed
-        - elasticsearch.node.operations.time
-        - elasticsearch.node.shards.data_set.size
-        - elasticsearch.node.shards.reserved.size
-        - elasticsearch.node.shards.size
-        - elasticsearch.node.thread_pool.tasks.finished
-        - elasticsearch.node.thread_pool.tasks.queued
-        - elasticsearch.node.thread_pool.threads
-        - elasticsearch.node.translog.operations
-        - elasticsearch.node.translog.size
-        - elasticsearch.node.translog.uncommitted.size
-        - elasticsearch.os.cpu.load_avg.15m
-        - elasticsearch.os.cpu.load_avg.1m
-        - elasticsearch.os.cpu.load_avg.5m
-        - elasticsearch.os.cpu.usage
-        - elasticsearch.os.memory
-        - jvm.classes.loaded
-        - jvm.gc.collections.count
-        - jvm.gc.collections.elapsed
-        - jvm.memory.heap.committed
-        - jvm.memory.heap.max
-        - jvm.memory.heap.used
-        - jvm.memory.nonheap.committed
-        - jvm.memory.nonheap.used
-        - jvm.memory.pool.max
-        - jvm.memory.pool.used
-        - jvm.threads.count
+        metricCategories:
+          - label: Elasticsearch.breaker
+            metrics:
+              - name: elasticsearch.breaker.memory.estimated
+              - name: elasticsearch.breaker.memory.limit
+              - name: elasticsearch.breaker.tripped
+          - label: Elasticsearch.cluster
+            column: 1
+            metrics:
+              - name: elasticsearch.cluster.data_nodes
+              - name: elasticsearch.cluster.health
+              - name: elasticsearch.cluster.nodes
+              - name: elasticsearch.cluster.shards
+          - label: Elasticsearch.node
+            metrics:
+              - name: elasticsearch.node.cache.evictions
+              - name: elasticsearch.node.cache.memory.usage
+              - name: elasticsearch.node.cluster.connections
+              - name: elasticsearch.node.cluster.io
+              - name: elasticsearch.node.disk.io.read
+              - name: elasticsearch.node.disk.io.write
+              - name: elasticsearch.node.documents
+              - name: elasticsearch.node.fs.disk.available
+              - name: elasticsearch.node.http.connections
+              - name: elasticsearch.node.open_files
+              - name: elasticsearch.node.operations.completed
+              - name: elasticsearch.node.operations.time
+              - name: elasticsearch.node.shards.data_set.size
+              - name: elasticsearch.node.shards.reserved.size
+              - name: elasticsearch.node.shards.size
+              - name: elasticsearch.node.thread_pool.tasks.finished
+              - name: elasticsearch.node.thread_pool.tasks.queued
+              - name: elasticsearch.node.thread_pool.threads
+              - name: elasticsearch.node.translog.operations
+              - name: elasticsearch.node.translog.size
+              - name: elasticsearch.node.translog.uncommitted.size
+          - label: Elasticsearch.os
+            column: 1
+            metrics:
+              - name: elasticsearch.os.cpu.load_avg.15m
+              - name: elasticsearch.os.cpu.load_avg.1m
+              - name: elasticsearch.os.cpu.load_avg.5m
+              - name: elasticsearch.os.cpu.usage
+              - name: elasticsearch.os.memory
+          - label: JVM
+            column: 1
+            metrics:
+              - name: jvm.classes.loaded
+              - name: jvm.gc.collections.count
+              - name: jvm.gc.collections.elapsed
+              - name: jvm.memory.heap.committed
+              - name: jvm.memory.heap.max
+              - name: jvm.memory.heap.used
+              - name: jvm.memory.nonheap.committed
+              - name: jvm.memory.nonheap.used
+              - name: jvm.memory.pool.max
+              - name: jvm.memory.pool.used
+              - name: jvm.threads.count
       relevantIf:
         - name: enable_metrics
           operator: equals

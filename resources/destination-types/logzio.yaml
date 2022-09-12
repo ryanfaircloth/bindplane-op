@@ -52,7 +52,7 @@ spec:
           operator: equals
           value: true
 
-    - name: enable_tracing
+    - name: enable_traces
       label: Enable Tracing
       description: Enable to send spans to Logz.io.
       type: bool
@@ -65,7 +65,7 @@ spec:
       default: ""
       required: true
       relevantIf:
-        - name: enable_tracing
+        - name: enable_traces
           operator: equals
           value: true
 
@@ -86,7 +86,7 @@ spec:
 
     - name: timeout
       label: Timeout
-      description: Time to wait per individual attempt to send data to a backend. default = 30s
+      description: Time to wait per individual attempt to send data to a backend.
       type: int
       default: 30
       required: true
@@ -102,7 +102,7 @@ spec:
       {{ end }}
   traces:
     exporters: |
-      {{ if .enable_tracing }}
+      {{ if .enable_traces }}
       - logzio/tracing:
           region: "{{ .region }}"
           account_token: "{{ .tracing_token }}"

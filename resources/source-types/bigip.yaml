@@ -51,6 +51,8 @@ spec:
       description: Enable to require TLS certificate verification.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       advancedConfig: true
 
     - name: ca_file
@@ -70,6 +72,8 @@ spec:
       description: Enable to require TLS mutual authentication.
       type: bool
       default: false
+      options:
+        sectionHeader: true
       relevantIf:
         - name: strict_tls_verify
           operator: equals
@@ -101,45 +105,57 @@ spec:
       advancedConfig: true
 
     - name: metric_filtering
-      label: Metric Filtering
+      label: Filtering
       type: bool
       default: false
+      options:
+        sectionHeader: true
       advancedConfig: true
 
     - name: disable_metrics
       label: Metrics
       description: Toggle the metrics you wish to collect on and off.
-      type: enums
+      type: metrics
       options:
-        trackUnchecked: true
-      validValues:
-        - bigip.node.availability
-        - bigip.node.connection.count
-        - bigip.node.data.transmitted
-        - bigip.node.enabled
-        - bigip.node.packet.count
-        - bigip.node.request.count
-        - bigip.node.session.count
-        - bigip.pool.availability
-        - bigip.pool.connection.count
-        - bigip.pool.data.transmitted
-        - bigip.pool.enabled
-        - bigip.pool.member.count
-        - bigip.pool.packet.count
-        - bigip.pool.request.count
-        - bigip.pool_member.availability
-        - bigip.pool_member.connection.count
-        - bigip.pool_member.data.transmitted
-        - bigip.pool_member.enabled
-        - bigip.pool_member.packet.count
-        - bigip.pool_member.request.count
-        - bigip.pool_member.session.count
-        - bigip.virtual_server.availability
-        - bigip.virtual_server.connection.count
-        - bigip.virtual_server.data.transmitted
-        - bigip.virtual_server.enabled
-        - bigip.virtual_server.packet.count
-        - bigip.virtual_server.request.count
+        metricCategories:
+          - label: Node
+            column: 0
+            metrics:
+              - name: bigip.node.availability
+              - name: bigip.node.connection.count
+              - name: bigip.node.data.transmitted
+              - name: bigip.node.enabled
+              - name: bigip.node.packet.count
+              - name: bigip.node.request.count
+              - name: bigip.node.session.count
+          - label: Pool
+            column: 1
+            metrics:
+              - name: bigip.pool.availability
+              - name: bigip.pool.connection.count
+              - name: bigip.pool.data.transmitted
+              - name: bigip.pool.enabled
+              - name: bigip.pool.member.count
+              - name: bigip.pool.packet.count
+              - name: bigip.pool.request.count
+              - name: bigip.pool_member.availability
+              - name: bigip.pool_member.connection.count
+              - name: bigip.pool_member.data.transmitted
+              - name: bigip.pool_member.enabled
+              - name: bigip.pool_member.packet.count
+              - name: bigip.pool_member.request.count
+              - name: bigip.pool_member.session.count
+
+          - label: Virtual Server
+            column: 0
+            metrics:
+              - name: bigip.virtual_server.availability
+              - name: bigip.virtual_server.connection.count
+              - name: bigip.virtual_server.data.transmitted
+              - name: bigip.virtual_server.enabled
+              - name: bigip.virtual_server.packet.count
+              - name: bigip.virtual_server.request.count
+      default: []
       relevantIf:
         - name: metric_filtering
           operator: equals

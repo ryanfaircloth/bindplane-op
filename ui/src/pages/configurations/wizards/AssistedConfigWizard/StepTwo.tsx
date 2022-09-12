@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { useWizard } from "../../../../components/Wizard/WizardContext";
 import { PlusCircleIcon } from "../../../../components/Icons";
-import { ResourceDialog } from "../../../../components/ResourceDialog";
+import { NewResourceDialog } from "../../../../components/ResourceDialog";
 import { useState } from "react";
 import { gql } from "@apollo/client";
 import {
@@ -23,7 +23,7 @@ import {
   useSourceTypesQuery,
 } from "../../../../graphql/generated";
 import { AssistedWizardFormValues } from ".";
-import { EditResourceDialog } from "../../../../components/EditResourceDialog";
+import { EditResourceDialog } from "../../../../components/ResourceDialog/EditResourceDialog";
 import { ConfirmDeleteResourceDialog } from "../../../../components/ConfirmDeleteResourceDialog";
 import { classes } from "../../../../utils/styles";
 import { BPResourceConfiguration } from "../../../../utils/classes/resource-configuration";
@@ -62,6 +62,17 @@ gql`
           options {
             creatable
             trackUnchecked
+            sectionHeader
+            gridColumns
+            metricCategories {
+              label
+              column
+              metrics {
+                name
+                description
+                kpi
+              }
+            }
           }
         }
         supportedPlatforms
@@ -218,6 +229,11 @@ export const StepTwo: React.FC = (props) => {
     setOpen(true);
   }
 
+  const editingSourceType = findSourceType(
+    formValues.sources[editingSourceIx]?.type,
+    data?.sourceTypes
+  );
+
   return (
     <>
       <div className={styles.container} data-testid="step-two">
@@ -248,7 +264,7 @@ export const StepTwo: React.FC = (props) => {
             Add Source
           </Button>
 
-          <ResourceDialog
+          <NewResourceDialog
             title="Choose a Source"
             kind="source"
             open={open}
@@ -260,6 +276,9 @@ export const StepTwo: React.FC = (props) => {
       </div>
 
       <EditResourceDialog
+        displayName={editingSourceType?.metadata.displayName ?? ""}
+        description={editingSourceType?.metadata.displayName ?? ""}
+        parameterDefinitions={editingSourceType?.spec.parameters ?? []}
         fullWidth
         maxWidth="sm"
         parameters={formValues.sources[editingSourceIx]?.parameters ?? []}
@@ -270,14 +289,6 @@ export const StepTwo: React.FC = (props) => {
         }}
         onDelete={() => setRemoveModalOpen(true)}
         onSave={onEditSourceSave}
-        parameterDefinitions={
-          data?.sourceTypes.find(
-            (s: SourceType) =>
-              formValues.sources[editingSourceIx]?.type === s.metadata.name
-          )?.spec.parameters ?? []
-        }
-        title={""}
-        description={""}
         kind={"source"}
       />
 
@@ -305,3 +316,10 @@ export const StepTwo: React.FC = (props) => {
     </>
   );
 };
+
+function findSourceType(type?: string | null, sourceTypes?: SourceType[]) {
+  if (sourceTypes == null || type == null) {
+    return;
+  }
+  return sourceTypes.find((st) => st.metadata.name === type);
+}

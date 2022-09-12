@@ -11,7 +11,7 @@ import { ResourceDestinationCard } from "./ResourceDestinationCard";
 import { PlusCircleIcon } from "../../../components/Icons";
 import {
   DialogResource,
-  ResourceDialog,
+  NewResourceDialog,
 } from "../../../components/ResourceDialog";
 import { applyResources } from "../../../utils/rest/apply-resources";
 import { useSnackbar } from "notistack";
@@ -173,8 +173,7 @@ const DestinationsSectionComponent: React.FC<{
         </Stack>
       </CardContainer>
 
-      <ResourceDialog
-        title={"Add a Destination"}
+      <NewResourceDialog
         kind="destination"
         resources={data?.destinations ?? []}
         resourceTypes={data?.destinationTypes ?? []}

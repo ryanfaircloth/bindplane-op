@@ -1,10 +1,52 @@
 @use '../../../styles/typography';
-
-.indent {
-  margin-left: 48px;
-}
+@use '../../../styles/colors';
 
 .chip {
   font-family: typography.$font-family-monospace;
   max-width: 400px;
+}
+
+.telemetry-header-root {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+
+  background: #e9eaea;
+  border-radius: 4px;
+  padding-left: 8px;
+  padding-right: 8px;
+  margin-left: 0;
+}
+
+.telemetry-header-switch {
+  float: right;
+}
+
+.metric-category-label {
+  background: #e9e9ea;
+  border-radius: 4px;
+
+  padding: 4px 8px;
+}
+
+.metric-category-button {
+  border: none;
+  cursor: pointer;
+  color: colors.$endeavor;
+
+  font-size: 12px;
+}
+
+.metric-category-button:hover {
+  background: none;
+  text-decoration: underline;
+}
+
+.metric-label {
+  margin: -6px 16px -6px -11px;
+}
+
+.listbox {
+  max-height: 200px;
+  overflow: auto;
 }
