@@ -1,0 +1,112 @@
+@use '../../styles/colors';
+@use '../../styles/typography';
+
+.header {
+  position: sticky;
+  top: 0;
+
+  display: flex;
+
+  font-family: typography.$font-family-montserrat;
+  font-size: rem-calc(12px);
+  text-transform: uppercase;
+  letter-spacing: rem-calc(1px);
+
+  background-color: colors.$white;
+  border-bottom: 1px solid colors.$gray;
+  border-radius: 4px 4px 0 0;
+
+  z-index: 1;
+
+  div {
+    padding: 4px 8px;
+    border-right: 1px solid colors.$gray;
+
+    &:last-child {
+      border-right: 0;
+    }
+  }
+
+  .col-ex {
+    padding: 0;
+    border-right: 0;
+  }
+}
+
+.container {
+  height: calc(100vh - 500px);
+}
+
+.stack {
+  height: calc(100% - 30px);
+  overflow: auto;
+}
+
+.console {
+  height: 100%;
+  width: 100%;
+
+  background-color: colors.$white;
+
+  border: 1px solid colors.$gray;
+  border-radius: 4px;
+}
+
+.chip {
+  font-family: typography.$font-family-monospace;
+}
+
+.ch {
+  flex: 0 0 25px;
+  .chevron {
+    transition: transform 0.2s;
+  }
+}
+
+.ch-open {
+  flex: 0 0 20px;
+  .chevron {
+    transform: rotate(-90deg);
+    transition: transform 0.2s;
+  }
+}
+
+.dt {
+  flex: 0 0 220px;
+}
+
+.lg {
+  flex: 1 auto;
+  overflow-x: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.key {
+  width: 150px;
+}
+
+.value {
+  width: auto;
+}
+
+.card {
+  border: none;
+  border-bottom: 1px solid colors.$gray;
+
+  padding: 3px;
+}
+
+.chevron {
+  width: 15px;
+  margin: 2px 0 0 2px;
+
+  cursor: pointer;
+}
+
+.summary {
+  margin-left: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+}

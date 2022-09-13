@@ -7,6 +7,7 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/observiq/bindplane-op/internal/otlp/record"
 	"github.com/observiq/bindplane-op/internal/store/search"
 	"github.com/observiq/bindplane-op/model"
 )
@@ -48,6 +49,12 @@ type Configurations struct {
 type DestinationWithType struct {
 	Destination     *model.Destination     `json:"destination"`
 	DestinationType *model.DestinationType `json:"destinationType"`
+}
+
+type Snapshot struct {
+	Logs    []*record.Log    `json:"logs"`
+	Metrics []*record.Metric `json:"metrics"`
+	Traces  []*record.Trace  `json:"traces"`
 }
 
 type AgentChangeType string

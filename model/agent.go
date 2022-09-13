@@ -89,6 +89,17 @@ type AgentUpgrade struct {
 	Error string `json:"error,omitempty" yaml:"error,omitempty"`
 }
 
+// AgentFeatures is a bitmask of features supported by the Agent, usually based on its version.
+type AgentFeatures uint32
+
+const (
+	// AgentSupportsUpgrade will be set if this Agent can be upgraded remotely.
+	AgentSupportsUpgrade AgentFeatures = 1 << iota
+
+	// AgentSupportsSnapshots will be set if this Agent can send snapshots of recent telemetry signals.
+	AgentSupportsSnapshots
+)
+
 // Agent TODO(doc)
 type Agent struct {
 	ID              string `json:"id" yaml:"id"`
@@ -209,16 +220,49 @@ func durationDisplay(t *time.Time) string {
 }
 
 // ----------------------------------------------------------------------
-// upgrading
+// features
 
-var supportedUpgradeMinVersion = semver.Parse("1.6.0")
+var v1_6_0 = semver.Parse("1.6.0")
+var v1_8_0 = semver.Parse("1.8.0")
+
+// Features returns a bitmask of the features supported by this Agent
+func (a *Agent) Features() AgentFeatures {
+	agentVersion := semver.Parse(a.Version)
+
+	// arrange version checks newest first
+	switch {
+
+	// 1.8.0 introduced snapshots
+	case !agentVersion.IsOlder(v1_8_0):
+		return AgentSupportsUpgrade | AgentSupportsSnapshots
+
+	// 1.6.0 introduced upgrade
+	case !agentVersion.IsOlder(v1_6_0):
+		return AgentSupportsUpgrade
+
+	}
+	return 0
+}
+
+// HasFeatures returns true if this Agent supports the specified feature or features.
+func (a *Agent) HasFeatures(feature AgentFeatures) bool {
+	return a.Features().Has(feature)
+}
+
+// Has returns true if the AgentFeatures bitmask has the specified features enabled. This is simply implemented as
+// agentFeatures&feature != 0 but I prefer to avoid using bitmasks directly when possible.
+func (agentFeatures AgentFeatures) Has(feature AgentFeatures) bool {
+	return agentFeatures&feature != 0
+}
+
+// ----------------------------------------------------------------------
+// upgrading
 
 // SupportsUpgrade returns true if this agent supports upgrade
 func (a *Agent) SupportsUpgrade() bool {
 	// Ideally this would be based on the opamp flag AgentCapabilities_AcceptsPackages but agent capabilities aren't
 	// currently available on the Agent model. That should change but for now the version will be checked.
-	v := semver.Parse(a.Version)
-	return !v.IsOlder(supportedUpgradeMinVersion)
+	return a.HasFeatures(AgentSupportsUpgrade)
 }
 
 // UpgradeTo begins an upgrade by setting the status to Upgrading and setting the Upgrade field to the specified

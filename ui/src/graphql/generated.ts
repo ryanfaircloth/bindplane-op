@@ -26,6 +26,7 @@ export type Agent = {
   connectedAt?: Maybe<Scalars['Time']>;
   disconnectedAt?: Maybe<Scalars['Time']>;
   errorMessage?: Maybe<Scalars['String']>;
+  features: Scalars['Int'];
   home?: Maybe<Scalars['String']>;
   hostName?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
@@ -152,6 +153,15 @@ export enum EventType {
   Update = 'UPDATE'
 }
 
+export type Log = {
+  __typename?: 'Log';
+  attributes?: Maybe<Scalars['Map']>;
+  body?: Maybe<Scalars['Any']>;
+  resource?: Maybe<Scalars['Map']>;
+  severity?: Maybe<Scalars['String']>;
+  timestamp?: Maybe<Scalars['Time']>;
+};
+
 export type Metadata = {
   __typename?: 'Metadata';
   description?: Maybe<Scalars['String']>;
@@ -160,6 +170,17 @@ export type Metadata = {
   id: Scalars['ID'];
   labels?: Maybe<Scalars['Map']>;
   name: Scalars['String'];
+};
+
+export type Metric = {
+  __typename?: 'Metric';
+  attributes?: Maybe<Scalars['Map']>;
+  name?: Maybe<Scalars['String']>;
+  resource?: Maybe<Scalars['Map']>;
+  timestamp?: Maybe<Scalars['Time']>;
+  type?: Maybe<Scalars['String']>;
+  unit?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['Any']>;
 };
 
 export type MetricCategory = {
@@ -262,6 +283,7 @@ export type Query = {
   processorType?: Maybe<ProcessorType>;
   processorTypes: Array<ProcessorType>;
   processors: Array<Processor>;
+  snapshot: Snapshot;
   source?: Maybe<Source>;
   sourceType?: Maybe<SourceType>;
   sourceTypes: Array<SourceType>;
@@ -316,6 +338,12 @@ export type QueryProcessorTypeArgs = {
 };
 
 
+export type QuerySnapshotArgs = {
+  agentID: Scalars['String'];
+  pipelineType: PipelineType;
+};
+
+
 export type QuerySourceArgs = {
   name: Scalars['String'];
 };
@@ -350,6 +378,13 @@ export type ResourceTypeSpec = {
   supportedPlatforms: Array<Scalars['String']>;
   telemetryTypes: Array<PipelineType>;
   version: Scalars['String'];
+};
+
+export type Snapshot = {
+  __typename?: 'Snapshot';
+  logs: Array<Log>;
+  metrics: Array<Metric>;
+  traces: Array<Trace>;
 };
 
 export type Source = {
@@ -392,6 +427,18 @@ export type Suggestion = {
   query: Scalars['String'];
 };
 
+export type Trace = {
+  __typename?: 'Trace';
+  attributes?: Maybe<Scalars['Map']>;
+  end?: Maybe<Scalars['Time']>;
+  name?: Maybe<Scalars['String']>;
+  parentSpanID?: Maybe<Scalars['String']>;
+  resource?: Maybe<Scalars['Map']>;
+  spanID?: Maybe<Scalars['String']>;
+  start?: Maybe<Scalars['Time']>;
+  traceID?: Maybe<Scalars['String']>;
+};
+
 export type GetProcessorTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -404,13 +451,21 @@ export type GetProcessorTypeQueryVariables = Exact<{
 
 export type GetProcessorTypeQuery = { __typename?: 'Query', processorType?: { __typename?: 'ProcessorType', metadata: { __typename?: 'Metadata', displayName?: string | null, name: string, description?: string | null }, spec: { __typename?: 'ResourceTypeSpec', parameters: Array<{ __typename?: 'ParameterDefinition', label: string, name: string, description: string, required: boolean, type: ParameterType, default?: any | null, validValues?: Array<string> | null, relevantIf?: Array<{ __typename?: 'RelevantIfCondition', name: string, operator: RelevantIfOperatorType, value: any }> | null, options: { __typename?: 'ParameterOptions', creatable?: boolean | null, trackUnchecked?: boolean | null, gridColumns?: number | null, sectionHeader?: boolean | null, metricCategories?: Array<{ __typename?: 'MetricCategory', label: string, column: number, metrics: Array<{ __typename?: 'MetricOption', name: string, description?: string | null, kpi?: boolean | null }> }> | null }, documentation?: Array<{ __typename?: 'DocumentationLink', text: string, url: string }> | null }> } } | null };
 
+export type SnapshotQueryVariables = Exact<{
+  agentID: Scalars['String'];
+  pipelineType: PipelineType;
+}>;
+
+
+export type SnapshotQuery = { __typename?: 'Query', snapshot: { __typename?: 'Snapshot', metrics: Array<{ __typename?: 'Metric', name?: string | null, timestamp?: any | null, value?: any | null, unit?: string | null, type?: string | null, attributes?: any | null, resource?: any | null }>, logs: Array<{ __typename?: 'Log', timestamp?: any | null, body?: any | null, severity?: string | null, attributes?: any | null, resource?: any | null }>, traces: Array<{ __typename?: 'Trace', name?: string | null, traceID?: string | null, spanID?: string | null, parentSpanID?: string | null, start?: any | null, end?: any | null, attributes?: any | null, resource?: any | null }> } };
+
 export type AgentsTableQueryVariables = Exact<{
   selector?: InputMaybe<Scalars['String']>;
   query?: InputMaybe<Scalars['String']>;
 }>;
 
 
-export type AgentsTableQuery = { __typename?: 'Query', agents: { __typename?: 'Agents', query?: string | null, latestVersion: string, agents: Array<{ __typename?: 'Agent', id: string, architecture?: string | null, hostName?: string | null, labels?: any | null, platform?: string | null, version?: string | null, name: string, home?: string | null, operatingSystem?: string | null, macAddress?: string | null, type?: string | null, status: number, connectedAt?: any | null, disconnectedAt?: any | null, configurationResource?: { __typename?: 'Configuration', apiVersion: string, kind: string, metadata: { __typename?: 'Metadata', id: string, name: string }, spec: { __typename?: 'ConfigurationSpec', contentType?: string | null } } | null }>, suggestions?: Array<{ __typename?: 'Suggestion', query: string, label: string }> | null } };
+export type AgentsTableQuery = { __typename?: 'Query', agents: { __typename?: 'Agents', query?: string | null, latestVersion: string, agents: Array<{ __typename?: 'Agent', id: string, architecture?: string | null, hostName?: string | null, labels?: any | null, platform?: string | null, version?: string | null, name: string, home?: string | null, operatingSystem?: string | null, macAddress?: string | null, type?: string | null, status: number, connectedAt?: any | null, disconnectedAt?: any | null, configurationResource?: { __typename?: 'Configuration', metadata: { __typename?: 'Metadata', name: string } } | null }>, suggestions?: Array<{ __typename?: 'Suggestion', query: string, label: string }> | null } };
 
 export type GetDestinationTypeDisplayInfoQueryVariables = Exact<{
   name: Scalars['String'];
@@ -453,14 +508,14 @@ export type AgentChangesSubscriptionVariables = Exact<{
 }>;
 
 
-export type AgentChangesSubscription = { __typename?: 'Subscription', agentChanges: Array<{ __typename?: 'AgentChange', changeType: AgentChangeType, agent: { __typename?: 'Agent', id: string, name: string, architecture?: string | null, operatingSystem?: string | null, labels?: any | null, hostName?: string | null, platform?: string | null, version?: string | null, macAddress?: string | null, home?: string | null, type?: string | null, status: number, connectedAt?: any | null, disconnectedAt?: any | null, configuration?: { __typename?: 'AgentConfiguration', Collector?: string | null } | null, configurationResource?: { __typename?: 'Configuration', apiVersion: string, kind: string, metadata: { __typename?: 'Metadata', id: string, name: string }, spec: { __typename?: 'ConfigurationSpec', contentType?: string | null } } | null } }> };
+export type AgentChangesSubscription = { __typename?: 'Subscription', agentChanges: Array<{ __typename?: 'AgentChange', changeType: AgentChangeType, agent: { __typename?: 'Agent', id: string, name: string, architecture?: string | null, operatingSystem?: string | null, labels?: any | null, hostName?: string | null, platform?: string | null, version?: string | null, macAddress?: string | null, home?: string | null, type?: string | null, status: number, connectedAt?: any | null, disconnectedAt?: any | null, configuration?: { __typename?: 'AgentConfiguration', Collector?: string | null } | null, configurationResource?: { __typename?: 'Configuration', metadata: { __typename?: 'Metadata', name: string } } | null } }> };
 
 export type GetAgentAndConfigurationsQueryVariables = Exact<{
   agentId: Scalars['ID'];
 }>;
 
 
-export type GetAgentAndConfigurationsQuery = { __typename?: 'Query', agent?: { __typename?: 'Agent', id: string, name: string, architecture?: string | null, operatingSystem?: string | null, labels?: any | null, hostName?: string | null, platform?: string | null, version?: string | null, macAddress?: string | null, remoteAddress?: string | null, home?: string | null, status: number, connectedAt?: any | null, disconnectedAt?: any | null, errorMessage?: string | null, upgradeAvailable?: string | null, configuration?: { __typename?: 'AgentConfiguration', Collector?: string | null } | null, configurationResource?: { __typename?: 'Configuration', metadata: { __typename?: 'Metadata', name: string } } | null, upgrade?: { __typename?: 'AgentUpgrade', status: number, version: string, error?: string | null } | null } | null, configurations: { __typename?: 'Configurations', configurations: Array<{ __typename?: 'Configuration', metadata: { __typename?: 'Metadata', name: string, labels?: any | null }, spec: { __typename?: 'ConfigurationSpec', raw?: string | null } }> } };
+export type GetAgentAndConfigurationsQuery = { __typename?: 'Query', agent?: { __typename?: 'Agent', id: string, name: string, architecture?: string | null, operatingSystem?: string | null, labels?: any | null, hostName?: string | null, platform?: string | null, version?: string | null, macAddress?: string | null, remoteAddress?: string | null, home?: string | null, status: number, connectedAt?: any | null, disconnectedAt?: any | null, errorMessage?: string | null, upgradeAvailable?: string | null, features: number, configuration?: { __typename?: 'AgentConfiguration', Collector?: string | null } | null, configurationResource?: { __typename?: 'Configuration', metadata: { __typename?: 'Metadata', name: string } } | null, upgrade?: { __typename?: 'AgentUpgrade', status: number, version: string, error?: string | null } | null } | null, configurations: { __typename?: 'Configurations', configurations: Array<{ __typename?: 'Configuration', metadata: { __typename?: 'Metadata', name: string, labels?: any | null }, spec: { __typename?: 'ConfigurationSpec', raw?: string | null } }> } };
 
 export type GetConfigurationNamesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -659,6 +714,67 @@ export function useGetProcessorTypeLazyQuery(baseOptions?: Apollo.LazyQueryHookO
 export type GetProcessorTypeQueryHookResult = ReturnType<typeof useGetProcessorTypeQuery>;
 export type GetProcessorTypeLazyQueryHookResult = ReturnType<typeof useGetProcessorTypeLazyQuery>;
 export type GetProcessorTypeQueryResult = Apollo.QueryResult<GetProcessorTypeQuery, GetProcessorTypeQueryVariables>;
+export const SnapshotDocument = gql`
+    query snapshot($agentID: String!, $pipelineType: PipelineType!) {
+  snapshot(agentID: $agentID, pipelineType: $pipelineType) {
+    metrics {
+      name
+      timestamp
+      value
+      unit
+      type
+      attributes
+      resource
+    }
+    logs {
+      timestamp
+      body
+      severity
+      attributes
+      resource
+    }
+    traces {
+      name
+      traceID
+      spanID
+      parentSpanID
+      start
+      end
+      attributes
+      resource
+    }
+  }
+}
+    `;
+
+/**
+ * __useSnapshotQuery__
+ *
+ * To run a query within a React component, call `useSnapshotQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSnapshotQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSnapshotQuery({
+ *   variables: {
+ *      agentID: // value for 'agentID'
+ *      pipelineType: // value for 'pipelineType'
+ *   },
+ * });
+ */
+export function useSnapshotQuery(baseOptions: Apollo.QueryHookOptions<SnapshotQuery, SnapshotQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<SnapshotQuery, SnapshotQueryVariables>(SnapshotDocument, options);
+      }
+export function useSnapshotLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SnapshotQuery, SnapshotQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<SnapshotQuery, SnapshotQueryVariables>(SnapshotDocument, options);
+        }
+export type SnapshotQueryHookResult = ReturnType<typeof useSnapshotQuery>;
+export type SnapshotLazyQueryHookResult = ReturnType<typeof useSnapshotLazyQuery>;
+export type SnapshotQueryResult = Apollo.QueryResult<SnapshotQuery, SnapshotQueryVariables>;
 export const AgentsTableDocument = gql`
     query AgentsTable($selector: String, $query: String) {
   agents(selector: $selector, query: $query) {
@@ -678,14 +794,8 @@ export const AgentsTableDocument = gql`
       connectedAt
       disconnectedAt
       configurationResource {
-        apiVersion
-        kind
         metadata {
-          id
           name
-        }
-        spec {
-          contentType
         }
       }
     }
@@ -963,14 +1073,8 @@ export const AgentChangesDocument = gql`
         Collector
       }
       configurationResource {
-        apiVersion
-        kind
         metadata {
-          id
           name
-        }
-        spec {
-          contentType
         }
       }
     }
@@ -1034,6 +1138,7 @@ export const GetAgentAndConfigurationsDocument = gql`
       error
     }
     upgradeAvailable
+    features
   }
   configurations {
     configurations {

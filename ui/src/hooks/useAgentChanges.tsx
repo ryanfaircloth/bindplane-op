@@ -1,7 +1,6 @@
 import { gql } from "@apollo/client";
 import { useContext } from "react";
-import { AgentChangesContext } from "../contexts/AgentChanges";
-import { AgentChange } from "../graphql/generated";
+import { AgentChange, AgentChangesContext } from "../contexts/AgentChanges";
 
 gql`
   subscription AgentChanges($selector: String, $query: String) {
@@ -25,14 +24,8 @@ gql`
           Collector
         }
         configurationResource {
-          apiVersion
-          kind
           metadata {
-            id
             name
-          }
-          spec {
-            contentType
           }
         }
       }

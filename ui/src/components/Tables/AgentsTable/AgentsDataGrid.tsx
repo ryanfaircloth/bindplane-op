@@ -10,10 +10,10 @@ import {
 } from "@mui/x-data-grid";
 import React, { memo, useEffect, useState } from "react";
 import { renderAgentLabels, renderAgentStatus } from "../utils";
-import { Agent } from "../../../graphql/generated";
 import { Link } from "react-router-dom";
 import { AgentStatus } from "../../../types/agents";
 import { isFunction } from "lodash";
+import { AgentsTableAgent } from '.';
 
 export enum AgentsTableField {
   NAME = "name",
@@ -26,12 +26,12 @@ export enum AgentsTableField {
 
 interface AgentsDataGridProps {
   onAgentsSelected?: (agentIds: GridSelectionModel) => void;
-  isRowSelectable?: (params: GridRowParams<Agent>) => boolean;
+  isRowSelectable?: (params: GridRowParams<AgentsTableAgent>) => boolean;
   clearSelectionModelFnRef?: React.MutableRefObject<(() => void) | null>;
   density?: GridDensityTypes;
   loading: boolean;
   minHeight?: string;
-  agents?: Agent[];
+  agents?: AgentsTableAgent[];
   columnFields?: AgentsTableField[];
 }
 
@@ -77,7 +77,7 @@ const AgentsDataGridComponent: React.FC<AgentsDataGridProps> = ({
           headerName: "Configuration",
           width: 200,
           renderCell: renderConfigurationCell,
-          valueGetter: (params: GridValueGetterParams<Agent>) => {
+          valueGetter: (params: GridValueGetterParams<AgentsTableAgent>) => {
             const configuration = params.row.configurationResource;
             return configuration?.metadata?.name;
           },
@@ -95,7 +95,7 @@ const AgentsDataGridComponent: React.FC<AgentsDataGridProps> = ({
           headerName: "Labels",
           width: 300,
           renderCell: renderLabelDataCell,
-          valueGetter: (params: GridValueGetterParams<Agent>) => {
+          valueGetter: (params: GridValueGetterParams<AgentsTableAgent>) => {
             return params.row.labels;
           },
         };
@@ -103,7 +103,7 @@ const AgentsDataGridComponent: React.FC<AgentsDataGridProps> = ({
         return {
           field: AgentsTableField.NAME,
           headerName: "Name",
-          valueGetter: (params: GridValueGetterParams<Agent>) => {
+          valueGetter: (params: GridValueGetterParams<AgentsTableAgent>) => {
             return params.row.name;
           },
           renderCell: renderNameDataCell,
@@ -150,7 +150,7 @@ function renderConfigurationCell(cellParams: GridCellParams<string>) {
 }
 
 function renderNameDataCell(
-  cellParams: GridCellParams<{ name: string; id: string }, Agent>
+  cellParams: GridCellParams<{ name: string; id: string }, AgentsTableAgent>
 ): JSX.Element {
   return <Link to={`/agents/${cellParams.row.id}`}>{cellParams.row.name}</Link>;
 }

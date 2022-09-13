@@ -1,5 +1,7 @@
 import { createContext } from "react";
-import { AgentChange, useAgentChangesSubscription } from "../graphql/generated";
+import { AgentChangesSubscriptionResult, useAgentChangesSubscription } from "../graphql/generated";
+
+export type AgentChange = NonNullable<AgentChangesSubscriptionResult["data"]>["agentChanges"][0]
 
 interface AgentChangesContextValue {
   agentChanges: AgentChange[];

@@ -5,6 +5,8 @@ package mocks
 import (
 	context "context"
 
+	report "github.com/observiq/bindplane-op/internal/server/report"
+
 	mock "github.com/stretchr/testify/mock"
 
 	model "github.com/observiq/bindplane-op/model"
@@ -88,6 +90,20 @@ func (_m *Manager) AgentVersion(ctx context.Context, version string) (*model.Age
 	}
 
 	return r0, r1
+}
+
+// RequestReport sends report configuration to the specified agent
+func (_m *Manager) RequestReport(ctx context.Context, agentID string, configuration report.Configuration) error {
+	ret := _m.Called(ctx, agentID, configuration)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, report.Configuration) error); ok {
+		r0 = rf(ctx, agentID, configuration)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // EnableProtocol provides a mock function with given fields: _a0

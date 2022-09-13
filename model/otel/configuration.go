@@ -63,6 +63,34 @@ func ParseComponentID(id ComponentID) (pipelineType, name string) {
 	return parts[0], parts[1]
 }
 
+// ----------------------------------------------------------------------
+
+type configurationOptions struct {
+	includeSnapshotProcessor bool
+}
+
+func makeConfigurationOptions(options []ConfigurationOption) configurationOptions {
+	opts := configurationOptions{
+		includeSnapshotProcessor: false,
+	}
+	for _, opt := range options {
+		opt(&opts)
+	}
+	return opts
+}
+
+// ConfigurationOption is an option provided when creating a new Configuration
+type ConfigurationOption func(*configurationOptions)
+
+// WithSnapshotProcessor adds the snapshot processor to the configuration
+func WithSnapshotProcessor() ConfigurationOption {
+	return func(opts *configurationOptions) {
+		opts.includeSnapshotProcessor = true
+	}
+}
+
+// ----------------------------------------------------------------------
+
 // Configuration is a rough approximation of an OpenTelemetry configuration. It is used to help assemble a configuration
 // and marshal it to a string to send to an agent.
 type Configuration struct {
@@ -71,11 +99,13 @@ type Configuration struct {
 	Exporters  ComponentMap `yaml:"exporters,omitempty"`
 	Extensions ComponentMap `yaml:"extensions,omitempty"`
 	Service    Service      `yaml:"service"`
+
+	options configurationOptions
 }
 
 // NewConfiguration creates a new configuration with initialized fields
-func NewConfiguration() *Configuration {
-	return &Configuration{
+func NewConfiguration(options ...ConfigurationOption) *Configuration {
+	c := &Configuration{
 		Receivers:  ComponentMap{},
 		Processors: ComponentMap{},
 		Exporters:  ComponentMap{},
@@ -83,8 +113,19 @@ func NewConfiguration() *Configuration {
 		Service: Service{
 			Pipelines: Pipelines{},
 		},
+		options: makeConfigurationOptions(options),
 	}
+
+	if c.options.includeSnapshotProcessor {
+		c.Processors[SnapshotProcessorName] = nil
+	}
+
+	return c
 }
+
+// SnapshotProcessorName is the name of the snapshot processor that is inserted into each pipeline before the
+// exporter
+const SnapshotProcessorName ComponentID = "snapshotprocessor"
 
 // YAML marshals the configuration to yaml
 func (c *Configuration) YAML() (string, error) {
@@ -211,6 +252,11 @@ func (c *Configuration) AddPipeline(name string, pipelineType PipelineType, sour
 	// add any processors specified
 	p.AddProcessors(c.Processors.addComponents(s.Processors))
 	p.AddProcessors(c.Processors.addComponents(d.Processors))
+
+	if c.options.includeSnapshotProcessor {
+		// add the snapshot processor before the exporter
+		p.AddProcessors([]ComponentID{SnapshotProcessorName})
+	}
 
 	// add any exporters specified
 	p.AddExporters(c.Exporters.addComponents(s.Exporters))

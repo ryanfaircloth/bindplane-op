@@ -7,8 +7,10 @@ import {
   Typography,
   Alert,
   AlertTitle,
+  Button,
+  Tooltip,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CardContainer } from "../../components/CardContainer";
 import { ManageConfigForm } from "../../components/ManageConfigForm";
@@ -19,9 +21,15 @@ import { RawConfigWizard } from "../configurations/wizards/RawConfigWizard";
 import { useSnackbar } from "notistack";
 import { labelAgents } from "../../utils/rest/label-agents";
 import { RawConfigFormValues } from "../../types/forms";
+import {
+  hasAgentFeature,
+  AgentFeatures,
+  AgentStatus,
+} from "../../types/agents";
 import { withRequireLogin } from "../../contexts/RequireLogin";
 import { withNavBar } from "../../components/NavBar";
 import { AgentChangesProvider } from "../../contexts/AgentChanges";
+import { RecentTelemetryDialog } from "../../components/RecentTelemetryDialog/RecentTelemetryDialog";
 
 import mixins from "../../styles/mixins.module.scss";
 
@@ -57,6 +65,7 @@ gql`
         error
       }
       upgradeAvailable
+      features
     }
     configurations {
       configurations {
@@ -76,6 +85,7 @@ const AgentPageContent: React.FC = () => {
   const { id } = useParams();
   const snackbar = useSnackbar();
   const [importOpen, setImportOpen] = useState(false);
+  const [recentTelemetryOpen, setRecentTelemetryOpen] = useState(false);
 
   // AgentChanges subscription to trigger a refetch.
   const agentChanges = useAgentChangesContext();
@@ -116,6 +126,59 @@ const AgentPageContent: React.FC = () => {
     }
   }, [agentChanges, id, refetch]);
 
+  const viewTelemetryButton = useMemo(() => {
+    let disableReason: string | null = null;
+
+    if (
+      data?.agent == null ||
+      data.agent?.status === AgentStatus.DISCONNECTED
+    ) {
+      disableReason = "Cannot view recent telemetry, agent is disconnected.";
+    }
+
+    if (
+      disableReason == null &&
+      !hasAgentFeature(data!.agent!, AgentFeatures.AGENT_SUPPORTS_SNAPSHOTS)
+    ) {
+      disableReason =
+        "Upgrade Agent to v1.8.0 or later to view recent telemetry.";
+    }
+
+    if (disableReason == null && data?.agent?.configurationResource == null) {
+      disableReason =
+        "Cannot view recent telemetry for an agent with an unmanaged configuration.";
+    }
+
+    if (disableReason != null) {
+      return (
+        <Tooltip title={disableReason} disableInteractive>
+          <div style={{ display: "inline-block" }}>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => setRecentTelemetryOpen(true)}
+              sx={{ marginTop: 3 }}
+              disabled
+            >
+              View Recent Telemetry
+            </Button>
+          </div>
+        </Tooltip>
+      );
+    } else {
+      return (
+        <Button
+          variant="contained"
+          size="large"
+          onClick={() => setRecentTelemetryOpen(true)}
+          sx={{ marginTop: 3 }}
+        >
+          View Recent Telemetry
+        </Button>
+      );
+    }
+  }, [data]);
+
   // Here we use the distinction between graphql returning null vs undefined.
   // If the agent is null then this agent doesn't exist, redirect to agents.
   if (data?.agent === null) {
@@ -134,18 +197,23 @@ const AgentPageContent: React.FC = () => {
         <Typography variant="h5" classes={{ root: mixins["mb-5"] }}>
           Agent - {data.agent.name}
         </Typography>
+
         <Grid container spacing={5}>
           <Grid item xs={12} lg={6}>
             <Typography variant="h6" classes={{ root: mixins["mb-2"] }}>
               Details
             </Typography>
+
             <AgentTable agent={data.agent} />
+
             {data.agent.errorMessage && (
               <Alert severity="error" classes={{ root: mixins["mt-3"] }}>
                 <AlertTitle>Error</AlertTitle>
                 {data.agent.errorMessage}
               </Alert>
             )}
+
+            {viewTelemetryButton}
           </Grid>
           <Grid item xs={12} lg={6}>
             <ManageConfigForm
@@ -181,6 +249,12 @@ const AgentPageContent: React.FC = () => {
           </Stack>
         </DialogContent>
       </Dialog>
+
+      <RecentTelemetryDialog
+        open={recentTelemetryOpen}
+        onClose={() => setRecentTelemetryOpen(false)}
+        agentID={id!}
+      />
     </>
   );
 };

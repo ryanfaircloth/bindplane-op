@@ -317,6 +317,27 @@ definitions:
       name:
         type: string
     type: object
+  model.MetricCategory:
+    properties:
+      column:
+        description: 0 or 1
+        type: integer
+      label:
+        type: string
+      metrics:
+        items:
+          $ref: '#/definitions/model.MetricOption'
+        type: array
+    type: object
+  model.MetricOption:
+    properties:
+      description:
+        type: string
+      kpi:
+        type: boolean
+      name:
+        type: string
+    type: object
   model.Parameter:
     properties:
       name:
@@ -366,6 +387,21 @@ definitions:
         description: |-
           Creatable will modify the "enum" parameter from a select to
           a creatable select where a user can specify a custom value
+        type: boolean
+      gridColumns:
+        description: |-
+          GridColumns will specify the number of flex-grid columns the
+          control will take up, must be an integer between 1 and 12 or
+          unspecified.
+        type: integer
+      metricCategories:
+        items:
+          $ref: '#/definitions/model.MetricCategory'
+        type: array
+      sectionHeader:
+        description: |-
+          SectionHeader is used to indicate that the bool parameter input is
+          a switch for further configuration for UI styling.
         type: boolean
       trackUnchecked:
         description: |-

@@ -211,3 +211,43 @@ func TestAgentUpgradeComplete(t *testing.T) {
 		})
 	}
 }
+
+func TestFeatures(t *testing.T) {
+	tests := []struct {
+		version        string
+		expectFeatures AgentFeatures
+	}{
+		{
+			version:        "",
+			expectFeatures: 0,
+		},
+		{
+			version:        "1.5.0",
+			expectFeatures: 0,
+		},
+		{
+			version:        "1.6.0",
+			expectFeatures: AgentSupportsUpgrade,
+		},
+		{
+			version:        "1.7.0",
+			expectFeatures: AgentSupportsUpgrade,
+		},
+		{
+			version:        "1.8.0",
+			expectFeatures: AgentSupportsUpgrade | AgentSupportsSnapshots,
+		},
+		{
+			version:        "2.0.0",
+			expectFeatures: AgentSupportsUpgrade | AgentSupportsSnapshots,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.version, func(t *testing.T) {
+			agent := Agent{
+				Version: test.version,
+			}
+			require.Equal(t, test.expectFeatures, agent.Features())
+		})
+	}
+}

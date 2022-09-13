@@ -20,13 +20,19 @@ package graphql
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/observiq/bindplane-op/internal/eventbus"
 	"github.com/observiq/bindplane-op/internal/graphql/generated"
 	model1 "github.com/observiq/bindplane-op/internal/graphql/model"
+	"github.com/observiq/bindplane-op/internal/server"
+	"github.com/observiq/bindplane-op/internal/server/report"
 	"github.com/observiq/bindplane-op/internal/store"
 	"github.com/observiq/bindplane-op/model"
+	"github.com/observiq/bindplane-op/model/otel"
 	"go.uber.org/zap"
 )
 
@@ -69,6 +75,11 @@ func (r *agentResolver) UpgradeAvailable(ctx context.Context, obj *model.Agent) 
 		return &latestVersion, nil
 	}
 	return nil, nil
+}
+
+// Features is the resolver for the features field.
+func (r *agentResolver) Features(ctx context.Context, obj *model.Agent) (int, error) {
+	return int(obj.Features()), nil
 }
 
 // MatchLabels is the resolver for the matchLabels field.
@@ -321,6 +332,89 @@ func (r *queryResolver) Components(ctx context.Context) (*model1.Components, err
 		Destinations: destinations,
 		Sources:      sources,
 	}, nil
+}
+
+// Snapshot is the resolver for the snapshot field.
+func (r *queryResolver) Snapshot(ctx context.Context, agentID string, pipelineType otel.PipelineType) (*model1.Snapshot, error) {
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	signals := &model1.Snapshot{}
+
+	// construct a reporting config for this agent
+	config, err := r.bindplane.Store().AgentConfiguration(agentID)
+	if err != nil {
+		return signals, err
+	}
+	if config == nil {
+		return signals, fmt.Errorf("no configuration available for agent %s", agentID)
+	}
+
+	reportRequest := func(id string) report.Configuration {
+		rc := report.Configuration{
+			Snapshot: report.Snapshot{
+				Processor:    string(otel.SnapshotProcessorName),
+				PipelineType: pipelineType,
+				Endpoint: report.Endpoint{
+					URL: fmt.Sprintf("%s/v1/otlphttp/v1/%s", r.bindplane.Config().BindPlaneURL(), pipelineType),
+					Header: http.Header{
+						server.HeaderSessionID: []string{id},
+					},
+				},
+			},
+		}
+		r.bindplane.Logger().Info("Requesting report", zap.Any("config", rc))
+		return rc
+	}
+
+	// all three cases follow the same pattern:
+	//
+	// 1) receive a channel to await results from relayer
+	//
+	// 2) send a message to the agent with the specified session id
+	//
+	// 3) wait for results or timeout
+
+	switch pipelineType {
+	case otel.Logs:
+		id, result, cancel := r.bindplane.Relayers().Logs.AwaitResult()
+		defer cancel()
+
+		if err := r.bindplane.Manager().RequestReport(ctx, agentID, reportRequest(id)); err != nil {
+			return signals, err
+		}
+
+		select {
+		case <-ctx.Done():
+		case signals.Logs = <-result:
+		}
+	case otel.Metrics:
+		id, result, cancel := r.bindplane.Relayers().Metrics.AwaitResult()
+		defer cancel()
+
+		if err := r.bindplane.Manager().RequestReport(ctx, agentID, reportRequest(id)); err != nil {
+			return signals, err
+		}
+
+		select {
+		case <-ctx.Done():
+		case signals.Metrics = <-result:
+		}
+	case otel.Traces:
+		id, result, cancel := r.bindplane.Relayers().Traces.AwaitResult()
+		defer cancel()
+
+		if err := r.bindplane.Manager().RequestReport(ctx, agentID, reportRequest(id)); err != nil {
+			return signals, err
+		}
+
+		select {
+		case <-ctx.Done():
+		case signals.Traces = <-result:
+		}
+	}
+
+	return signals, nil
 }
 
 // Operator is the resolver for the operator field.

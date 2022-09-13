@@ -27,15 +27,15 @@ export const App: React.FC = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
-
                 {/* --------------- The following routes require authentication -------------- */}
-
                 {/* No path at "/", reroute to agents */}
                 <Route path="/" element={<Navigate to="/agents" />} />
                 <Route path="agents">
                   <Route index element={<AgentsPage />} />
                   <Route path="install" element={<InstallPage />} />
-                  <Route path=":id" element={<AgentPage />} />
+                  <Route path=":id">
+                    <Route index element={<AgentPage />} />
+                  </Route>
                 </Route>
 
                 <Route path="configurations">
@@ -44,7 +44,6 @@ export const App: React.FC = () => {
                   <Route path="new" element={<NewConfigurationPage />} />
                   <Route path=":name" element={<ViewConfiguration />} />
                 </Route>
-
                 <Route path="components">
                   <Route index element={<ComponentsPage />} />
                 </Route>

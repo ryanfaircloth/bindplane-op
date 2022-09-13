@@ -1,10 +1,14 @@
-import { Agent, AgentConfiguration } from "../../../../graphql/generated";
+import { AgentsTableAgent, AgentsTableConfiguration } from "..";
 
-function createAgent(): Agent {
+function createAgent(): AgentsTableAgent {
   const now = new Date();
   const connectedAt = new Date(now.getTime() - 5 * 60 * 1000);
   const id = makeId();
-  const configuration: AgentConfiguration = {};
+  const configurationResource: AgentsTableConfiguration = {
+    metadata: {
+      name: "configuration-name",
+    },
+  };
   return {
     id: id,
     name: `test-agent-${id}`,
@@ -13,7 +17,7 @@ function createAgent(): Agent {
     architecture: "amd64",
     connectedAt: connectedAt.toString(),
     hostName: "host-name",
-    configuration,
+    configurationResource,
     labels: {},
     macAddress: "",
     operatingSystem: "Ubuntu",
@@ -25,8 +29,8 @@ function createAgent(): Agent {
   };
 }
 
-export function generateAgents(length: number): Agent[] {
-  const agents: Agent[] = [];
+export function generateAgents(length: number): AgentsTableAgent[] {
+  const agents: AgentsTableAgent[] = [];
   for (let i = 0; i < length; i++) {
     agents.push(createAgent());
   }

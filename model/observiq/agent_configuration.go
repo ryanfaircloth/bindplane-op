@@ -108,8 +108,8 @@ func (raw *RawAgentConfiguration) Parse() (*AgentConfiguration, error) {
 
 func computeHash(contents ...[]byte) []byte {
 	h := sha256.New()
-	for _, bytes := range contents {
-		h.Write(bytes)
+	for _, b := range contents {
+		h.Write(b)
 	}
 	return h.Sum(nil)
 }

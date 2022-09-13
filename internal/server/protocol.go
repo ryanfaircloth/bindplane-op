@@ -17,6 +17,7 @@ package server
 import (
 	"context"
 
+	"github.com/observiq/bindplane-op/internal/server/report"
 	"github.com/observiq/bindplane-op/model"
 )
 
@@ -52,6 +53,9 @@ type Protocol interface {
 
 	// SendHeartbeat sends a heartbeat to the agent to keep the websocket open
 	SendHeartbeat(agentID string) error
+
+	// RequestReport sends report configuration to the specified agent
+	RequestReport(ctx context.Context, agentID string, configuration report.Configuration) error
 }
 
 // Empty returns true if the updates are empty because no changes need to be made to the agent

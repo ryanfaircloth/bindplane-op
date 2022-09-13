@@ -1,35 +1,58 @@
 import { mergeAgents } from "./merge-agents";
-import {
-  Agent,
-  AgentChange,
-  AgentChangeType,
-} from "../../../graphql/generated";
+import { AgentChangeType } from "../../../graphql/generated";
 import { cloneDeep } from "@apollo/client/utilities";
+import { AgentsTableAgent } from ".";
+import { AgentChange } from "../../../contexts/AgentChanges";
 
-const a1: Agent = {
+const a1: AgentsTableAgent = {
   id: "1",
   name: "",
   status: 1,
+  configurationResource: {
+    metadata: {
+      name: "",
+    },
+  },
 };
-const a2: Agent = {
+const a2: AgentsTableAgent = {
   id: "2",
   name: "",
   status: 1,
+  configurationResource: {
+    metadata: {
+      name: "",
+    },
+  },
 };
-const a3: Agent = {
+const a3: AgentsTableAgent = {
   id: "3",
   name: "",
   status: 1,
+  configurationResource: {
+    metadata: {
+      name: "",
+    },
+  },
 };
-const a4: Agent = {
+const a4: AgentsTableAgent = {
   id: "4",
   name: "",
   status: 1,
+  configurationResource: {
+    metadata: {
+      name: "",
+    },
+  },
 };
-const a5: Agent = {
+const a5: AgentsTableAgent = {
   id: "5",
   name: "",
   status: 1,
+  configurationResource: {
+    metadata: {
+      name: "",
+    },
+  },
 };
 
 describe("mergeAgents", () => {

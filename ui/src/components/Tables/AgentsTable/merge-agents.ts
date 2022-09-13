@@ -1,5 +1,6 @@
+import { AgentsTableAgent } from '.';
+import { AgentChange } from '../../../contexts/AgentChanges';
 import {
-  AgentChange,
   AgentChangeType,
   AgentsTableQuery,
 } from "../../../graphql/generated";
@@ -7,10 +8,10 @@ import {
 // mergeAgents updates applies the updates to the list of current agents, replacing existing agents that are updated,
 // adding new agents that are added, and removing agents that are removed.
 export function mergeAgents(
-  currentAgents: AgentsTableQuery["agents"]["agents"],
+  currentAgents: AgentsTableAgent[],
   agentUpdates: AgentChange[] | undefined
 ): AgentsTableQuery["agents"]["agents"] {
-  let newAgents: AgentsTableQuery["agents"]["agents"] = [...currentAgents];
+  let newAgents: AgentsTableAgent[] = [...currentAgents];
 
   for (const agentUpdate of agentUpdates || []) {
     switch (agentUpdate.changeType) {

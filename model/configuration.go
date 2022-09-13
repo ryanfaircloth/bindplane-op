@@ -38,7 +38,7 @@ const (
 	ConfigurationTypeRaw ConfigurationType = "raw"
 
 	// ConfigurationTypeModular configurations have Sources and Destinations that are used to generate the configuration to pass to an agent.
-	ConfigurationTypeModular = "modular"
+	ConfigurationTypeModular ConfigurationType = "modular"
 	// TODO(andy): Do we like Modular for configurations with Sources/Destinations?
 )
 
@@ -155,8 +155,8 @@ type ResourceStore interface {
 	DestinationType(name string) (*DestinationType, error)
 }
 
-// Render converts the Configuration model to a configuration that can be sent to an agent
-func (c *Configuration) Render(ctx context.Context, store ResourceStore) (string, error) {
+// Render converts the Configuration model to a configuration yaml that can be sent to an agent
+func (c *Configuration) Render(ctx context.Context, agentFeatures AgentFeatures, store ResourceStore) (string, error) {
 	ctx, span := tracer.Start(ctx, "model/Configuration/Render")
 	defer span.End()
 
@@ -164,23 +164,30 @@ func (c *Configuration) Render(ctx context.Context, store ResourceStore) (string
 		// we always prefer raw
 		return c.Spec.Raw, nil
 	}
-	return c.renderComponents(store)
+	return c.renderComponents(agentFeatures, store)
 }
 
-func (c *Configuration) renderComponents(store ResourceStore) (string, error) {
-	configuration, err := c.otelConfiguration(store)
+func (c *Configuration) renderComponents(agentFeatures AgentFeatures, store ResourceStore) (string, error) {
+	configuration, err := c.otelConfiguration(agentFeatures, store)
 	if err != nil {
 		return "", err
 	}
 	return configuration.YAML()
 }
 
-func (c *Configuration) otelConfiguration(store ResourceStore) (*otel.Configuration, error) {
+func (c *Configuration) otelConfiguration(agentFeatures AgentFeatures, store ResourceStore) (*otel.Configuration, error) {
 	if len(c.Spec.Sources) == 0 || len(c.Spec.Destinations) == 0 {
 		return nil, nil
 	}
 
-	configuration := otel.NewConfiguration()
+	options := []otel.ConfigurationOption{}
+
+	// add the snapshot processor into configs for agents that support it
+	if agentFeatures.Has(AgentSupportsSnapshots) {
+		options = append(options, otel.WithSnapshotProcessor())
+	}
+
+	configuration := otel.NewConfiguration(options...)
 
 	// match each source with each destination to produce a pipeline
 	sources, destinations, err := c.evalComponents(store)

@@ -39,6 +39,7 @@ import (
 	"github.com/observiq/bindplane-op/internal/cli/commands/profile"
 	"github.com/observiq/bindplane-op/internal/graphql"
 	"github.com/observiq/bindplane-op/internal/opamp"
+	"github.com/observiq/bindplane-op/internal/otlp"
 	"github.com/observiq/bindplane-op/internal/rest"
 	"github.com/observiq/bindplane-op/internal/server"
 	"github.com/observiq/bindplane-op/internal/server/auth"
@@ -133,6 +134,11 @@ func (s *Server) Start(bindplane *cli.BindPlane, h profile.Helper, forceConsoleC
 	err = opamp.AddRoutes(v1, server)
 	if err != nil {
 		return fmt.Errorf("failed to start OpAMP: %w", err)
+	}
+
+	err = otlp.AddRoutes(v1, server)
+	if err != nil {
+		return fmt.Errorf("failed to add OTLP endpoints: %w", err)
 	}
 
 	ui.AddRoutes(router, server)

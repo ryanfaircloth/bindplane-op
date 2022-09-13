@@ -2,9 +2,9 @@ import { gql } from "@apollo/client";
 import { debounce, isFunction } from "lodash";
 import { memo, useEffect, useMemo, useState } from "react";
 import {
-  Agent,
   AgentChangesDocument,
   AgentChangesSubscription,
+  AgentsTableQueryResult,
   Suggestion,
   useAgentsTableQuery,
 } from "../../../graphql/generated";
@@ -17,6 +17,9 @@ import {
 } from "@mui/x-data-grid";
 import { mergeAgents } from "./merge-agents";
 import { AgentStatus } from "../../../types/agents";
+
+export type AgentsTableAgent = NonNullable<AgentsTableQueryResult["data"]>["agents"]["agents"][0];
+export type AgentsTableConfiguration = NonNullable<AgentsTableAgent>["configurationResource"]
 
 gql`
   query AgentsTable($selector: String, $query: String) {
@@ -41,14 +44,8 @@ gql`
         disconnectedAt
 
         configurationResource {
-          apiVersion
-          kind
           metadata {
-            id
             name
-          }
-          spec {
-            contentType
           }
         }
       }
@@ -68,7 +65,7 @@ interface Props {
   onAgentsSelected?: (agentIds: GridSelectionModel) => void;
   onDeletableAgentsSelected?: (agentIds: GridSelectionModel) => void;
   onUpdatableAgentsSelected?: (agentIds: GridSelectionModel) => void;
-  isRowSelectable?: (params: GridRowParams<Agent>) => boolean;
+  isRowSelectable?: (params: GridRowParams<AgentsTableAgent>) => boolean;
   clearSelectionModelFnRef?: React.MutableRefObject<(() => void) | null>;
   selector?: string;
   minHeight?: string;
@@ -101,7 +98,7 @@ const AgentsTableComponent: React.FC<Props> = ({
     nextFetchPolicy: "cache-only",
   });
 
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents] = useState<AgentsTableAgent[]>([]);
   const [subQuery, setSubQuery] = useState<string>(initQuery);
 
   const debouncedRefetch = useMemo(() => debounce(refetch, 100), [refetch]);
@@ -208,13 +205,13 @@ const AgentsTableComponent: React.FC<Props> = ({
   );
 };
 
-function isDeletable(agents: Agent[], id: string): boolean {
+function isDeletable(agents: AgentsTableAgent[], id: string): boolean {
   return agents.some(
     (a) => a.id === id && a.status === AgentStatus.DISCONNECTED
   );
 }
 function isUpdatable(
-  agents: Agent[],
+  agents: AgentsTableAgent[],
   id: string,
   latestVersion?: string
 ): boolean {

@@ -1829,6 +1829,38 @@ const docTemplate = `{
                 }
             }
         },
+        "model.MetricCategory": {
+            "type": "object",
+            "properties": {
+                "column": {
+                    "description": "0 or 1",
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "metrics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.MetricOption"
+                    }
+                }
+            }
+        },
+        "model.MetricOption": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "kpi": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Parameter": {
             "type": "object",
             "properties": {
@@ -1897,6 +1929,20 @@ const docTemplate = `{
             "properties": {
                 "creatable": {
                     "description": "Creatable will modify the \"enum\" parameter from a select to\na creatable select where a user can specify a custom value",
+                    "type": "boolean"
+                },
+                "gridColumns": {
+                    "description": "GridColumns will specify the number of flex-grid columns the\ncontrol will take up, must be an integer between 1 and 12 or\nunspecified.",
+                    "type": "integer"
+                },
+                "metricCategories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.MetricCategory"
+                    }
+                },
+                "sectionHeader": {
+                    "description": "SectionHeader is used to indicate that the bool parameter input is\na switch for further configuration for UI styling.",
                     "type": "boolean"
                 },
                 "trackUnchecked": {

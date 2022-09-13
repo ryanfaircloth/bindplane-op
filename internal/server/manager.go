@@ -27,6 +27,7 @@ import (
 	"github.com/observiq/bindplane-op/common"
 	"github.com/observiq/bindplane-op/internal/agent"
 	"github.com/observiq/bindplane-op/internal/eventbus"
+	"github.com/observiq/bindplane-op/internal/server/report"
 	"github.com/observiq/bindplane-op/internal/store"
 	"github.com/observiq/bindplane-op/model"
 )
@@ -58,6 +59,8 @@ type Manager interface {
 	VerifySecretKey(ctx context.Context, secretKey string) bool
 	// ResourceStore provides access to the store to render configurations
 	ResourceStore() model.ResourceStore
+	// RequestReport sends report configuration to the specified agent
+	RequestReport(ctx context.Context, agentID string, configuration report.Configuration) error
 	// AgentVersion returns information about a version of an agent
 	AgentVersion(ctx context.Context, version string) (*model.AgentVersion, error)
 }
@@ -314,6 +317,21 @@ func (m *manager) VerifySecretKey(ctx context.Context, secretKey string) bool {
 // ResourceStore provides access to the store to render configurations
 func (m *manager) ResourceStore() model.ResourceStore {
 	return m.store
+}
+
+// RequestReport sends report configuration to the specified agent
+func (m *manager) RequestReport(ctx context.Context, agentID string, configuration report.Configuration) error {
+	ctx, span := tracer.Start(ctx, "manager/RequestReport")
+	defer span.End()
+
+	for _, p := range m.protocols {
+		err := p.RequestReport(ctx, agentID, configuration)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // AgentVersion returns information about a version of an agent

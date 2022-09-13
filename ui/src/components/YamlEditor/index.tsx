@@ -37,7 +37,7 @@ export const YamlEditor: React.FC<YamlEditorProps> = ({
   const [expandable, setExpandable] = useState(false);
 
   useEffect(() => {
-    if (ref.current && ref.current.scrollHeight > 300) {
+    if (ref.current && ref.current.scrollHeight > 500) {
       setExpandable(true);
       return;
     }

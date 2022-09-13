@@ -17,6 +17,7 @@ package opamp
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -33,6 +34,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/observiq/bindplane-op/internal/server"
+	"github.com/observiq/bindplane-op/internal/server/report"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/bindplane-op/model/observiq"
 )
@@ -294,7 +296,7 @@ func (s *opampServer) UpdateAgent(ctx context.Context, agent *model.Agent, updat
 		agentConfiguration = &observiq.AgentConfiguration{}
 	}
 
-	newConfiguration, err := s.updatedConfiguration(ctx, agentConfiguration, updates)
+	newConfiguration, err := s.updatedConfiguration(ctx, agent.Features(), agentConfiguration, updates)
 	if err != nil {
 		return fmt.Errorf("unable to get the new configuration for agent [%s]: %w", agent.ID, err)
 	}
@@ -399,6 +401,40 @@ func (s *opampServer) SendHeartbeat(agentID string) error {
 	return nil
 }
 
+// RequestReport sends report configuration to the specified agent
+func (s *opampServer) RequestReport(ctx context.Context, agentID string, configuration report.Configuration) error {
+	conn := s.connections.connection(agentID)
+	if conn != nil {
+		body, err := configuration.YAML()
+		if err != nil {
+			return err
+		}
+		s.logger.Info("RequestReport", zap.String(report.ConfigurationName, string(body)))
+		return s.send(context.Background(), conn, &protobufs.ServerToAgent{
+			RemoteConfig: &protobufs.AgentRemoteConfig{
+				ConfigHash: computeReportConfigurationHash(body),
+				Config: &protobufs.AgentConfigMap{
+					ConfigMap: map[string]*protobufs.AgentConfigFile{
+						report.ConfigurationName: {
+							Body:        body,
+							ContentType: "text/yaml",
+						},
+					},
+				},
+			},
+		})
+	}
+	return nil
+}
+
+func computeReportConfigurationHash(contents ...[]byte) []byte {
+	h := sha256.New()
+	for _, b := range contents {
+		h.Write(b)
+	}
+	return h.Sum(nil)
+}
+
 func (s *opampServer) send(ctx context.Context, conn opamp.Connection, msg *protobufs.ServerToAgent) error {
 	lock := s.connections.sendLock(conn)
 	lock.Lock()
@@ -442,7 +478,7 @@ func (s *opampServer) updateAgentConfig(ctx context.Context, agent *model.Agent,
 		return fmt.Errorf("unable to get agent updates [%s]: %w", agent.ID, err)
 	}
 
-	serverConfiguration, err := s.updatedConfiguration(ctx, agentConfiguration, updates)
+	serverConfiguration, err := s.updatedConfiguration(ctx, agent.Features(), agentConfiguration, updates)
 	if err != nil {
 		return fmt.Errorf("unable to compute the updated agent configuration [%s]: %w", agent.ID, err)
 	}
@@ -475,10 +511,10 @@ func (s *opampServer) updateAgentConfig(ctx context.Context, agent *model.Agent,
 	return nil
 }
 
-func (s *opampServer) updatedConfiguration(ctx context.Context, agentConfiguration *observiq.AgentConfiguration, updates *server.AgentUpdates) (diff observiq.AgentConfiguration, err error) {
+func (s *opampServer) updatedConfiguration(ctx context.Context, agentFeatures model.AgentFeatures, agentConfiguration *observiq.AgentConfiguration, updates *server.AgentUpdates) (diff observiq.AgentConfiguration, err error) {
 	// Configuration => collector.yaml
 	if updates.Configuration != nil {
-		newCollectorYAML, err := updates.Configuration.Render(ctx, s.manager.ResourceStore())
+		newCollectorYAML, err := updates.Configuration.Render(ctx, agentFeatures, s.manager.ResourceStore())
 		if err != nil {
 			return diff, err
 		}

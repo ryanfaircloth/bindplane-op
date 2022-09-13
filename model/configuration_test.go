@@ -109,7 +109,7 @@ func TestEvalConfiguration(t *testing.T) {
 	store.destinationTypes[cabinType.Name()] = cabinType
 
 	configuration := testResource[*Configuration](t, "configuration-macos-sources.yaml")
-	result, err := configuration.Render(context.TODO(), store)
+	result, err := configuration.Render(context.TODO(), 0, store)
 	require.NoError(t, err)
 
 	expect := strings.TrimLeft(`
@@ -188,7 +188,7 @@ func TestEvalConfiguration2(t *testing.T) {
 	store.destinationTypes[googleCloudType.Name()] = googleCloudType
 
 	configuration := testResource[*Configuration](t, "configuration-macos-googlecloud.yaml")
-	result, err := configuration.Render(context.TODO(), store)
+	result, err := configuration.Render(context.TODO(), 0, store)
 	require.NoError(t, err)
 
 	expect := strings.TrimLeft(`
@@ -289,7 +289,7 @@ func TestEvalConfiguration3(t *testing.T) {
 	store.destinationTypes[googleCloudType.Name()] = googleCloudType
 
 	configuration := testResource[*Configuration](t, "configuration-otlp.yaml")
-	result, err := configuration.Render(context.TODO(), store)
+	result, err := configuration.Render(context.TODO(), 0, store)
 	require.NoError(t, err)
 
 	expect := strings.TrimLeft(`
@@ -341,7 +341,7 @@ func TestEvalConfiguration4(t *testing.T) {
 	store.destinationTypes[googleCloudType.Name()] = googleCloudType
 
 	configuration := testResource[*Configuration](t, "configuration-postgresql-googlecloud.yaml")
-	result, err := configuration.Render(context.TODO(), store)
+	result, err := configuration.Render(context.TODO(), 0, store)
 	require.NoError(t, err)
 
 	expect := strings.TrimLeft(`
@@ -399,7 +399,7 @@ func TestEvalConfiguration5(t *testing.T) {
 	store.processorTypes[resourceAttributeTransposerType.Name()] = resourceAttributeTransposerType
 
 	configuration := testResource[*Configuration](t, "configuration-macos-processors.yaml")
-	result, err := configuration.Render(context.TODO(), store)
+	result, err := configuration.Render(context.TODO(), 0, store)
 	require.NoError(t, err)
 
 	expect := strings.TrimLeft(`
@@ -515,7 +515,7 @@ func TestEvalConfigurationFailsMissingResource(t *testing.T) {
 			// before rendering, delete resources that we reference
 			test.deleteResources()
 
-			_, err := configuration.Render(context.TODO(), store)
+			_, err := configuration.Render(context.TODO(), 0, store)
 			require.Error(t, err)
 			require.Equal(t, test.expectError, err.Error())
 

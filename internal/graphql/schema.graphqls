@@ -47,6 +47,9 @@ type Agent {
 
   # latest version of the agent if an upgrade is available
   upgradeAvailable: String
+
+  # bitmask of features supported by this agent
+  features: Int!
 }
 
 type AgentConfiguration {
@@ -302,6 +305,44 @@ type Components {
 }
 
 # ----------------------------------------------------------------------
+# telemetry
+
+type Metric {
+  name: String
+  timestamp: Time
+  value: Any
+  unit: String
+  type: String
+  attributes: Map
+  resource: Map
+}
+
+type Log {
+  timestamp: Time
+  body: Any
+  severity: String
+  attributes: Map
+  resource: Map
+}
+
+type Trace {
+  name: String
+  traceID: String
+  spanID: String
+  parentSpanID: String
+  start: Time
+  end: Time
+  attributes: Map
+  resource: Map
+}
+
+type Snapshot {
+  logs: [Log!]!
+  metrics: [Metric!]!
+  traces: [Trace!]!
+}
+
+# ----------------------------------------------------------------------
 # queries
 
 type Query {
@@ -331,6 +372,8 @@ type Query {
   destinationType(name: String!): DestinationType
 
   components: Components!
+
+  snapshot(agentID: String!, pipelineType: PipelineType!): Snapshot!
 }
 
 # ----------------------------------------------------------------------

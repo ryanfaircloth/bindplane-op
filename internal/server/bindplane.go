@@ -28,6 +28,8 @@ type BindPlane interface {
 	Store() store.Store
 	// Manager TODO(doc)
 	Manager() Manager
+	// Relayer enables Live messages to flow from Agents to GraphQL subscriptions
+	Relayers() *Relayers
 	// Versions TODO(doc)
 	Versions() agent.Versions
 	// Config TODO(doc)
@@ -49,6 +51,7 @@ func NewBindPlane(config *common.Server, logger *zap.Logger, s store.Store, vers
 			logger:   logger,
 			config:   config,
 			manager:  manager,
+			relayers: NewRelayers(logger),
 			versions: versions,
 		},
 	}, nil
@@ -60,11 +63,16 @@ type bindplane struct {
 	manager  Manager
 	logger   *zap.Logger
 	versions agent.Versions
+	relayers *Relayers
 }
 
 // Manager TODO(doc)
 func (s *bindplane) Manager() Manager {
 	return s.manager
+}
+
+func (s *bindplane) Relayers() *Relayers {
+	return s.relayers
 }
 
 // Logger TODO(doc)
