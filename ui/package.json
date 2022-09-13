@@ -6,7 +6,7 @@
   "dependencies": {
     "@mui/lab": "^5.0.0-alpha.99",
     "date-fns": "^2.29.2",
-    "graphql-ws": "^5.9.1",
+    "graphql-ws": "^5.10.2",
     "lodash": "^4.17.21",
     "nock": "^13.2.9",
     "notistack": "^2.0.5",
