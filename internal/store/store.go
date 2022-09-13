@@ -360,7 +360,7 @@ func applySortOffsetAndLimit[T any](list []T, opts queryOptions, fieldAccessor f
 
 func newBPCookieStore(secret string) *sessions.CookieStore {
 	store := sessions.NewCookieStore([]byte(secret))
-	store.Options.MaxAge = 60 * 60 // 1 hour
+	store.Options.MaxAge = 15 * 60 // 15 minutes
 	store.Options.SameSite = http.SameSiteStrictMode
 	return store
 }

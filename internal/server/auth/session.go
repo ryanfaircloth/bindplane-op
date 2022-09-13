@@ -50,5 +50,12 @@ func CheckSession(server server.BindPlane) gin.HandlerFunc {
 		}
 
 		c.Keys["authenticated"] = true
+		// Extend the cookies life by 15 minutes since the user is active and making requests.
+		session.Options.MaxAge = 15 * 60
+		err = session.Save(c.Request, c.Writer)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
 	}
 }
