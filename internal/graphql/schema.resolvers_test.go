@@ -47,6 +47,63 @@ func mockVersions() agent.Versions {
 	return v
 }
 
+func TestUpgradeAvailable(t *testing.T) {
+	stringPointer := func(s string) *string { return &s }
+
+	ctx := context.Background()
+	testCases := []struct {
+		name               string
+		latestVersion      *model.AgentVersion
+		upgradeableVersion *string
+	}{
+		{
+			name: "upgrade available",
+			latestVersion: &model.AgentVersion{
+				Spec: model.AgentVersionSpec{
+					Version: "1.6.3",
+				},
+			},
+			upgradeableVersion: stringPointer("1.6.3"),
+		},
+		{
+			name: "no upgrade available",
+			latestVersion: &model.AgentVersion{
+				Spec: model.AgentVersionSpec{
+					Version: "1.5.0",
+				},
+			},
+			upgradeableVersion: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			agentVersions := mocks.NewVersions(t)
+			agentVersions.On("LatestVersion").Return(tc.latestVersion, nil)
+			bindplane, err := server.NewBindPlane(&common.Server{},
+				zaptest.NewLogger(t),
+				store.NewMapStore(ctx, store.Options{}, zap.NewNop()),
+				agentVersions,
+			)
+			require.NoError(t, err)
+
+			resolver := agentResolver{&Resolver{
+				bindplane: bindplane,
+			}}
+			newVersion, err := resolver.UpgradeAvailable(ctx, &model.Agent{
+				Version: "1.6.1",
+			})
+
+			require.NoError(t, err)
+			if tc.upgradeableVersion != nil {
+				require.Equal(t, *tc.upgradeableVersion, *newVersion)
+			} else {
+				require.Nil(t, newVersion)
+			}
+		})
+	}
+}
+
 func TestQueryResolvers(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

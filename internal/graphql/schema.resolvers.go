@@ -31,6 +31,7 @@ import (
 	"github.com/observiq/bindplane-op/internal/server"
 	"github.com/observiq/bindplane-op/internal/server/report"
 	"github.com/observiq/bindplane-op/internal/store"
+	"github.com/observiq/bindplane-op/internal/util/semver"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/bindplane-op/model/otel"
 	"go.uber.org/zap"
@@ -70,9 +71,15 @@ func (r *agentResolver) UpgradeAvailable(ctx context.Context, obj *model.Agent) 
 	if !obj.SupportsUpgrade() {
 		return nil, nil
 	}
-	latestVersion := r.bindplane.Versions().LatestVersionString()
-	if obj.Version != latestVersion {
-		return &latestVersion, nil
+
+	latestVersion, err := r.bindplane.Versions().LatestVersion()
+	if err != nil {
+		return nil, nil
+	}
+
+	if latestVersion.SemanticVersion().IsNewer(semver.Parse(obj.Version)) {
+		latestVersionString := latestVersion.Version()
+		return &latestVersionString, nil
 	}
 	return nil, nil
 }
