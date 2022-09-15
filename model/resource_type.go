@@ -23,6 +23,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/observiq/bindplane-op/model/otel"
 	"github.com/observiq/bindplane-op/model/validation"
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
@@ -142,13 +143,77 @@ func (rt *ResourceType) evalOutput(output *ResourceTypeOutput, resource paramete
 	}
 }
 
+const (
+	templateFuncHasCategoryMetricsEnabled = "bpHasCategoryMetricsEnabled"
+	templateFuncDisabledCategoryMetrics   = "bpDisabledCategoryMetrics"
+)
+
+func (rt *ResourceType) templateFuncMap() template.FuncMap {
+	return template.FuncMap{
+		templateFuncHasCategoryMetricsEnabled: rt.templateFuncHasCategoryMetricsEnabled,
+		templateFuncDisabledCategoryMetrics:   rt.templateFuncDisabledCategoryMetrics,
+	}
+}
+
+func (rt *ResourceType) templateFuncHasCategoryMetricsEnabled(parameterValue []any, parameterName, metricCategory string) (bool, error) {
+	parameterDefinition := rt.Spec.ParameterDefinition(parameterName)
+	if parameterDefinition == nil {
+		return false, fmt.Errorf("unknown parameter name %s", parameterName)
+	}
+
+	if parameterDefinition.Type != metricsType {
+		return false, fmt.Errorf("parameter name %s is not a metrics type", parameterName)
+	}
+
+	metricNames := parameterDefinition.metricNames(metricCategory)
+	return slices.IndexFunc(metricNames, func(metricName string) bool {
+		for _, val := range parameterValue {
+			if val == metricName {
+				// disabled
+				return false
+			}
+		}
+		// not disabled
+		return true
+	}) >= 0, nil
+}
+
+func (rt *ResourceType) templateFuncDisabledCategoryMetrics(parameterValue []any, parameterName, metricCategory string) ([]string, error) {
+	parameterDefinition := rt.Spec.ParameterDefinition(parameterName)
+	if parameterDefinition == nil {
+		return nil, fmt.Errorf("unknown parameter name %s", parameterName)
+	}
+
+	if parameterDefinition.Type != metricsType {
+		return nil, fmt.Errorf("parameter name %s is not a metrics type", parameterName)
+	}
+
+	metricNames := parameterDefinition.metricNames(metricCategory)
+
+	var result []string
+
+	for _, name := range metricNames {
+		for _, val := range parameterValue {
+			if name == val {
+				result = append(result, name)
+			}
+		}
+	}
+
+	return result, nil
+}
+
 // evalTemplate evaluates a single template with the specified paramValues. nameProvider is available to make the name
 // unique and the errorHandler will accumulate errors so that they can be reported once.
 func (rt *ResourceType) evalTemplate(r ResourceTypeTemplate, nameProvider otel.ComponentIDProvider, paramValues map[string]any, errorHandler TemplateErrorHandler) otel.ComponentList {
 	set := otel.ComponentList{}
 
 	// get the template for the key
-	t, err := template.New(rt.Name()).Option("missingkey=error").Funcs(template.FuncMap(sprig.FuncMap())).Parse(string(r))
+	t, err := template.New(rt.Name()).
+		Option("missingkey=error").
+		Funcs(template.FuncMap(sprig.FuncMap())).
+		Funcs(rt.templateFuncMap()).
+		Parse(string(r))
 	if err != nil {
 		errorHandler(err)
 		return set
@@ -293,7 +358,11 @@ func (s ResourceTypeTemplate) validate(errs validation.Errors, name string, para
 		return
 	}
 	// ensure the template is valid
-	t, err := template.New(name).Option("missingkey=error").Funcs(template.FuncMap(sprig.FuncMap())).Parse(string(s))
+	t, err := template.New(name).
+		Option("missingkey=error").
+		Funcs(template.FuncMap(sprig.FuncMap())).
+		Funcs(bpTemplateFuncMap()).
+		Parse(string(s))
 	if err != nil {
 		errs.Add(err)
 		return
@@ -301,6 +370,17 @@ func (s ResourceTypeTemplate) validate(errs validation.Errors, name string, para
 	// ensure that it can be executed with default values
 	if err := t.Execute(io.Discard, params); err != nil {
 		errs.Add(err)
+	}
+}
+
+func bpTemplateFuncMap() template.FuncMap {
+	return template.FuncMap{
+		templateFuncHasCategoryMetricsEnabled: func(parameterValue []any, parameterName, metricCategory string) (bool, error) {
+			return false, nil
+		},
+		templateFuncDisabledCategoryMetrics: func(parameterValue []any, parameterName, metricCategory string) ([]string, error) {
+			return nil, nil
+		},
 	}
 }
 

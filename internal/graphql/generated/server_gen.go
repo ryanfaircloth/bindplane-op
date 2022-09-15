@@ -216,16 +216,17 @@ type ComplexityRoot struct {
 	}
 
 	ParameterDefinition struct {
-		Default       func(childComplexity int) int
-		Description   func(childComplexity int) int
-		Documentation func(childComplexity int) int
-		Label         func(childComplexity int) int
-		Name          func(childComplexity int) int
-		Options       func(childComplexity int) int
-		RelevantIf    func(childComplexity int) int
-		Required      func(childComplexity int) int
-		Type          func(childComplexity int) int
-		ValidValues   func(childComplexity int) int
+		AdvancedConfig func(childComplexity int) int
+		Default        func(childComplexity int) int
+		Description    func(childComplexity int) int
+		Documentation  func(childComplexity int) int
+		Label          func(childComplexity int) int
+		Name           func(childComplexity int) int
+		Options        func(childComplexity int) int
+		RelevantIf     func(childComplexity int) int
+		Required       func(childComplexity int) int
+		Type           func(childComplexity int) int
+		ValidValues    func(childComplexity int) int
 	}
 
 	ParameterOptions struct {
@@ -1051,6 +1052,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Parameter.Value(childComplexity), true
+
+	case "ParameterDefinition.advancedConfig":
+		if e.complexity.ParameterDefinition.AdvancedConfig == nil {
+			break
+		}
+
+		return e.complexity.ParameterDefinition.AdvancedConfig(childComplexity), true
 
 	case "ParameterDefinition.default":
 		if e.complexity.ParameterDefinition.Default == nil {
@@ -1963,6 +1971,7 @@ type ParameterDefinition {
 
   default: Any
   relevantIf: [RelevantIfCondition!]
+  advancedConfig: Boolean
 
   options: ParameterOptions!
 
@@ -6843,6 +6852,47 @@ func (ec *executionContext) fieldContext_ParameterDefinition_relevantIf(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _ParameterDefinition_advancedConfig(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParameterDefinition_advancedConfig(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AdvancedConfig, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalOBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParameterDefinition_advancedConfig(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParameterDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ParameterDefinition_options(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterDefinition_options(ctx, field)
 	if err != nil {
@@ -9344,6 +9394,8 @@ func (ec *executionContext) fieldContext_ResourceTypeSpec_parameters(ctx context
 				return ec.fieldContext_ParameterDefinition_default(ctx, field)
 			case "relevantIf":
 				return ec.fieldContext_ParameterDefinition_relevantIf(ctx, field)
+			case "advancedConfig":
+				return ec.fieldContext_ParameterDefinition_advancedConfig(ctx, field)
 			case "options":
 				return ec.fieldContext_ParameterDefinition_options(ctx, field)
 			case "documentation":
@@ -13510,6 +13562,10 @@ func (ec *executionContext) _ParameterDefinition(ctx context.Context, sel ast.Se
 		case "relevantIf":
 
 			out.Values[i] = ec._ParameterDefinition_relevantIf(ctx, field, obj)
+
+		case "advancedConfig":
+
+			out.Values[i] = ec._ParameterDefinition_advancedConfig(ctx, field, obj)
 
 		case "options":
 

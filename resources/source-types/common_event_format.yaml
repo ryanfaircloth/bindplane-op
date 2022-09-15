@@ -16,6 +16,8 @@ spec:
       label: File Path
       description: Specify a single path or multiple paths to read one or many files. You may also use a wildcard (*) to read multiple files within a directory.
       type: strings
+      options:
+        gridColumns: 12
       default: []
       required: true
 
@@ -23,6 +25,8 @@ spec:
       label: Exclude File Path
       description: Specify a single path or multiple paths to exclude one or many files from being read. You may also use a wildcard (*) to exclude multiple files from being read within a directory.
       type: strings
+      options:
+        gridColumns: 12
       default: []
       advanced_config: true
 
@@ -34,7 +38,7 @@ spec:
 
     - name: location
       label: Geographic Location
-      description: The geographic location (timezone) to use when parsing logs that contain a timestamp
+      description: The geographic location (timezone) to use when parsing logs that contain a timestamp.
       type: timezone
       default: "UTC"
 

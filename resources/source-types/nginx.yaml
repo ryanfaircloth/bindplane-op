@@ -31,19 +31,25 @@ spec:
           operator: equals
           value: true
 
-    - name: collection_interval
-      label: Collection Interval
-      description: How often (seconds) to scrape for metrics.
-      type: int
-      default: 60
+    - name: disable_metrics
+      label: Filtering
+      type: metrics
+      default: []
+      advancedConfig: true
+      options:
+        metricCategories:
+          - label: NGINX Metrics
+            metrics:
+              - name: nginx.connections_accepted
+              - name: nginx.connections_current
+              - name: nginx.connections_handled
+              - name: nginx.requests
       relevantIf:
         - name: enable_metrics
           operator: equals
           value: true
-      advancedConfig: true
 
     # Metrics TLS Settings #
-
     - name: enable_tls
       label: Enable TLS
       description: Whether or not to use TLS.
@@ -104,6 +110,17 @@ spec:
           value: true
       advancedConfig: true
 
+    - name: collection_interval
+      label: Collection Interval
+      description: How often (seconds) to scrape for metrics.
+      type: int
+      default: 60
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+      advancedConfig: true
+
     # Logging
     #
     - name: enable_logs
@@ -142,6 +159,8 @@ spec:
       label: Access Log Paths
       description: Path to NGINX access log file(s).
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/var/log/nginx/access.log*"
       relevantIf:
@@ -154,6 +173,8 @@ spec:
       label: Error Log Paths
       description: Path to NGINX error log file(s).
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/var/log/nginx/error.log*"
       relevantIf:
@@ -192,6 +213,11 @@ spec:
           {{ else }}
             insecure: true
           {{ end }}
+          metrics:
+            {{ range $m := .disable_metrics }}
+            {{ $m }}:
+              enabled: false
+            {{ end }}
       {{ end }}
 
     processors: |

@@ -71,6 +71,7 @@ spec:
         - name: enable_auth
           operator: equals
           value: true
+      advancedConfig: true
 
     - name: basic_username
       label: Username
@@ -84,6 +85,7 @@ spec:
         - name: auth_type
           operator: equals
           value: basic
+      advancedConfig: true
 
     - name: basic_password
       label: Password
@@ -97,6 +99,7 @@ spec:
         - name: auth_type
           operator: equals
           value: basic
+      advancedConfig: true
 
     - name: sasl_username
       label: Username
@@ -110,6 +113,7 @@ spec:
         - name: auth_type
           operator: equals
           value: sasl
+      advancedConfig: true
 
     - name: sasl_password
       label: Password
@@ -123,6 +127,7 @@ spec:
         - name: auth_type
           operator: equals
           value: sasl
+      advancedConfig: true
 
     - name: sasl_mechanism
       label: Mechanism
@@ -139,6 +144,7 @@ spec:
         - name: auth_type
           operator: equals
           value: sasl
+      advancedConfig: true
 
     - name: kerberos_service_name
       label: Service Name
@@ -152,6 +158,7 @@ spec:
         - name: auth_type
           operator: equals
           value: kerberos
+      advancedConfig: true
 
     - name: kerberos_realm
       label: Realm
@@ -165,6 +172,7 @@ spec:
         - name: auth_type
           operator: equals
           value: kerberos
+      advancedConfig: true
 
     - name: kerberos_config_file
       label: Config File
@@ -178,6 +186,7 @@ spec:
         - name: auth_type
           operator: equals
           value: kerberos
+      advancedConfig: true
 
     - name: kerberos_auth_type
       label: Kerberos Auth Type
@@ -193,6 +202,7 @@ spec:
         - name: auth_type
           operator: equals
           value: kerberos
+      advancedConfig: true
 
     - name: kerberos_keytab_file
       label: Keytab File
@@ -209,6 +219,7 @@ spec:
         - name: kerberos_auth_type
           operator: equals
           value: keytab
+      advancedConfig: true
 
     - name: kerberos_username
       label: Username
@@ -225,6 +236,7 @@ spec:
         - name: kerberos_auth_type
           operator: equals
           value: basic
+      advancedConfig: true
 
     - name: kerberos_password
       label: Password
@@ -241,6 +253,7 @@ spec:
         - name: kerberos_auth_type
           operator: equals
           value: basic
+      advancedConfig: true
 
     - name: enable_metrics
       label: Enable Metrics

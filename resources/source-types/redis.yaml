@@ -42,6 +42,73 @@ spec:
           operator: equals
           value: true
 
+    - name: disable_metrics
+      label: Filtering
+      type: metrics
+      advancedConfig: true
+      default: []
+      options:
+        metricCategories:
+          - label: Client
+            column: 0
+            metrics:
+              - name: redis.clients.blocked
+              - name: redis.clients.connected
+              - name: redis.clients.max_input_buffer
+              - name: redis.clients.max_output_buffer
+          - label: Commands
+            column: 1
+            metrics:
+              - name: redis.cmd.calls
+              - name: redis.cmd.usec
+              - name: redis.commands
+              - name: redis.commands.processed
+          - label: Connections
+            column: 0
+            metrics:
+              - name: redis.connections.received
+              - name: redis.connections.rejected
+          - label: Database
+            column: 1
+            metrics:
+              - name: redis.db.avg_ttl
+              - name: redis.db.expires
+              - name: redis.db.keys
+          - label: Keys
+            metrics:
+              - name: redis.keys.evicted
+              - name: redis.keys.expired
+              - name: redis.keyspace.hits
+              - name: redis.keyspace.misses
+          - label: Memory
+            column: 0
+            metrics:
+              - name: redis.maxmemory
+              - name: redis.memory.fragmentation_ratio
+              - name: redis.memory.lua
+              - name: redis.memory.peak
+              - name: redis.memory.rss
+              - name: redis.memory.used
+          - label: Network
+            column: 1
+            metrics:
+              - name: redis.net.input
+              - name: redis.net.output
+          - label: Replication
+            column: 0
+            metrics:
+              - name: redis.replication.backlog_first_byte_offset
+              - name: redis.replication.offset
+              - name: redis.role
+              - name: redis.slaves.connected
+          - label: System
+            column: 1
+            metrics:
+              - name: redis.cpu.time
+              - name: redis.latest_fork
+              - name: redis.rdb.changes_since_last_save
+              - name: redis.uptime
+
     - name: password
       label: Password
       description: The password used to access the Redis instance; must match the password specified in the requirepass server configuration option.
@@ -139,6 +206,8 @@ spec:
       label: Log Paths
       description: Path to Redis log file(s).
       type: strings
+      options:
+        gridColumns: 12
       default:
         # Default log path on Ubuntu / Debian
         - "/var/log/redis/redis-server.log"
@@ -188,6 +257,15 @@ spec:
           {{ else }}
             insecure: true
           {{ end }}
+
+          {{ if .disable_metrics }}
+          metrics:
+            {{ range $m := .disable_metrics }}
+            {{ $m }}:
+              enabled: false
+            {{ end }}
+          {{ end }}
+
       {{ end }}
 
     processors: |

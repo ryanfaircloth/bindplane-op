@@ -14,8 +14,10 @@ spec:
   parameters:
     - name: file_path
       label: Log Paths
-      description: Path to log file(s).
+      description: File paths to PgBouncer logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - /var/log/pgbouncer/pgbouncer.log
 

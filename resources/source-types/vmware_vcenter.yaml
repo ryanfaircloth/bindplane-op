@@ -2,9 +2,9 @@ apiVersion: bindplane.observiq.com/v1
 kind: SourceType
 metadata:
   name: vmware_vcenter
-  displayName: VMare vCenter
+  displayName: VMware vCenter
   icon: /icons/sources/vmware_vcenter.svg
-  description: Collect metrics and receive Syslog from vCenter.
+  description: Collect metrics and receive syslog from VMware vCenter.
 spec:
   version: 0.0.1
   supported_platforms:
@@ -41,7 +41,6 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
-      advancedConfig: true
 
     - name: username
       label: Username
@@ -155,19 +154,6 @@ spec:
           value: true
       advancedConfig: true
 
-    - name: metric_filtering
-      label: Filtering
-      type: bool
-      default: false
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-      advancedConfig: true
-      options:
-        sectionHeader: true
-        gridColumns: 12
-
     - name: disable_metrics
       label: Metrics
       description: Toggle the metrics you wish to collect on and off.
@@ -214,12 +200,12 @@ spec:
               - name: vcenter.resource_pool.memory.shares
               - name: vcenter.resource_pool.memory.usage
 
-          - label: Vm.memory
+          - label: VM Memory
             column: 1
             metrics:
               - name: vcenter.vm.memory.ballooned
               - name: vcenter.vm.memory.usage
-          - label: Vm.disk
+          - label: VM Disk
             column: 1
             metrics:
               - name: vcenter.vm.disk.latency.avg
@@ -228,16 +214,13 @@ spec:
               - name: vcenter.vm.disk.usage
               - name: vcenter.vm.disk.utilization
 
-          - label: Vm.network
+          - label: VM Network
             column: 1
             metrics:
               - name: vcenter.vm.network.packet.count
       default: []
       relevantIf:
         - name: enable_metrics
-          operator: equals
-          value: true
-        - name: metric_filtering
           operator: equals
           value: true
       advancedConfig: true
@@ -251,23 +234,22 @@ spec:
       options:
         gridColumns: 12
 
+    - name: listen_ip
+      label: Listening IP Address
+      description: The IP address to bind to and receive syslog.
+      type: string
+      default: "0.0.0.0"
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+
     - name: listen_port
       label: Listening Port
       description: The port to bind to and receive syslog. Collector must be running as root (Linux) or Administrator (windows) when binding to a port below 1024.
       type: int
       default: 5140
       required: true
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
-
-    - name: listen_ip
-      label: Listening IP Address
-      description: The IP address to bind to and receive syslog.
-      type: string
-      default: "0.0.0.0"
-      advancedConfig: true
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -339,14 +321,12 @@ spec:
             key_file: "{{ .metrics_mtls_key_file }}"
             {{ end }}
 
-        {{ if .metric_filtering }}
           metrics:
             {{ range $m := .disable_metrics }}
             {{ $m }}:
               enabled: false
             {{ end }}
-        {{ end }}
-        
+
       {{ end }}
 
     processors: |

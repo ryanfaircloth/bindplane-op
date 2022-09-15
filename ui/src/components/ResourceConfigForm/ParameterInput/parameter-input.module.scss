@@ -5,6 +5,12 @@
   font-family: typography.$font-family-monospace;
   max-width: 400px;
 }
+// in wide 12 column boxes, allow larger chips
+:global .MuiGrid-grid-xs-12 {
+  :local .chip {
+    max-width: 600px;
+  }
+}
 
 .telemetry-header-root {
   width: 100%;

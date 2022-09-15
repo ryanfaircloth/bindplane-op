@@ -4,7 +4,7 @@ metadata:
   name: postgresql
   displayName: PostgreSQL
   icon: /icons/sources/postgres.svg
-  description: Collect metrics and logs from Postgresql.
+  description: Collect metrics and logs from PostgreSQL.
 spec:
   version: 0.0.1
   supported_platforms:
@@ -21,6 +21,29 @@ spec:
       default: true
       options:
         gridColumns: 12
+
+    - name: endpoint
+      label: Endpoint
+      description: The endpoint of the PostgreSQL server. If transport is set to unix, the endpoint will internally be translated from host:port to /host.s.PGSQL.port.
+      type: string
+      default: localhost:5432
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
+    - name: transport
+      label: Transport
+      description: The transport protocol being used to connect to PostgreSQL.
+      type: enum
+      validValues:
+        - tcp
+        - unix
+      default: tcp
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
 
     - name: username
       label: Username
@@ -39,29 +62,6 @@ spec:
       type: string
       required: true
       default: ""
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-
-    - name: endpoint
-      label: Endpoint
-      description: The endpoint of the postgres server. If transport is set to unix, the endpoint will internally be translated from host:port to /host.s.PGSQL.port.
-      type: string
-      default: localhost:5432
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-
-    - name: transport
-      label: Transport
-      description: The transport protocol being used to connect to Postgres.
-      type: enum
-      validValues:
-        - tcp
-        - unix
-      default: tcp
       relevantIf:
         - name: enable_metrics
           operator: equals
@@ -153,19 +153,6 @@ spec:
           value: true
       advancedConfig: true
 
-    - name: metric_filtering
-      label: Filtering
-      type: bool
-      default: false
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-      options:
-        gridColumns: 12
-        sectionHeader: true
-      advancedConfig: true
-
     - name: disable_metrics
       label: Metrics
       type: metrics
@@ -185,9 +172,6 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
-        - name: metric_filtering
-          operator: equals
-          value: true
       advancedConfig: true
 
     # Logging
@@ -202,8 +186,10 @@ spec:
 
     - name: postgresql_log_path
       label: Log Paths
-      description: Path to Postgres log file(s).
+      description: Path to PostgreSQL log file(s).
       type: strings
+      options:
+        gridColumns: 12
       default:
         # Default log paths for Debain / Ubuntu
         - "/var/log/postgresql/postgresql*.log"
@@ -257,13 +243,11 @@ spec:
             insecure: true
           {{ end }}
 
-          {{ if .metric_filtering }}
           metrics:
             {{ range $m := .disable_metrics }}
             {{ $m }}:
               enabled: false
             {{ end }}
-          {{ end }}
       {{ end }}
 
     processors: |

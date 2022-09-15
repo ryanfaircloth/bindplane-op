@@ -159,3 +159,201 @@ func TestTelemetryTypes(t *testing.T) {
 		)
 	}
 }
+
+func TestResourceType_templateFuncHasMetricsEnabled(t *testing.T) {
+	type fields struct {
+		ResourceMeta ResourceMeta
+		Spec         ResourceTypeSpec
+	}
+	type args struct {
+		parameterValue []any
+		parameterName  string
+		category       string
+	}
+	tests := []struct {
+		name    string
+		metrics ParameterDefinition
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "missing definition",
+			metrics: ParameterDefinition{
+				Name: "missing",
+				Type: metricsType,
+			},
+			args: args{
+				parameterName: "something-else",
+			},
+			want:    false,
+			wantErr: true,
+		},
+		{
+			name: "bad type",
+			metrics: ParameterDefinition{
+				Name: "wrongType",
+				Type: stringType,
+			},
+			args: args{
+				parameterName: "wrongType",
+			},
+			want:    false,
+			wantErr: true,
+		},
+		{
+			name: "no metrics",
+			metrics: ParameterDefinition{
+				Name: "metrics",
+				Type: metricsType,
+				Options: ParameterOptions{
+					MetricCategories: []MetricCategory{
+						{
+							Metrics: nil,
+						},
+					},
+				},
+			},
+			args: args{
+				parameterName: "metrics",
+			},
+			want: false,
+		},
+		{
+			name: "no disabled metrics",
+			metrics: ParameterDefinition{
+				Name: "metrics",
+				Type: metricsType,
+				Options: ParameterOptions{
+					MetricCategories: []MetricCategory{
+						{
+							Label: "Network",
+							Metrics: []MetricOption{
+								{
+									Name: "system.network.io",
+								},
+								{
+									Name: "system.network.errors",
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				parameterValue: nil,
+				parameterName:  "metrics",
+				category:       "Network",
+			},
+			want: true,
+		},
+		{
+			name: "all disabled metrics",
+			metrics: ParameterDefinition{
+				Name: "metrics",
+				Type: metricsType,
+				Options: ParameterOptions{
+					MetricCategories: []MetricCategory{
+						{
+							Label: "Network",
+							Metrics: []MetricOption{
+								{
+									Name: "system.network.io",
+								},
+								{
+									Name: "system.network.errors",
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				parameterValue: []any{"system.network.io", "system.network.errors"},
+				parameterName:  "metrics",
+				category:       "Network",
+			},
+			want: false,
+		},
+		{
+			name: "some disabled metrics",
+			metrics: ParameterDefinition{
+				Name: "metrics",
+				Type: metricsType,
+				Options: ParameterOptions{
+					MetricCategories: []MetricCategory{
+						{
+							Label: "Network",
+							Metrics: []MetricOption{
+								{
+									Name: "system.network.io",
+								},
+								{
+									Name: "system.network.errors",
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				parameterValue: []any{"system.network.io"},
+				parameterName:  "metrics",
+				category:       "Network",
+			},
+			want: true,
+		},
+		{
+			name: "all disabled metrics",
+			metrics: ParameterDefinition{
+				Name: "metrics",
+				Type: metricsType,
+				Options: ParameterOptions{
+					MetricCategories: []MetricCategory{
+						{
+							Label: "Network",
+							Metrics: []MetricOption{
+								{
+									Name: "system.network.io",
+								},
+								{
+									Name: "system.network.errors",
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				parameterValue: []any{"system.network.io", "system.network.errors"},
+				parameterName:  "metrics",
+				category:       "Not a real category",
+			},
+			want: false,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			rt := &ResourceType{
+				ResourceMeta: ResourceMeta{
+					Metadata: Metadata{
+						Name: "test",
+					},
+				},
+				Spec: ResourceTypeSpec{
+					Parameters: []ParameterDefinition{
+						test.metrics,
+					},
+				},
+			}
+			got, err := rt.templateFuncHasCategoryMetricsEnabled(test.args.parameterValue, test.args.parameterName, test.args.category)
+			if (err != nil) != test.wantErr {
+				t.Errorf("ResourceType.templateFuncHasMetricsEnabled() error = %v, wantErr %v", err, test.wantErr)
+				return
+			}
+			if got != test.want {
+				t.Errorf("ResourceType.templateFuncHasMetricsEnabled() = %v, want %v", got, test.want)
+			}
+		})
+	}
+}

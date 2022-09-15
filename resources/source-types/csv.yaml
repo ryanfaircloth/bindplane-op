@@ -16,6 +16,8 @@ spec:
       label: Header
       description: A comma delimited list of keys assigned to each of the columns.
       required: true
+      options:
+        gridColumns: 12
       type: string
       default: ""
 
@@ -23,6 +25,8 @@ spec:
       label: File Path(s)
       description: File or directory paths to tail for logs.
       type: strings
+      options:
+        gridColumns: 12
       default: []
       required: true
 
@@ -30,6 +34,8 @@ spec:
       label: Exclude File Path(s)
       description: File or directory paths to exclude.
       type: strings
+      options:
+        gridColumns: 12
       default: []
 
     - name: log_type

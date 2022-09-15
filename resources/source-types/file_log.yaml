@@ -15,6 +15,8 @@ spec:
     - name: file_path
       label: File Path(s)
       description: File or directory paths to tail for logs.
+      options:
+        gridColumns: 12
       type: strings
       default: []
       required: true
@@ -22,6 +24,8 @@ spec:
     - name: exclude_file_path
       label: Exclude File Path(s)
       description: File or directory paths to exclude.
+      options:
+        gridColumns: 12
       type: strings
       default: []
 

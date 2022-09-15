@@ -421,7 +421,7 @@ func (rc *ResourceConfiguration) validateParameters(resourceKind Kind, errors va
 		}
 		def := resourceType.Spec.ParameterDefinition(parameter.Name)
 		if def == nil {
-			errors.Add(fmt.Errorf("parameter %s not defined in type %s", parameter.Name, resourceType.Name()))
+			errors.Warn(fmt.Errorf("ignoring parameter %s not defined in type %s", parameter.Name, resourceType.Name()))
 			continue
 		}
 		err := def.validateValue(parameter.Value)

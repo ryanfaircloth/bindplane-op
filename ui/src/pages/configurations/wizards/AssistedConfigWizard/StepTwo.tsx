@@ -55,6 +55,11 @@ gql`
             operator
             value
           }
+          documentation {
+            text
+            url
+          }
+          advancedConfig
           required
           type
           validValues

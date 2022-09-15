@@ -44,6 +44,11 @@ gql`
             operator
             value
           }
+          documentation {
+            text
+            url
+          }
+          advancedConfig
           options {
             creatable
             trackUnchecked

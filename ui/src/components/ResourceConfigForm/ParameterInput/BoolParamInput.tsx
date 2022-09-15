@@ -1,8 +1,17 @@
-import { Checkbox, FormControlLabel, Switch, Typography } from "@mui/material";
-import { isFunction } from "lodash";
+import {
+  Checkbox,
+  FormControlLabel,
+  Switch,
+  Typography,
+  Tooltip,
+  Stack,
+  Badge,
+} from "@mui/material";
+import { isEmpty, isFunction } from "lodash";
 import { ParamInputProps } from "./ParameterInput";
 import { memo } from "react";
 import { ParameterDefinition } from "../../../graphql/generated";
+import { HelpCircleIcon } from "../../Icons";
 
 import styles from "./parameter-input.module.scss";
 
@@ -30,9 +39,18 @@ const BoolParamInputComponent: React.FC<ParamInputProps<boolean>> = ({
       }
       label={
         definition.options.sectionHeader ? (
-          <Typography fontSize={18} fontWeight={600}>
-            {definition.label}
-          </Typography>
+          <Stack direction={"row"} alignItems={"center"}>
+            <Typography fontSize={18} fontWeight={600}>
+              {definition.label}
+            </Typography>
+            {!isEmpty(definition.description) && (
+              <Tooltip title={definition.description} disableInteractive>
+                <Badge sx={{ marginLeft: 2 }} color={"primary"}>
+                  <HelpCircleIcon width={19} />
+                </Badge>
+              </Tooltip>
+            )}
+          </Stack>
         ) : (
           definition.label
         )

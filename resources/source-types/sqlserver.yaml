@@ -18,6 +18,51 @@ spec:
       type: bool
       default: true
 
+    - name: disable_metrics
+      label: Metric Filtering
+      type: metrics
+      default: []
+      advancedConfig: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
+      options:
+        metricCategories:
+          - label: Batch
+            column: 1
+            metrics:
+              - name: sqlserver.batch.request.rate
+              - name: sqlserver.batch.sql_compilation.rate
+              - name: sqlserver.batch.sql_recompilation.rate
+          - label: Lock
+            metrics:
+              - name: sqlserver.lock.wait.rate
+              - name: sqlserver.lock.wait_time.avg
+          - label: Page
+            column: 1
+            metrics:
+              - name: sqlserver.page.buffer_cache.hit_ratio
+              - name: sqlserver.page.checkpoint.flush.rate
+              - name: sqlserver.page.lazy_write.rate
+              - name: sqlserver.page.life_expectancy
+              - name: sqlserver.page.operation.rate
+              - name: sqlserver.page.split.rate
+          - label: Transaction
+            metrics:
+              - name: sqlserver.transaction.rate
+              - name: sqlserver.transaction.write.rate
+              - name: sqlserver.transaction_log.flush.data.rate
+              - name: sqlserver.transaction_log.flush.rate
+              - name: sqlserver.transaction_log.flush.wait.rate
+              - name: sqlserver.transaction_log.growth.count
+              - name: sqlserver.transaction_log.shrink.count
+              - name: sqlserver.transaction_log.usage
+          - label: User
+            metrics:
+              - name: sqlserver.user.connection.count
+
     - name: collection_interval
       label: Collection Interval
       description: How often (seconds) to scrape for metrics.
@@ -57,6 +102,11 @@ spec:
       - sqlserver:
           collection_interval: {{ .collection_interval }}s
       {{ end }}
+          metrics:
+            {{ range $m := .disable_metrics }}
+            {{ $m }}:
+              enabled: false
+            {{ end }}
 
     processors: |
       - resourcedetection:

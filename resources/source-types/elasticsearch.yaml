@@ -76,11 +76,11 @@ spec:
 
     - name: nodes
       label: Collection Scope
+      documentation:
+        - text: Read more
+          url: https://www.elastic.co/guide/en/elasticsearch/reference/7.9/cluster.html#cluster-nodes.
       description: |
         Filters that define which nodes are scraped for node-level metrics.
-        Should be set to '_node' if collector is installed on all nodes.
-        '_all' if single collector is scraping the entire collector.
-        https://www.elastic.co/guide/en/elasticsearch/reference/7.9/cluster.html#cluster-nodes.
       type: strings
       # Default to _node for the following reasons
       # 1) Default endpoint is localhost without auth.
@@ -179,37 +179,25 @@ spec:
           value: true
       advancedConfig: true
 
-    - name: metric_filtering
-      label: Filtering
-      type: bool
-      default: false
-      options:
-        sectionHeader: true
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-      advancedConfig: true
-
     - name: disable_metrics
       description: Toggle the metrics you wish to collect on and off.
       type: metrics
       default: []
       options:
         metricCategories:
-          - label: Elasticsearch.breaker
+          - label: Breaker
             metrics:
               - name: elasticsearch.breaker.memory.estimated
               - name: elasticsearch.breaker.memory.limit
               - name: elasticsearch.breaker.tripped
-          - label: Elasticsearch.cluster
+          - label: Cluster
             column: 1
             metrics:
               - name: elasticsearch.cluster.data_nodes
               - name: elasticsearch.cluster.health
               - name: elasticsearch.cluster.nodes
               - name: elasticsearch.cluster.shards
-          - label: Elasticsearch.node
+          - label: Node
             metrics:
               - name: elasticsearch.node.cache.evictions
               - name: elasticsearch.node.cache.memory.usage
@@ -232,7 +220,7 @@ spec:
               - name: elasticsearch.node.translog.operations
               - name: elasticsearch.node.translog.size
               - name: elasticsearch.node.translog.uncommitted.size
-          - label: Elasticsearch.os
+          - label: OS
             column: 1
             metrics:
               - name: elasticsearch.os.cpu.load_avg.15m
@@ -258,9 +246,6 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
-        - name: metric_filtering
-          operator: equals
-          value: true
       advancedConfig: true
 
     # Logging
@@ -275,6 +260,8 @@ spec:
       label: System Log Paths
       description: File paths for the JSON formatted logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/var/log/elasticsearch/*_server.json"
         - "/var/log/elasticsearch/*_deprecation.json"
@@ -291,6 +278,8 @@ spec:
       label: Garbage Collection Log Paths
       description: File paths for the garbage collection logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/var/log/elasticsearch/gc.log*"
       relevantIf:
@@ -343,14 +332,11 @@ spec:
             {{ end }}
           {{ end }}
 
-          {{ if .metric_filtering }}
           metrics:
             {{ range $m := .disable_metrics }}
             {{ $m }}:
               enabled: false
             {{ end }}
-          {{ end }}
-
       {{ end }}
 
     processors: |

@@ -71,6 +71,11 @@ gql`
             value
             operator
           }
+          documentation {
+            text
+            url
+          }
+          advancedConfig
           required
           options {
             creatable

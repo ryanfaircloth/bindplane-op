@@ -61,6 +61,8 @@ spec:
           operator: equals
           value: true
       advancedConfig: true
+      options:
+        gridColumns: 12
 
     - name: aerospike_enterprise
       label: Aerospike Enterprise Authentication
@@ -105,19 +107,6 @@ spec:
           value: true
       advancedConfig: true
 
-    - name: metric_filtering
-      label: Filtering
-      description: Enable and disable Aerospike metrics.
-      type: bool
-      default: false
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-      options:
-        sectionHeader: true
-      advancedConfig: true
-
     - name: disable_metrics
       description: Toggle the metrics you wish to collect on and off.
       type: metrics
@@ -142,9 +131,6 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
-        - name: metric_filtering
-          operator: equals
-          value: true
       advancedConfig: true
 
     # Logging
@@ -152,7 +138,7 @@ spec:
     # Aerospike uses Journald, which has a journald_directory option. Generally the journald
     # receiver will auto detect this directory, which is why we do not expose it here.
     - name: enable_logs
-      label: Enable Journald Logs
+      label: Enable Logs
       description: Enable to collect Aerospike logs from Journald.
       type: bool
       default: true
@@ -183,13 +169,11 @@ spec:
           password: {{ .password }}
           {{ end }}
 
-          {{ if .metric_filtering }}
           metrics:
             {{ range $m := .disable_metrics }}
             {{ $m }}:
               enabled: false
             {{ end }}
-          {{ end }}
 
       {{ end }}
 

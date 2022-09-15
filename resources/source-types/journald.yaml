@@ -25,12 +25,14 @@ spec:
       label: Journal Directory
       description: The directory containing Journald's log files. If not set, /run/log/journal and /run/journal will be used.
       type: string
+      options:
+        gridColumns: 12
       default: ""
       advancedConfig: true
 
     - name: priority
       label: Priority
-      description:
+      description: Limit log messages to this priority and higher.
       type: enum
       default: "info"
       validValues:

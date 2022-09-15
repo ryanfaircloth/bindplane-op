@@ -19,20 +19,9 @@ spec:
       type: bool
       default: true
 
-    - name: collection_interval
-      label: Collection Interval
-      description: How often (seconds) to scrape for metrics.
-      type: int
-      default: 60
-      advancedConfig: true
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-
     - name: address
       label: Address
-      description: IP address or hostname to scrape for JMX metrics.
+      description: IP address or hostname to scrape for Solr metrics.
       type: string
       default: localhost
       relevantIf:
@@ -42,7 +31,7 @@ spec:
 
     - name: port
       label: Port
-      description: Port to scrape for JMX metrics.
+      description: Port to scrape for Solr metrics.
       type: int
       default: 9012
       relevantIf:
@@ -61,6 +50,17 @@ spec:
           operator: equals
           value: true
 
+    - name: collection_interval
+      label: Collection Interval
+      description: How often (seconds) to scrape for metrics.
+      type: int
+      default: 60
+      advancedConfig: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
     # Logs
     - name: enable_logs
       label: Enable Logs
@@ -72,6 +72,8 @@ spec:
       label: File Path(s)
       description: File or directory paths to tail for logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - /var/solr/logs/solr.log
       relevantIf:
@@ -92,7 +94,6 @@ spec:
         - name: enable_logs
           operator: equals
           value: true
-
 
   metrics:
     receivers: |

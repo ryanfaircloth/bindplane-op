@@ -4,7 +4,7 @@ metadata:
   name: ciscomeraki
   displayName: Cisco Meraki
   icon: /icons/sources/cisco_meraki.svg
-  description: Collect logs from Cisco Meraki.
+  description: Receive syslog from Cisco Meraki.
 spec:
   version: 0.0.1
   supported_platforms:
@@ -12,18 +12,17 @@ spec:
     - linux
     - windows
   parameters:
-    - name: listen_port
-      label: Listen Port
-      description: A UDP port which the agent will listen for syslog messages.
-      type: int
-      default: 5140
-
     - name: listen_ip
       label: Listen Address
       description: An IP address for the agent to bind. Typically 0.0.0.0 for most configurations.
       type: string
       default: "0.0.0.0"
-      advancedConfig: true
+
+    - name: listen_port
+      label: Listen Port
+      description: A UDP port which the agent will listen for syslog messages.
+      type: int
+      default: 5140
 
   logs:
     receivers: |

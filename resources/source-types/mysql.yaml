@@ -4,7 +4,7 @@ metadata:
   name: mysql
   displayName: MySQL
   icon: /icons/sources/mysql.svg
-  description: Collect metrics and logs from Mysql.
+  description: Collect metrics and logs from MySQL.
 spec:
   version: 0.0.1
   supported_platforms:
@@ -44,7 +44,7 @@ spec:
 
     - name: endpoint
       label: Endpoint
-      description: The endpoint of the mysql server.
+      description: The endpoint of the MySQL server.
       type: string
       default: localhost:3306
       relevantIf:
@@ -54,7 +54,7 @@ spec:
 
     - name: transport
       label: Transport
-      description: The transport protocol being used to connect to Mysql.
+      description: The transport protocol being used to connect to MySQL.
       type: enum
       validValues:
         - tcp
@@ -64,6 +64,36 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
+
+    - name: disable_metrics
+      label: Filtering
+      type: metrics
+      advancedConfig: true
+      default: []
+      options:
+        metricCategories:
+          - label: Buffer Pool
+            column: 1
+            metrics:
+              - name: mysql.buffer_pool.pages
+              - name: mysql.buffer_pool.data_pages
+              - name: mysql.buffer_pool.page_flushes
+              - name: mysql.buffer_pool.operations
+              - name: mysql.buffer_pool.limit
+              - name: mysql.buffer_pool.usage
+          - label: General
+            metrics:
+              - name: mysql.commands
+              - name: mysql.handlers
+              - name: mysql.double_writes
+              - name: mysql.log_operations
+              - name: mysql.operations
+              - name: mysql.page_operations
+              - name: mysql.row_locks
+              - name: mysql.row_operations
+              - name: mysql.locks
+              - name: mysql.sorts
+              - name: mysql.threads
 
     - name: database
       label: Database
@@ -96,20 +126,6 @@ spec:
       type: bool
       default: true
 
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
-      advancedConfig: true
-
     - name: enable_general_log
       label: Enable General Log
       description: Enable to read and parse the general log file.
@@ -121,21 +137,6 @@ spec:
         - name: enable_logs
           operator: equals
           value: true
-
-    - name: general_log_paths
-      label: General Log Path
-      description: Path to the general log file(s).
-      type: strings
-      default:
-        - "/var/log/mysql/general.log"
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
-        - name: enable_general_log
-          operator: equals
-          value: true
-      advancedConfig: true
 
     - name: enable_slow_log
       label: Enable Slow Log
@@ -149,21 +150,6 @@ spec:
           operator: equals
           value: true
 
-    - name: slow_query_log_paths
-      label: Slow Query Log Path
-      description: Path to the slow query log file(s).
-      type: strings
-      default:
-        - "/var/log/mysql/slow*.log"
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
-        - name: enable_slow_log
-          operator: equals
-          value: true
-      advancedConfig: true
-
     - name: enable_error_log
       label: Enable Error Log
       description: Enable to read and parse the error log.
@@ -176,10 +162,46 @@ spec:
           operator: equals
           value: true
 
+    - name: general_log_paths
+      label: General Log Path
+      description: Path to the general log file(s).
+      type: strings
+      options:
+        gridColumns: 12
+      default:
+        - "/var/log/mysql/general.log"
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+        - name: enable_general_log
+          operator: equals
+          value: true
+      advancedConfig: true
+
+    - name: slow_query_log_paths
+      label: Slow Query Log Path
+      description: Path to the slow query log file(s).
+      type: strings
+      options:
+        gridColumns: 12
+      default:
+        - "/var/log/mysql/slow*.log"
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+        - name: enable_slow_log
+          operator: equals
+          value: true
+      advancedConfig: true
+
     - name: error_log_paths
       label: Error Log Path
       description: Path to the error log file(s).
       type: strings
+      options:
+        gridColumns: 12
       default:
         # Default log path for CentOS / RHEL
         - "/var/log/mysqld.log"
@@ -196,6 +218,20 @@ spec:
           value: true
       advancedConfig: true
 
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+      advancedConfig: true
+
   metrics:
     receivers: |
       {{ if .enable_metrics }}
@@ -206,6 +242,11 @@ spec:
           transport: {{ .transport }}
           collection_interval: "{{ .collection_interval }}s"
           database: {{ .database }}
+          metrics:
+            {{ range $m := .disable_metrics }}
+            {{ $m }}:
+              enabled: false
+            {{ end }}
       {{ end }}
 
     processors: |

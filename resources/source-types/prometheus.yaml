@@ -12,18 +12,18 @@ spec:
     - linux
     - windows
   parameters:
+    - name: static_targets
+      label: Targets
+      description: List of endpoints to scrape.
+      type: strings
+      default: []
+      required: true
+
     - name: job_name
       label: Job Name
       description: The name of the scraper job. Will be set as service.name resource label.
       type: string
       default: ""
-      required: true
-
-    - name: static_targets
-      label: Static Targets
-      description: List of endpoints to scrape.
-      type: strings
-      default: []
       required: true
 
     - name: collection_interval

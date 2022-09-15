@@ -4,6 +4,8 @@ import {
   Chip,
   TextField,
   FormHelperText,
+  Typography,
+  Stack,
 } from "@mui/material";
 import { isArray, isFunction, isEmpty } from "lodash";
 import { memo, useState } from "react";
@@ -90,7 +92,25 @@ const StringsParamInputComponent: React.FC<ParamInputProps<string[]>> = ({
             {...params}
             label={label}
             size={"small"}
-            helperText={definition.description}
+            helperText={
+              <>
+                <Typography
+                  fontSize={"0.75rem"}
+                  component="span"
+                  whiteSpace="pre-wrap"
+                >
+                  {definition.description}
+                </Typography>
+
+                {definition.documentation && (
+                  <Stack component={"span"}>
+                    {definition.documentation.map((d) => (
+                      <a href={d.url}>{d.text}</a>
+                    ))}
+                  </Stack>
+                )}
+              </>
+            }
             id={definition.name}
           />
         )}

@@ -2,9 +2,9 @@ apiVersion: bindplane.observiq.com/v1
 kind: SourceType
 metadata:
   name: mongodb
-  displayName: Mongodb
+  displayName: MongoDB
   icon: /icons/sources/mongodb.svg
-  description: Collect metrics and logs from Mongodb.
+  description: Collect metrics and logs from MongoDB.
 spec:
   version: 0.0.1
   supported_platforms:
@@ -23,10 +23,12 @@ spec:
       label: Hosts
       description: |
         List of host:port or unix domain socket endpoints.
-        For standalone MongoDB deployments this is the hostname and port of the mongod instance.
-        For replica sets specify the hostnames and ports of the mongod instances that are in the replica set configuration. If the replica_set field is specified, nodes will be autodiscovered.
-        For a sharded MongoDB deployment, please specify a list of the mongos hosts.
+        Standalone deployments: the hostname and port of the mongod instance.
+        Replica sets: the hostnames and ports of the mongod instances in the replica set configuration.
+        Sharded deployments: a list of the mongos hosts.
       type: strings
+      options:
+        gridColumns: 12
       required: false
       default:
         - "localhost:27017"
@@ -35,16 +37,37 @@ spec:
           operator: equals
           value: true
 
-    - name: collection_interval
-      label: Collection Interval
-      description: How often (seconds) to scrape for metrics.
-      type: int
-      default: 60
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
+    - name: disable_metrics
+      label: Filtering
+      type: metrics
       advancedConfig: true
+      default: []
+      options:
+        metricCategories:
+          - label: MongoDB Metrics
+            metrics:
+              - name: mongodb.cache.operations
+              - name: mongodb.collection.count
+              - name: mongodb.connection.count
+              - name: mongodb.cursor.count
+              - name: mongodb.cursor.timeout.count
+              - name: mongodb.data.size
+              - name: mongodb.database.count
+              - name: mongodb.document.operation.count
+              - name: mongodb.extent.count
+              - name: mongodb.global_lock.time
+              - name: mongodb.index.access.count
+              - name: mongodb.index.count
+              - name: mongodb.index.size
+              - name: mongodb.memory.usage
+              - name: mongodb.network.io.receive
+              - name: mongodb.network.io.transmit
+              - name: mongodb.network.request.count
+              - name: mongodb.object.count
+              - name: mongodb.operation.count
+              - name: mongodb.operation.time
+              - name: mongodb.session.count
+              - name: mongodb.storage.size
 
     - name: username
       label: Username
@@ -64,6 +87,17 @@ spec:
       type: string
       required: false
       default: ""
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+      advancedConfig: true
+
+    - name: collection_interval
+      label: Collection Interval
+      description: How often (seconds) to scrape for metrics.
+      type: int
+      default: 60
       relevantIf:
         - name: enable_metrics
           operator: equals
@@ -144,6 +178,8 @@ spec:
       label: Log Paths
       description: Path to Mongodb log file(s).
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/var/log/mongodb/mongodb.log*"
         - "/var/log/mongodb/mongod.log*"
@@ -188,6 +224,13 @@ spec:
           {{ else }}
             insecure: true
           {{ end }}
+
+          metrics:
+            {{ range $m := .disable_metrics }}
+            {{ $m }}:
+              enabled: false
+            {{ end }}
+
       {{ end }}
 
     processors: |

@@ -159,18 +159,6 @@ spec:
           value: true
       advancedConfig: true
 
-    - name: metric_filtering
-      label: Filtering
-      type: bool
-      default: false
-      options:
-        sectionHeader: true
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-      advancedConfig: true
-
     - name: disable_metrics
       type: metrics
       options:
@@ -184,13 +172,6 @@ spec:
               - name: apache.uptime
               - name: apache.workers
       default: []
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-        - name: metric_filtering
-          operator: equals
-          value: true
       advancedConfig: true
 
     # Logging
@@ -205,6 +186,8 @@ spec:
       description: Access Log File paths to tail for logs.
       type: strings
       default: ["/var/log/apache2/access.log"]
+      options:
+        gridColumns: 12
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -214,6 +197,8 @@ spec:
       label: Error Log File Path(s)
       description: Error Log File paths to tail for logs.
       type: strings
+      options:
+        gridColumns: 12
       default: ["/var/log/apache2/error.log"]
       relevantIf:
         - name: enable_logs
@@ -277,13 +262,11 @@ spec:
             insecure: true
           {{ end }}
 
-          {{ if .metric_filtering }}
           metrics:
             {{ range $m := .disable_metrics }}
             {{ $m }}:
               enabled: false
             {{ end }}
-          {{ end }}
       {{ end }}
 
     processors: |

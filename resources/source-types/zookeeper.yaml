@@ -4,7 +4,7 @@ metadata:
   name: zookeeper
   displayName: ZooKeeper
   icon: /icons/sources/zookeeper.svg
-  description: Collect metrics and logs from Zookeeper.
+  description: Collect metrics and logs from ZooKeeper.
 spec:
   version: 0.0.1
   supported_platforms:
@@ -17,17 +17,6 @@ spec:
       label: Enable Metrics
       type: bool
       default: true
-
-    - name: collection_interval
-      label: Collection Interval
-      description: How often (seconds) to scrape for metrics.
-      type: int
-      default: 60
-      advancedConfig: true
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
 
     - name: address
       label: Address
@@ -49,6 +38,17 @@ spec:
           operator: equals
           value: true
 
+    - name: collection_interval
+      label: Collection Interval
+      description: How often (seconds) to scrape for metrics.
+      type: int
+      default: 60
+      advancedConfig: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
     # Logs
     - name: enable_logs
       label: Enable Logs
@@ -59,6 +59,8 @@ spec:
       label: Log Path(s)
       description: File paths to logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/opt/zookeeper/logs/zookeeper.log"
       required: true

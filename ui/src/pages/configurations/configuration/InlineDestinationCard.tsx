@@ -33,11 +33,16 @@ gql`
           required
           type
           default
+          documentation {
+            text
+            url
+          }
           relevantIf {
             name
             operator
             value
           }
+          advancedConfig
           validValues
           options {
             creatable

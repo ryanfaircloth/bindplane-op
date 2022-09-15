@@ -35,6 +35,11 @@ gql`
             operator
             value
           }
+          documentation {
+            text
+            url
+          }
+          advancedConfig
           validValues
           options {
             creatable

@@ -14,8 +14,10 @@ spec:
   parameters:
     - name: file_path
       label: File Path(s)
-      description: Log File paths to tail for logs.
+      description: File paths to tail for logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - /var/log/haproxy/haproxy.log
 

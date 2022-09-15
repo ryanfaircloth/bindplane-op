@@ -12,49 +12,20 @@ spec:
     - linux
     - windows
   parameters:
-    - name: collection_interval
-      label: Collection Interval
-      description: How often (seconds) to scrape for metrics.
-      type: int
-      default: 60
-      advancedConfig: true
-
-    # Load Metrics
-    - name: enable_load
-      label: Load Metrics
-      description: Enable to collect load metrics. Compatible with all platforms.
-      type: bool
-      options:
-        sectionHeader: true
-      default: true
-
-    - name: load_metric_filtering
+    - name: metric_filtering
       type: metrics
-      options:
-        metricCategories:
-          - label: Load Metrics
-            metrics:
-              - name: system.cpu.load_average.15m
-              - name: system.cpu.load_average.1m
-              - name: system.cpu.load_average.5m
-      default: []
-      relevantIf:
-        - name: enable_load
-          operator: equals
-          value: true
-      advancedConfig: true
-
-    # Filesystem Metrics
-    - name: enable_filesystem
-      label: Filesystem Metrics
-      description: Enable to collect filesystem metrics. Compatible with all platforms.
-      type: bool
-      default: true
-      options:
-        sectionHeader: true
-
-    - name: filesystem_metric_filtering
-      type: metrics
+      default:
+        - system.disk.io
+        - system.disk.io_time
+        - system.disk.merged
+        - system.disk.operation_time
+        - system.disk.operations
+        - system.disk.pending_operations
+        - system.disk.weighted_io_time
+        - system.processes.count
+        - system.processes.created
+        - system.cpu.time
+        - system.cpu.utilization
       options:
         metricCategories:
           - label: Filesystem Metrics
@@ -62,50 +33,10 @@ spec:
               - name: system.filesystem.inodes.usage
               - name: system.filesystem.usage
               - name: system.filesystem.utilization
-      default: []
-      relevantIf:
-        - name: enable_filesystem
-          operator: equals
-          value: true
-      advancedConfig: true
-
-    # Memory Metrics
-    - name: enable_memory
-      label: Memory Metrics
-      description: Enable to collect memory metrics. Compatible with all platforms.
-      type: bool
-      options:
-        sectionHeader: true
-      default: true
-
-    - name: memory_metrics_filtering
-      type: metrics
-      options:
-        metricCategories:
           - label: Memory Metrics
             metrics:
               - name: system.memory.usage
               - name: system.memory.utilization
-      default: []
-      relevantIf:
-        - name: enable_memory
-          operator: equals
-          value: true
-      advancedConfig: true
-
-    # Network Metrics
-    - name: enable_network
-      label: Network Metrics
-      description: Enable to collect network metrics. Compatible with all platforms.
-      type: bool
-      default: true
-      options:
-        sectionHeader: true
-
-    - name: network_metrics_filtering
-      type: metrics
-      options:
-        metricCategories:
           - label: Network Metrics
             metrics:
               - name: system.network.connections
@@ -115,26 +46,6 @@ spec:
               - name: system.network.errors
               - name: system.network.io
               - name: system.network.packets
-      default: []
-      relevantIf:
-        - name: enable_network
-          operator: equals
-          value: true
-      advancedConfig: true
-
-    # Paging Metrics
-    - name: enable_paging
-      label: Paging Metrics
-      description: Enable to collect paging metrics. Compatible with all platforms.
-      type: bool
-      default: true
-      options:
-        sectionHeader: true
-
-    - name: paging_metrics_filtering
-      type: metrics
-      options:
-        metricCategories:
           - label: Paging Metrics
             metrics:
               - name: system.paging.faults
@@ -143,51 +54,19 @@ spec:
               - name: system.paging.operations.page_out
               - name: system.paging.usage
               - name: system.paging.utilization
-      default: []
-      relevantIf:
-        - name: enable_paging
-          operator: equals
-          value: true
-      advancedConfig: true
-
-    # CPU Metrics
-    - name: enable_cpu
-      label: CPU Metrics
-      description: Enable to collect CPU metrics. Compatible with Linux and Windows.
-      type: bool
-      default: false
-      options:
-        sectionHeader: true
-
-    - name: cpu_metrics_filtering
-      type: metrics
-      options:
-        metricCategories:
+          - label: Load Metrics
+            column: 1
+            metrics:
+              - name: system.cpu.load_average.15m
+              - name: system.cpu.load_average.1m
+              - name: system.cpu.load_average.5m
           - label: CPU Metrics
+            column: 1
             metrics:
               - name: system.cpu.time
               - name: system.cpu.utilization
-      default: []
-      relevantIf:
-        - name: enable_cpu
-          operator: equals
-          value: true
-      advancedConfig: true
-
-    # Disk Metrics
-    - name: enable_disk
-      label: Disk Metrics
-      description: Enable to collect disk metrics. Compatible with Linux and Windows.
-      type: bool
-      default: false
-      options:
-        sectionHeader: true
-
-    - name: disk_metrics_filtering
-      type: metrics
-      options:
-        metricCategories:
           - label: Disk Metrics
+            column: 1
             metrics:
               - name: system.disk.io
               - name: system.disk.io_time
@@ -196,35 +75,11 @@ spec:
               - name: system.disk.operations
               - name: system.disk.pending_operations
               - name: system.disk.weighted_io_time
-      default: []
-      relevantIf:
-        - name: enable_disk
-          operator: equals
-          value: true
-      advancedConfig: true
-
-    # Processes Metrics
-    - name: enable_processes
-      label: Processes Metrics
-      description: Enable to collect process count metrics. Compatible with Linux only.
-      type: bool
-      default: false
-      options:
-        sectionHeader: true
-
-    - name: processes_metrics_filtering
-      type: metrics
-      options:
-        metricCategories:
           - label: Processes Metrics
+            column: 1
             metrics:
               - name: system.processes.count
               - name: system.processes.created
-      default: []
-      relevantIf:
-        - name: enable_processes
-          operator: equals
-          value: true
 
     # Process metrics w/ filtering
     - name: enable_process
@@ -250,7 +105,6 @@ spec:
         - name: enable_process
           operator: equals
           value: true
-      advancedConfig: true
 
     - name: enable_process_filter
       label: Process Name Filtering
@@ -297,98 +151,91 @@ spec:
           operator: equals
           value: true
 
+    - name: collection_interval
+      label: Collection Interval
+      description: How often (seconds) to scrape for metrics.
+      type: int
+      default: 60
+      advancedConfig: true
+
   metrics:
     receivers: |
       - hostmetrics:
           collection_interval: {{ .collection_interval }}s
           scrapers:
-            {{ if .enable_load }}
+          {{ if bpHasCategoryMetricsEnabled .metric_filtering "metric_filtering" "Load Metrics" }}
             load:
-              {{ if .load_metric_filtering }}
               metrics:
-                {{ range $m := .load_metric_filtering }}
+                {{ range $m := bpDisabledCategoryMetrics .metric_filtering "metric_filtering" "Load Metrics" }}
                 {{ $m }}:
                   enabled: false
                 {{ end }}
-              {{ end }}
-            {{ end }}
+          {{ end }}
 
-            {{ if .enable_filesystem }}
+          {{ if bpHasCategoryMetricsEnabled .metric_filtering "metric_filtering" "Filesystem Metrics" }}
             filesystem:
-              {{ if .filesystem_metric_filtering }}
               metrics:
-                {{ range $m := .filesystem_metric_filtering }}
+                {{ range $m := bpDisabledCategoryMetrics .metric_filtering "metric_filtering" "Filesystem Metrics" }}
                 {{ $m }}:
                   enabled: false
                 {{ end }}
-              {{ end }}
-            {{ end }}
+          {{ end }}
 
-            {{ if .enable_memory }}
+
+          {{ if bpHasCategoryMetricsEnabled .metric_filtering "metric_filtering" "Memory Metrics" }}
             memory:
-              {{ if .memory_metrics_filtering }}
               metrics:
-                {{ range $m := .memory_metrics_filtering }}
+                {{ range $m := bpDisabledCategoryMetrics .metric_filtering "metric_filtering" "Memory Metrics" }}
                 {{ $m }}:
                   enabled: false
                 {{ end }}
-              {{ end }}
-            {{ end }}
+          {{ end }}
 
-            {{ if .enable_network }}
+          {{ if bpHasCategoryMetricsEnabled .metric_filtering "metric_filtering" "Network Metrics" }}
             network:
-              {{ if .network_metrics_filtering }}
               metrics:
-                {{ range $m := .network_metrics_filtering }}
+                {{ range $m := bpDisabledCategoryMetrics .metric_filtering "metric_filtering" "Network Metrics" }}
                 {{ $m }}:
                   enabled: false
                 {{ end }}
-              {{ end }}
-            {{ end }}
+          {{ end }}
 
-            {{ if .enable_paging }}
+          {{ if bpHasCategoryMetricsEnabled .metric_filtering "metric_filtering" "Paging Metrics" }}
             paging:
-              {{ if .paging_metrics_filtering }}
               metrics:
-                {{ range $m := .paging_metrics_filtering }}
+                {{ range $m := bpDisabledCategoryMetrics .metric_filtering "metric_filtering" "Paging Metrics" }}
                 {{ $m }}:
                   enabled: false
                 {{ end }}
-              {{ end }}
-            {{ end }}
+          {{ end }}
 
-            {{ if .enable_disk }}
+          {{ if bpHasCategoryMetricsEnabled .metric_filtering "metric_filtering" "Disk Metrics" }}
             disk:
-              {{ if .disk_metrics_filtering }}
               metrics:
-                {{ range $m := .disk_metrics_filtering }}
+                {{ range $m := bpDisabledCategoryMetrics .metric_filtering "metric_filtering" "Disk Metrics" }}
                 {{ $m }}:
                   enabled: false
                 {{ end }}
-              {{ end }}
-            {{ end }}
+          {{ end }}
 
-            {{ if .enable_cpu }}
+
+          {{ if bpHasCategoryMetricsEnabled .metric_filtering "metric_filtering" "CPU Metrics" }}
             cpu:
-              {{ if .cpu_metrics_filtering }}
               metrics:
-                {{ range $m := .cpu_metrics_filtering }}
+                {{ range $m := bpDisabledCategoryMetrics .metric_filtering "metric_filtering" "CPU Metrics" }}
                 {{ $m }}:
                   enabled: false
                 {{ end }}
-              {{ end }}
-            {{ end }}
+          {{ end }}
 
-            {{ if .enable_processes }}
+          {{ if bpHasCategoryMetricsEnabled .metric_filtering "metric_filtering" "Processes Metrics" }}
             processes:
-              {{ if .processes_metrics_filtering }}
               metrics:
-                {{ range $m := .processes_metrics_filtering }}
+                {{ range $m := bpDisabledCategoryMetrics .metric_filtering "metric_filtering" "Processes Metrics" }}
                 {{ $m }}:
                   enabled: false
                 {{ end }}
-              {{ end }}
-            {{ end }}
+          {{ end }}
 
             {{ if .enable_process }}
             process:

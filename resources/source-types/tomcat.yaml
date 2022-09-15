@@ -18,20 +18,9 @@ spec:
       type: bool
       default: true
 
-    - name: collection_interval
-      label: Collection Interval
-      description: How often (seconds) to scrape for metrics.
-      type: int
-      default: 60
-      advancedConfig: true
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-
     - name: address
       label: Address
-      description: IP address or hostname to scrape for JMX metrics.
+      description: IP address or hostname to scrape for Tomcat metrics.
       type: string
       default: localhost
       relevantIf:
@@ -41,7 +30,7 @@ spec:
 
     - name: port
       label: Port
-      description: Port to scrape for JMX metrics.
+      description: Port to scrape for Tomcat metrics.
       type: int
       default: 9012
       relevantIf:
@@ -60,36 +49,21 @@ spec:
           operator: equals
           value: true
 
+    - name: collection_interval
+      label: Collection Interval
+      description: How often (seconds) to scrape for metrics.
+      type: int
+      default: 60
+      advancedConfig: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
     # Logs
     - name: enable_logs
       label: Enable Logs
       type: bool
       default: true
-
-    - name: timezone
-      label: Timezone
-      description: The timezone to use when parsing timestamps.
-      type: timezone
-      default: "UTC"
-      advancedConfig: true
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
-
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      advancedConfig: true
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
 
     - name: enable_access_log
       label: Access Logs
@@ -106,6 +80,8 @@ spec:
       label: Access Log Path(s)
       description: File paths to access logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/usr/local/tomcat/logs/localhost_access_log.*.txt"
       required: true
@@ -132,6 +108,8 @@ spec:
       label: Catalina Log Path(S)
       description: File paths to catalina logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/usr/local/tomcat/logs/catalina.out"
       required: true
@@ -140,6 +118,31 @@ spec:
           operator: equals
           value: true
         - name: enable_catalina_log
+          operator: equals
+          value: true
+
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      advancedConfig: true
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+
+    - name: timezone
+      label: Timezone
+      description: The timezone to use when parsing timestamps.
+      type: timezone
+      default: "UTC"
+      advancedConfig: true
+      relevantIf:
+        - name: enable_logs
           operator: equals
           value: true
 

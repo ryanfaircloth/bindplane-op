@@ -19,33 +19,11 @@ spec:
       type: bool
       default: true
 
-    - name: collection_interval
-      label: Collection Interval
-      description: How often (seconds) to scrape for metrics.
-      type: int
-      default: 60
-      advancedConfig: true
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-
     - name: address
       label: Address
       description: IP address or hostname to scrape for JMX metrics.
       type: string
       default: localhost
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-
-    - name: jar_path
-      label: JMX Metrics Collection Jar Path
-      description: Full path to the JMX metrics jar.
-      type: string
-      default: "/opt/opentelemetry-java-contrib-jmx-metrics.jar"
-      advancedConfig: true
       relevantIf:
         - name: enable_metrics
           operator: equals
@@ -101,26 +79,34 @@ spec:
           operator: equals
           value: true
 
+    - name: jar_path
+      label: JMX Metrics Collection Jar Path
+      description: Full path to the JMX metrics jar.
+      type: string
+      default: "/opt/opentelemetry-java-contrib-jmx-metrics.jar"
+      advancedConfig: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
+    - name: collection_interval
+      label: Collection Interval
+      description: How often (seconds) to scrape for metrics.
+      type: int
+      default: 60
+      advancedConfig: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
     # Logs
     - name: enable_logs
       label: Enable Logs
       description: Enable to send logs.
       type: bool
       default: true
-
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      advancedConfig: true
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
 
     - name: enable_master_log
       label: Master Logs
@@ -138,6 +124,8 @@ spec:
       label: Master File Path(s)
       description: File paths to tail for master logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/usr/local/hbase*/logs/hbase*-master-*.log"
       relevantIf:
@@ -164,6 +152,8 @@ spec:
       label: Region Server File Path(s)
       description: File paths to tail for region server logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/usr/local/hbase*/logs/hbase*-regionserver-*.log"
       relevantIf:
@@ -190,6 +180,8 @@ spec:
       label: Zookeeper File Path(s)
       description: File paths to tail for zookeeper logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/usr/local/hbase*/logs/hbase*-zookeeper-*.log"
       relevantIf:
@@ -200,10 +192,23 @@ spec:
           operator: equals
           value: true
 
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      advancedConfig: true
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+
   metrics:
     receivers: |
       {{ if .enable_metrics }}
-
       {{ if .enable_master_jmx }}
       - jmx/hbase/master:
           jar_path: {{ .jar_path }}
@@ -223,7 +228,6 @@ spec:
           resource_attributes:
             hbase.region.endpoint: {{ .address }}:{{ .region_jmx_port }}
       {{ end }}
-
       {{ end }}
 
     processors: |

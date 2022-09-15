@@ -168,6 +168,28 @@ func (p ParameterDefinition) validateSpecialParameters(kind Kind, errs validatio
 					AdvancedConfig: true,
 				})
 			}
+		case "jar_path":
+			p.validateSpecialParameter(errs, ParameterDefinition{
+				Label:          "JMX Metrics Collection Jar Path",
+				Description:    "Full path to the JMX metrics jar.",
+				Type:           "string",
+				Default:        "/opt/opentelemetry-java-contrib-jmx-metrics.jar",
+				AdvancedConfig: true,
+				RelevantIf: []RelevantIfCondition{
+					{
+						Name:     "enable_metrics",
+						Operator: "equals",
+						Value:    true,
+					},
+				},
+			})
+		}
+
+		// use full width for paths
+		if p.Name != "jar_path" && (strings.HasSuffix(p.Name, "_path") || strings.HasSuffix(p.Name, "_paths")) {
+			if p.Options.GridColumns == nil || *p.Options.GridColumns != 12 {
+				errs.Warn(errors.NewError(fmt.Sprintf("%s parameter appears to be a path and should use the full width. ", p.Name), "specify gridColumns: 12 in options"))
+			}
 		}
 	}
 }
@@ -579,4 +601,22 @@ func (p ParameterDefinition) validateMapValue(fieldType parameterFieldType, valu
 		}
 	}
 	return nil
+}
+
+// Metrics returns the list of metrics associated with this parameter definition
+func (p ParameterDefinition) metricNames(metricCategory string) []string {
+	if p.Type != metricsType {
+		return nil
+	}
+	results := []string{}
+
+	for _, cat := range p.Options.MetricCategories {
+		if cat.Label == metricCategory {
+			for _, metric := range cat.Metrics {
+				results = append(results, metric.Name)
+			}
+		}
+	}
+
+	return results
 }

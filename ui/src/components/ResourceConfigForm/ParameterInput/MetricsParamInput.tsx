@@ -135,7 +135,7 @@ const CategoryStack: React.FC<{
                 </div>
               </Stack>
             </div>
-            <Stack>
+            <Stack marginBottom={2}>
               {category.metrics.map((m) => {
                 return (
                   <FormControlLabel
@@ -149,7 +149,7 @@ const CategoryStack: React.FC<{
                       />
                     }
                     classes={{ root: styles["metric-label"] }}
-                    label={<Typography fontSize={18}>{m.name}</Typography>}
+                    label={<Typography overflow="hidden" textOverflow={"ellipsis"}>{m.name}</Typography>}
                   />
                 );
               })}

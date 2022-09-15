@@ -12,24 +12,17 @@ spec:
     - linux
     - windows
   parameters:
-    - name: listen_port
-      label: Listen Port
-      description: Port to listen on.
-      type: int
-      required: true
-
     - name: listen_ip
       label: Listen Address
       description: IP Address to listen on.
       type: string
       default: "0.0.0.0"
-      advancedConfig: true
 
-    - name: log_type
-      label: Log Type
-      description: Arbitrary for attribute 'log_type'. Useful for filtering between many udp sources.
-      type: string
-      default: udp
+    - name: listen_port
+      label: Listen Port
+      description: Port to listen on.
+      type: int
+      required: true
 
   logs:
     receivers: |
@@ -38,7 +31,6 @@ spec:
           parameters:
             listen_port: {{ .listen_port }}
             listen_ip: {{ .listen_ip }}
-            log_type: {{ .log_type }}
             add_attributes: true
 
     processors: |

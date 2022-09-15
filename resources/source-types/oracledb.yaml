@@ -12,16 +12,6 @@ spec:
     - linux
     - windows
   parameters:
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      advancedConfig: true
-
     - name: enable_audit_log
       label: Audit Logs
       type: bool
@@ -33,6 +23,8 @@ spec:
       label: Audit Log Path(s)
       description: File paths to audit logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/u01/app/oracle/product/*/dbhome_1/admin/*/adump/*.aud"
       required: true
@@ -52,6 +44,8 @@ spec:
       label: Alert Log Path(s)
       description: File paths to alert logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/u01/app/oracle/product/*/dbhome_1/diag/rdbms/*/*/trace/alert_*.log"
       required: true
@@ -68,9 +62,11 @@ spec:
         sectionHeader: true
 
     - name: listener_log_path
-      label: Listenr Log Path(s)
+      label: Listener Log Path(s)
       description: File paths to alert logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/u01/app/oracle/product/*/dbhome_1/diag/tnslsnr/*/listener/alert/log.xml"
       required: true
@@ -78,6 +74,16 @@ spec:
         - name: enable_listener_log
           operator: equals
           value: true
+
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      advancedConfig: true
 
   logs:
     receivers: |

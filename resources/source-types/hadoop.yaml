@@ -19,20 +19,9 @@ spec:
       type: bool
       default: true
 
-    - name: collection_interval
-      label: Collection Interval
-      description: How often (seconds) to scrape for metrics.
-      type: int
-      default: 60
-      advancedConfig: true
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-
     - name: address
       label: Address
-      description: IP address or hostname to scrape for JMX metrics.
+      description: IP address or hostname to scrape for Hadoop metrics.
       type: string
       default: localhost
       relevantIf:
@@ -42,7 +31,7 @@ spec:
 
     - name: port
       label: Port
-      description: Port to scrape for JMX metrics.
+      description: Port to scrape for Hadoop metrics.
       type: int
       default: 8004
       relevantIf:
@@ -61,6 +50,17 @@ spec:
           operator: equals
           value: true
 
+    - name: collection_interval
+      label: Collection Interval
+      description: How often (seconds) to scrape for metrics.
+      type: int
+      default: 60
+      advancedConfig: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
     # Logs
     - name: enable_logs
       label: Enable Logs
@@ -69,8 +69,8 @@ spec:
       default: true
 
     - name: enable_datanode_logs
-      label: Datanode Logs
-      description: Enable to collect datanode logs.
+      label: DataNode Logs
+      description: Enable to collect DataNode logs.
       type: bool
       default: true
       options:
@@ -81,9 +81,11 @@ spec:
           value: true
 
     - name: datanode_log_path
-      label: Datanode File Path(s)
-      description: File paths to tail for datanode logs.
+      label: DataNode File Path(s)
+      description: File paths to tail for dataNode logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/usr/local/hadoop/logs/hadoop-*-datanode-*.log"
       relevantIf:
@@ -110,6 +112,8 @@ spec:
       label: Resource Manager File Path(s)
       description: File paths to tail for resource manager logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/usr/local/hadoop/logs/hadoop-*-resourcemgr-*.log"
       relevantIf:
@@ -121,8 +125,8 @@ spec:
           value: true
 
     - name: enable_namenode_logs
-      label: Namenode Logs
-      description: Enable to collect namenode logs.
+      label: NameNode Logs
+      description: Enable to collect NameNode logs.
       type: bool
       default: true
       options:
@@ -133,9 +137,11 @@ spec:
           value: true
 
     - name: namenode_log_path
-      label: Namenode File Path(s)
-      description: File paths to tail for namenode logs.
+      label: NameNode File Path(s)
+      description: File paths to tail for NameNode logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/usr/local/hadoop/logs/hadoop-*-namenode-*.log"
       relevantIf:
@@ -154,8 +160,6 @@ spec:
         - beginning
         - end
       default: end
-      options:
-        gridColumns: 12
       advancedConfig: true
       relevantIf:
         - name: enable_logs

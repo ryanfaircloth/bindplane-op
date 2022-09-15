@@ -224,6 +224,7 @@ type ParameterDefinition {
 
   default: Any
   relevantIf: [RelevantIfCondition!]
+  advancedConfig: Boolean
 
   options: ParameterOptions!
 

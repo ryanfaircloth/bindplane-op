@@ -4,7 +4,7 @@ metadata:
   name: wildfly
   displayName: WildFly
   icon: /icons/sources/wildfly.svg
-  description: Collect logs from Wildfly.
+  description: Collect logs from WildFly.
 spec:
   version: 0.0.1
   supported_platforms:
@@ -15,25 +15,10 @@ spec:
       label: Standalone Server File Path(s)
       description: File paths to tail for standalone server logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - /opt/wildfly/standalone/log/server.log
-
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      advancedConfig: true
-
-    - name: timezone
-      label: Timezone
-      description: The timezone to use when parsing timestamps.
-      type: timezone
-      default: "UTC"
-      advancedConfig: true
 
     - name: enable_domain_server
       label: Domain Server Logs
@@ -47,6 +32,8 @@ spec:
       label: Domain Server File Path(s)
       description: File paths to tail for domain server logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/opt/wildfly/domain/servers/*/log/server.log"
       relevantIf:
@@ -66,12 +53,31 @@ spec:
       label: Domain Controller File Path(s)
       description: File paths to tail for domain controller logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/opt/wildfly/domain/log/*.log"
       relevantIf:
         - name: enable_domain_controller
           operator: equals
           value: true
+
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      advancedConfig: true
+
+    - name: timezone
+      label: Timezone
+      description: The timezone to use when parsing timestamps.
+      type: timezone
+      default: "UTC"
+      advancedConfig: true
 
   logs:
     receivers: |

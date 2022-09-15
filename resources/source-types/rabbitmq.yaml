@@ -20,6 +20,18 @@ spec:
       type: bool
       default: true
 
+    - name: endpoint
+      label: Endpoint
+      description: The endpoint of the RabbitMQ server.
+      type: string
+      default: http://localhost:15672
+      options:
+        gridColumns: 12
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
     - name: username
       label: Username
       description: Username used to authenticate.
@@ -37,16 +49,6 @@ spec:
       type: string
       required: true
       default: ""
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-
-    - name: endpoint
-      label: Endpoint
-      description: The endpoint of the Rabbitmq server.
-      type: string
-      default: http://localhost:15672
       relevantIf:
         - name: enable_metrics
           operator: equals
@@ -125,18 +127,6 @@ spec:
           value: true
       advancedConfig: true
 
-    - name: metric_filtering
-      label: Filtering
-      type: bool
-      default: false
-      options:
-        sectionHeader: true
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-      advancedConfig: true
-
     - name: disable_metrics
       label: Metrics
       description: Toggle the metrics you wish to collect on and off.
@@ -156,9 +146,6 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
-        - name: metric_filtering
-          operator: equals
-          value: true
       advancedConfig: true
 
     # Logging
@@ -171,8 +158,10 @@ spec:
 
     - name: daemon_log_paths
       label: Log Paths
-      description: Path to Rabbitmq log file(s).
+      description: Path to RabbitMQ log file(s).
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/var/log/rabbitmq/rabbit@*.log"
       relevantIf:
@@ -214,13 +203,11 @@ spec:
             insecure: true
           {{ end }}
 
-          {{ if .metric_filtering }}
           metrics:
             {{ range $m := .disable_metrics }}
             {{ $m }}:
               enabled: false
             {{ end }}
-          {{ end }}
 
       {{ end }}
 

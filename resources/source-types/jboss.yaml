@@ -16,6 +16,8 @@ spec:
       label: File Path(s)
       description: File paths to tail for logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - /usr/local/JBoss/EAP-*/*/log/server.log
 

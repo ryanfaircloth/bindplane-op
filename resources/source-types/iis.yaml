@@ -11,7 +11,6 @@ spec:
     - windows
   parameters:
     # Metrics
-
     - name: enable_metrics
       label: Enable Metrics
       description: Enable to send metrics.
@@ -28,18 +27,6 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
-
-    - name: metric_filtering
-      label: Filtering
-      type: bool
-      default: false
-      options:
-        sectionHeader: true
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-      advancedConfig: true
 
     - name: disable_metrics
       label: Metrics
@@ -76,9 +63,6 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
-        - name: metric_filtering
-          operator: equals
-          value: true
       advancedConfig: true
 
     # Logs
@@ -93,6 +77,8 @@ spec:
       label: File Path(s)
       description: File or directory paths to tail for logs.
       type: strings
+      options:
+        gridColumns: 12
       default: ["C:/inetpub/logs/LogFiles/W3SVC*/**/*.log"]
       relevantIf:
         - name: enable_logs
@@ -103,6 +89,8 @@ spec:
       label: Exclude File Path(s)
       description: File or directory paths to exclude.
       type: strings
+      options:
+        gridColumns: 12
       default: []
       relevantIf:
         - name: enable_logs
@@ -139,14 +127,11 @@ spec:
       {{ if .enable_metrics }}
       - iis:
           collection_interval: {{ .collection_interval }}s
-
-          {{ if .metric_filtering }}
           metrics:
             {{ range $m := .disable_metrics }}
             {{ $m }}:
               enabled: false
             {{ end }}
-          {{ end }}
       {{ end }}
 
     processors: |

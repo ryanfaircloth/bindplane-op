@@ -27,14 +27,14 @@ spec:
 
     - name: username
       label: Username
-      description: Username used for authenticating with Big-Ip.
+      description: Username used for authenticating with Big-IP.
       type: string
       default: ""
       required: true
 
     - name: password
       label: Password
-      description: Password used for authenticating with Big-Ip.
+      description: Password used for authenticating with Big-IP.
       type: string
       default: ""
       required: true
@@ -59,7 +59,7 @@ spec:
       label: TLS Certificate Authority File
       description: Certificate authority used to validate TLS certificates. Not required if the collector's operating system already trusts the certificate authority.
       type: string
-      required: false
+      required: true
       default: ""
       relevantIf:
         - name: strict_tls_verify
@@ -102,14 +102,6 @@ spec:
         - name: mutual_tls
           operator: equals
           value: true
-      advancedConfig: true
-
-    - name: metric_filtering
-      label: Filtering
-      type: bool
-      default: false
-      options:
-        sectionHeader: true
       advancedConfig: true
 
     - name: disable_metrics
@@ -156,10 +148,6 @@ spec:
               - name: bigip.virtual_server.packet.count
               - name: bigip.virtual_server.request.count
       default: []
-      relevantIf:
-        - name: metric_filtering
-          operator: equals
-          value: true
       advancedConfig: true
 
   metrics:
@@ -179,13 +167,11 @@ spec:
             cert_file: "{{ .cert_file }}"
             key_file: "{{ .key_file }}"
 
-          {{ if .metric_filtering }}
           metrics:
             {{ range $m := .disable_metrics }}
             {{ $m }}:
               enabled: false
             {{ end }}
-          {{ end }}
 
     processors: |
       - resourcedetection:

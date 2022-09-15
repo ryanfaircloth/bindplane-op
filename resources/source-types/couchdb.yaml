@@ -39,7 +39,6 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
-      advancedConfig: true
 
     - name: username
       label: Username
@@ -183,18 +182,6 @@ spec:
       advancedConfig: true
 
       # Metric Filtering
-    - name: metric_filtering
-      label: Filtering
-      type: bool
-      default: false
-      options:
-        sectionHeader: true
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-      advancedConfig: true
-
     - name: disable_metrics
       description: Toggle the metrics you wish to collect on and off.
       type: metrics
@@ -215,9 +202,6 @@ spec:
         - name: enable_metrics
           operator: equals
           value: true
-        - name: metric_filtering
-          operator: equals
-          value: true
       advancedConfig: true
 
     # Logging
@@ -231,6 +215,8 @@ spec:
       label: Log Paths
       description: Path to CouchDB log file(s).
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/var/log/couchdb/couchdb.log"
       relevantIf:
@@ -287,13 +273,11 @@ spec:
             insecure: true
           {{ end }}
 
-          {{ if .metric_filtering }}
           metrics:
             {{ range $m := .disable_metrics }}
             {{ $m }}:
               enabled: false
             {{ end }}
-          {{ end }}
       {{ end }}
 
     processors: |

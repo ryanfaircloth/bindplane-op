@@ -2,9 +2,9 @@ apiVersion: bindplane.observiq.com/v1
 kind: SourceType
 metadata:
   name: vmware_esxi
-  displayName: VMWare ESXI
+  displayName: VMware ESXI
   icon: /icons/sources/vmware_esxi.svg
-  description: Receive Syslog from ESXI.
+  description: Receive syslog messages from VMware ESXI.
 spec:
   version: 0.0.1
   supported_platforms:
@@ -12,19 +12,18 @@ spec:
     - linux
     - windows
   parameters:
+    - name: listen_ip
+      label: Listening IP Address
+      description: The IP address to bind to and receive syslog.
+      type: string
+      default: "0.0.0.0"
+
     - name: listen_port
       label: Listening Port
       description: The port to bind to and receive syslog. Collector must be running as root (Linux) or Administrator (windows) when binding to a port below 1024.
       type: int
       default: 5140
       required: true
-
-    - name: listen_ip
-      label: Listening IP Address
-      description: The IP address to bind to and receive syslog.
-      type: string
-      default: "0.0.0.0"
-      advancedConfig: true
 
     - name: enable_tls
       label: Enable TLS

@@ -37,20 +37,6 @@ spec:
       type: bool
       default: true
 
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
-      advancedConfig: true
-
     - name: enable_system_log
       label: System Logs
       description: Enable to collect macOS system logs.
@@ -65,8 +51,10 @@ spec:
 
     - name: system_log_path
       label: System Log Path
-      description: The absolute path to the System log.
+      description: The absolute path to the system log.
       type: string
+      options:
+        gridColumns: 12
       default: "/var/log/system.log"
       relevantIf:
         - name: enable_logs
@@ -92,6 +80,8 @@ spec:
       label: Install Log Path
       description: The absolute path to the Install log.
       type: string
+      options:
+        gridColumns: 12
       default: "/var/log/install.log"
       relevantIf:
         - name: enable_logs
@@ -100,6 +90,20 @@ spec:
         - name: enable_install_log
           operator: equals
           value: true
+
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+      advancedConfig: true
 
   metrics:
     receivers: |

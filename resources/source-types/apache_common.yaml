@@ -14,8 +14,10 @@ spec:
   parameters:
     - name: file_path
       label: Access Log File Path(s)
-      description: Path to apache common formatted log file
+      description: Path to apache common formatted log file.
       type: strings
+      options:
+        gridColumns: 12
       default: ["/var/log/apache2/access.log"]
 
     - name: start_at

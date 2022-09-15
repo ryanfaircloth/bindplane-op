@@ -4,7 +4,7 @@ metadata:
   name: syslog
   displayName: Syslog
   icon: /icons/sources/network.svg
-  description: Receive Syslog from network devices.
+  description: Receive syslog from network devices.
 spec:
   version: 0.0.1
   supported_platforms:
@@ -12,6 +12,19 @@ spec:
     - linux
     - windows
   parameters:
+    - name: listen_ip
+      label: Listening IP Address
+      description: The IP address to bind to and receive syslog.
+      type: string
+      default: "0.0.0.0"
+
+    - name: listen_port
+      label: Listening Port
+      description: The port to bind to and receive syslog. Collector must be running as root (Linux) or Administrator (windows) when binding to a port below 1024.
+      type: int
+      default: 5140
+      required: true
+
     - name: protocol
       label: Protocol
       description: The RFC protocol to use when parsing incoming syslog.
@@ -40,19 +53,6 @@ spec:
         - high
         - low
 
-    - name: listen_port
-      label: Listening Port
-      description: The port to bind to and receive syslog. Collector must be running as root (Linux) or Administrator (windows) when binding to a port below 1024.
-      type: int
-      default: 5140
-      required: true
-
-    - name: listen_ip
-      label: Listening IP Address
-      description: The IP address to bind to and receive syslog.
-      type: string
-      default: "0.0.0.0"
-      advancedConfig: true
 
     - name: timezone
       label: Timezone

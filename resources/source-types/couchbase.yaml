@@ -82,20 +82,6 @@ spec:
       type: bool
       default: true
 
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      advancedConfig: true
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
-
     - name: enable_error_log
       label: Error Logs
       description: Enable to read error logs.
@@ -103,6 +89,7 @@ spec:
       default: true
       options:
         sectionHeader: true
+        gridColumns: 12
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -110,8 +97,10 @@ spec:
 
     - name: error_log_path
       label: Error Log Path(s)
-      description: Log File paths to tail for error logs.
+      description: File paths to tail for error logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/opt/couchbase/var/lib/couchbase/logs/error.log"
       relevantIf:
@@ -129,6 +118,7 @@ spec:
       default: false
       options:
         sectionHeader: true
+        gridColumns: 12
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -136,10 +126,12 @@ spec:
 
     - name: info_log_path
       label: Info Log Path(s)
-      description: Log File paths to tail for info logs.
+      description: File paths to tail for info logs.
       type: strings
       default:
         - "/opt/couchbase/var/lib/couchbase/logs/info.log"
+      options:
+        gridColumns: 12
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -155,6 +147,7 @@ spec:
       default: false
       options:
         sectionHeader: true
+        gridColumns: 12
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -163,7 +156,9 @@ spec:
     - name: debug_log_path
       type: strings
       label: Debug Log Path(s)
-      description: Log File paths to tail for debug logs.
+      description: File paths to tail for debug logs.
+      options:
+        gridColumns: 12
       default:
         - "/opt/couchbase/var/lib/couchbase/logs/debug.log"
       relevantIf:
@@ -181,6 +176,7 @@ spec:
       default: false
       options:
         sectionHeader: true
+        gridColumns: 12
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -188,8 +184,10 @@ spec:
 
     - name: http_access_log_path
       label: HTTP Access Log Path(s)
-      description: Log File paths to tail for http access logs.
+      description: File paths to tail for http access logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/opt/couchbase/var/lib/couchbase/logs/http_access.log"
       relevantIf:
@@ -207,6 +205,7 @@ spec:
       default: false
       options:
         sectionHeader: true
+        gridColumns: 12
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -214,8 +213,10 @@ spec:
 
     - name: http_internal_access_log_path
       label: Internal Access Log Path(s)
-      description: Log File paths to tail for internal access logs.
+      description: File paths to tail for internal access logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/opt/couchbase/var/lib/couchbase/logs/http_access_internal.log"
       relevantIf:
@@ -233,6 +234,7 @@ spec:
       default: false
       options:
         sectionHeader: true
+        gridColumns: 12
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -240,8 +242,10 @@ spec:
 
     - name: babysitter_log_path
       label: Baby Sitter Log Path(s)
-      description: Log File paths to tail for baby sitter logs.
+      description: File paths to tail for baby sitter logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/opt/couchbase/var/lib/couchbase/logs/babysitter.log"
       relevantIf:
@@ -259,6 +263,7 @@ spec:
       default: false
       options:
         sectionHeader: true
+        gridColumns: 12
       relevantIf:
         - name: enable_logs
           operator: equals
@@ -266,8 +271,10 @@ spec:
 
     - name: xdcr_log_path
       label: XDCR Log Path(s)
-      description: Log File paths to tail for xdcr logs.
+      description: File paths to tail for xdcr logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/opt/couchbase/var/lib/couchbase/logs/goxdcr.log"
       relevantIf:
@@ -275,6 +282,20 @@ spec:
           operator: equals
           value: true
         - name: enable_xdcr_log
+          operator: equals
+          value: true
+
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      advancedConfig: true
+      relevantIf:
+        - name: enable_logs
           operator: equals
           value: true
 

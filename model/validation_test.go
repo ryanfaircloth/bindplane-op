@@ -57,7 +57,7 @@ func TestConfigurationValidate(t *testing.T) {
 		{
 			testfile:                     "configuration-bad-parameter-values.yaml",
 			expectValidateError:          "",
-			expectValidateWithStoreError: "4 errors occurred:\n\t* parameter value for 'enable_system_log' must be a bool\n\t* parameter value for 'install_log_path' must be a string\n\t* parameter value for 'start_at' must be one of [beginning end]\n\t* parameter unknown not defined in type MacOS\n\n",
+			expectValidateWithStoreError: "3 errors occurred:\n\t* parameter value for 'enable_system_log' must be a bool\n\t* parameter value for 'install_log_path' must be a string\n\t* parameter value for 'start_at' must be one of [beginning end]\n\n",
 		},
 		{
 			testfile:                     "configuration-bad-selector.yaml",
@@ -119,17 +119,19 @@ func TestSourceTypeValidate(t *testing.T) {
 		expectValidateWarnings string
 	}{
 		{
-			testfile:           "sourcetype-ok.yaml",
-			expectErrorMessage: "",
+			testfile:               "sourcetype-ok.yaml",
+			expectErrorMessage:     "",
+			expectValidateWarnings: "2 warnings occurred:\n\t* system_log_path parameter appears to be a path and should use the full width. \n\t* install_log_path parameter appears to be a path and should use the full width. \n\n",
 		},
 		{
-			testfile:           "sourcetype-bad-name.yaml",
-			expectErrorMessage: "1 error occurred:\n\t* Mac OS is not a valid resource name: a valid label must be an empty string or consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyValue',  or 'my_value',  or '12345', regex used for validation is '(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?')\n\n",
+			testfile:               "sourcetype-bad-name.yaml",
+			expectErrorMessage:     "1 error occurred:\n\t* Mac OS is not a valid resource name: a valid label must be an empty string or consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyValue',  or 'my_value',  or '12345', regex used for validation is '(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?')\n\n",
+			expectValidateWarnings: "2 warnings occurred:\n\t* system_log_path parameter appears to be a path and should use the full width. \n\t* install_log_path parameter appears to be a path and should use the full width. \n\n",
 		},
 		{
 			testfile:               "sourcetype-bad-labels.yaml",
 			expectErrorMessage:     "1 error occurred:\n\t* bad name is not a valid label name: name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')\n\n",
-			expectValidateWarnings: "1 warning occurred:\n\t* start_at parameter with advancedConfig: false should have advancedConfig: true\n\n",
+			expectValidateWarnings: "3 warnings occurred:\n\t* system_log_path parameter appears to be a path and should use the full width. \n\t* install_log_path parameter appears to be a path and should use the full width. \n\t* start_at parameter with advancedConfig: false should have advancedConfig: true\n\n",
 		},
 		{
 			testfile:               "sourcetype-bad-parameter-definitions.yaml",
@@ -137,8 +139,9 @@ func TestSourceTypeValidate(t *testing.T) {
 			expectValidateWarnings: "1 warning occurred:\n\t* SourceType MacOS is missing .metadata.icon\n\n",
 		},
 		{
-			testfile:           "sourcetype-bad-templates.yaml",
-			expectErrorMessage: "2 errors occurred:\n\t* template: logs.receivers:6: unexpected \"}\" in operand\n\t* template: logs.processors:1:5: executing \"logs.processors\" at <.not_a_variable>: map has no entry for key \"not_a_variable\"\n\n",
+			testfile:               "sourcetype-bad-templates.yaml",
+			expectErrorMessage:     "2 errors occurred:\n\t* template: logs.receivers:6: unexpected \"}\" in operand\n\t* template: logs.processors:1:5: executing \"logs.processors\" at <.not_a_variable>: map has no entry for key \"not_a_variable\"\n\n",
+			expectValidateWarnings: "2 warnings occurred:\n\t* system_log_path parameter appears to be a path and should use the full width. \n\t* install_log_path parameter appears to be a path and should use the full width. \n\n",
 		},
 		{
 			testfile:               "sourcetype-warnings.yaml",
@@ -199,7 +202,7 @@ func TestSourceValidate(t *testing.T) {
 		{
 			testfile:                     "source-bad-parameter-values.yaml",
 			expectValidateError:          "",
-			expectValidateWithStoreError: "3 errors occurred:\n\t* parameter value for 'install_log_path' must be a string\n\t* parameter value for 'start_at' must be one of [beginning end]\n\t* parameter unknown not defined in type MacOS\n\n",
+			expectValidateWithStoreError: "2 errors occurred:\n\t* parameter value for 'install_log_path' must be a string\n\t* parameter value for 'start_at' must be one of [beginning end]\n\n",
 		},
 		{
 			testfile:                     "source-bad-processor-type.yaml",

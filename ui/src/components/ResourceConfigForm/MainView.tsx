@@ -2,9 +2,7 @@ import { Grid, Button, Typography } from "@mui/material";
 import { isFunction } from "lodash";
 import { ParameterDefinition } from "../../graphql/generated";
 import {
-  ParameterInput,
   ResourceNameInput,
-  satisfiesRelevantIf,
   useValidationContext,
   isValid,
 } from ".";
@@ -16,8 +14,34 @@ import { TitleSection } from "../ResourceDialog/TitleSection";
 import { ContentSection } from "../ResourceDialog/ContentSection";
 import { ActionsSection } from "../ResourceDialog/ActionSection";
 import { initFormErrors } from "./init-form-values";
+import { ParameterSection } from './ParameterSection';
 
 import mixins from "../../styles/mixins.module.scss";
+
+export interface ParameterGroup {
+  advanced: boolean;
+  parameters: ParameterDefinition[];
+}
+
+function groupParameters(parameters: ParameterDefinition[]): ParameterGroup[] {
+  const groups: ParameterGroup[] = [];
+  let group: ParameterGroup | undefined;
+
+  for (const p of parameters){
+    const advanced = p.advancedConfig ?? false;
+    if (group == null || advanced !== group.advanced) {
+      // start a new group
+      group = {
+        advanced,
+        parameters: [],
+      };
+      groups.push(group);
+    }
+    group.parameters.push(p);
+  }
+
+  return groups;
+}
 
 interface MainProps {
   kind: "source" | "destination" | "processor";
@@ -58,6 +82,11 @@ export const MainViewComponent: React.FC<MainProps> = ({
   const { touchAll, setErrors } = useValidationContext();
   const { setFormValues } = useResourceFormValues();
   const { purpose, onClose } = useResourceDialog();
+
+  const groups = useMemo(
+    () => groupParameters(parameterDefinitions),
+    [parameterDefinitions]
+  );
 
   function handleSubmit() {
     const errors = initFormErrors(
@@ -132,18 +161,14 @@ export const MainViewComponent: React.FC<MainProps> = ({
               </Typography>
             </Grid>
 
-            {parameterDefinitions.length === 0 ? (
+            {groups.length === 0 ? (
               <Grid item>
                 <Typography>No additional configuration needed.</Typography>
               </Grid>
             ) : (
-              parameterDefinitions.map((p) => {
-                if (satisfiesRelevantIf(formValues, p)) {
-                  return <ParameterInput key={p.name} definition={p} />;
-                }
-
-                return null;
-              })
+              <>
+                  {groups.map((g) => <ParameterSection group={g} />)}
+              </>
             )}
           </Grid>
 

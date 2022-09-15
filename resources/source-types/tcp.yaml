@@ -12,18 +12,17 @@ spec:
     - linux
     - windows
   parameters:
-    - name: listen_port
-      label: Listen Port
-      description: Port to listen on.
-      type: int
-      required: true
-
     - name: listen_ip
       label: Listen Address
       description: IP Address to listen on.
       type: string
       default: "0.0.0.0"
-      advancedConfig: true
+
+    - name: listen_port
+      label: Listen Port
+      description: Port to listen on.
+      type: int
+      required: true
 
     - name: log_type
       label: Log Type
@@ -45,6 +44,8 @@ spec:
       description: Path to the TLS cert to use for TLS required connections.
       type: string
       required: false
+      options:
+        gridColumns: 12
       default: ""
       relevantIf:
         - name: enable_tls
@@ -57,6 +58,8 @@ spec:
       description: Path to the TLS key to use for TLS required connections.
       type: string
       required: false
+      options:
+        gridColumns: 12
       default: ""
       relevantIf:
         - name: enable_tls
@@ -78,6 +81,7 @@ spec:
         - name: enable_tls
           operator: equals
           value: true
+      advancedConfig: true
 
   logs:
     receivers: |

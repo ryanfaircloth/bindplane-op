@@ -14,24 +14,32 @@ spec:
       label: System Events
       description: Enable the System event channel.
       type: bool
+      options:
+        gridColumns: 12
       default: true
 
     - name: app_event_input
       label: Application Events
       description: Enable the Application event channel.
       type: bool
+      options:
+        gridColumns: 12
       default: true
 
     - name: security_event_input
       label: Security Events
       description: Enable the Security event channel.
       type: bool
+      options:
+        gridColumns: 12
       default: true
 
     - name: custom_channels
       label: Custom Channels
       description: Custom channels to read events from.
       type: strings
+      options:
+        gridColumns: 12
       default: []
       advancedConfig: true
 

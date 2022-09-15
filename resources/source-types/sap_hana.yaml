@@ -2,10 +2,10 @@ apiVersion: bindplane.observiq.com/v1
 kind: SourceType
 metadata:
   name: hana
-  displayName: SAP Hana
+  displayName: SAP HANA
   icon: /icons/sources/sap.svg
   #description: Collect metrics logs from SAP Hana
-  description: Collect logs from SAP Hana
+  description: Collect logs from SAP HANA.
 spec:
   version: 0.0.1
   supported_platforms:
@@ -181,6 +181,8 @@ spec:
       label: Log Path(s)
       description: File paths to logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/usr/sap/*/HDB*/*/trace/*.trc"
       required: true

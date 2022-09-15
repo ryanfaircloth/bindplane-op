@@ -18,20 +18,9 @@ spec:
       type: bool
       default: true
 
-    - name: collection_interval
-      label: Collection Interval
-      description: How often (seconds) to scrape for metrics.
-      type: int
-      default: 60
-      advancedConfig: true
-      relevantIf:
-        - name: enable_metrics
-          operator: equals
-          value: true
-
     - name: address
       label: Address
-      description: IP address or hostname to scrape for JMX metrics.
+      description: IP address or hostname to scrape for Cassandra metrics.
       type: string
       default: localhost
       relevantIf:
@@ -41,7 +30,7 @@ spec:
 
     - name: port
       label: Port
-      description: Port to scrape for JMX metrics.
+      description: Port to scrape for Cassandra metrics.
       type: int
       default: 7199
       relevantIf:
@@ -60,37 +49,23 @@ spec:
           operator: equals
           value: true
 
+    - name: collection_interval
+      label: Collection Interval
+      description: How often (seconds) to scrape for metrics.
+      type: int
+      default: 60
+      advancedConfig: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
     # Logs
 
     - name: enable_logs
       label: Enable Logs
       type: bool
       default: true
-
-    - name: timezone
-      label: Timezone
-      description: The timezone to use when parsing timestamps.
-      type: timezone
-      default: "UTC"
-      advancedConfig: true
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
-
-    - name: start_at
-      label: Start At
-      description: Start reading logs from 'beginning' or 'end'.
-      type: enum
-      validValues:
-        - beginning
-        - end
-      default: end
-      advancedConfig: true
-      relevantIf:
-        - name: enable_logs
-          operator: equals
-          value: true
 
     - name: enable_system_logs
       label: System Logs
@@ -107,6 +82,8 @@ spec:
       label: System Log Path(s)
       description: File paths to system logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/var/log/cassandra/system.log"
       required: true
@@ -133,6 +110,8 @@ spec:
       label: Debug Log Path(s)
       description: File paths to debug logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/var/log/cassandra/debug.log"
       required: true
@@ -159,16 +138,41 @@ spec:
       label: GC Log Path(s)
       description: File paths to garbage collection logs.
       type: strings
+      options:
+        gridColumns: 12
       default:
         - "/var/log/cassandra/gc.log"
       required: true
-      options:
-        gridColumns: 6
       relevantIf:
         - name: enable_logs
           operator: equals
           value: true
         - name: enable_gc_logs
+          operator: equals
+          value: true
+
+    - name: timezone
+      label: Timezone
+      description: The timezone to use when parsing timestamps.
+      type: timezone
+      default: "UTC"
+      advancedConfig: true
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+
+    - name: start_at
+      label: Start At
+      description: Start reading logs from 'beginning' or 'end'.
+      type: enum
+      validValues:
+        - beginning
+        - end
+      default: end
+      advancedConfig: true
+      relevantIf:
+        - name: enable_logs
           operator: equals
           value: true
 
