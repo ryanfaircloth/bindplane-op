@@ -1,0 +1,34 @@
+apiVersion: bindplane.observiq.com/v1
+kind: ProcessorType
+metadata:
+  name: filter_severity
+  displayName: Severity Filter
+  description: Filter logs by severity level.
+spec:
+  version: 0.0.1
+  parameters:
+    - name: severity
+      label: Severity
+      description: Minimum severity to match. Log entries with lower severities will be filtered.
+      type: enum
+      required: true
+      validValues:
+        - TRACE
+        - INFO
+        - WARN
+        - ERROR
+        - FATAL
+      default: TRACE
+      options:
+        gridColumns: 12
+
+  logs:
+    processors: |
+      - filter:
+          logs:
+            include:
+              severity_number:
+                min: {{ .severity }}
+                # If a log entry is missing a severity, or contains an unknown
+                # severity, do not drop the log.
+                match_undefined: true
