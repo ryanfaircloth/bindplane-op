@@ -62,7 +62,7 @@ spec:
           channel: system
           max_reads: 100
           poll_interval: 1s
-          labels:
+          attributes:
             log_type: "windows_event.system"
           start_at: end
       {{ end }}
@@ -72,7 +72,7 @@ spec:
           channel: application
           max_reads: 100
           poll_interval: 1s
-          labels:
+          attributes:
             log_type: "windows_event.application"
           start_at: end
       {{ end }}
@@ -82,7 +82,7 @@ spec:
           channel: security
           max_reads: 100
           poll_interval: 1s
-          labels:
+          attributes:
             log_type: "windows_event.security"
           start_at: end
       {{ end }}
@@ -92,7 +92,7 @@ spec:
           channel: {{ $chan }}
           max_reads: 100
           poll_interval: 1s
-          labels:
+          attributes:
             log_type: "windows_event.custom"
           start_at: end
       {{ end }}
