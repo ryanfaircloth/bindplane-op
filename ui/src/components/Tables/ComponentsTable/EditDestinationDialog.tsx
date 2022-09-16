@@ -66,6 +66,7 @@ export const EditDestinationDialog: React.FC<EditDestinationProps> = ({
 
   return (
     <EditResourceDialog
+      fullWidth
       displayName={data?.destinationWithType.destination?.metadata.name ?? ""}
       description={
         data?.destinationWithType.destinationType?.metadata.description ?? ""

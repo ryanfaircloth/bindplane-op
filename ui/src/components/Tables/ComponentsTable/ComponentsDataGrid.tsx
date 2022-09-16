@@ -1,4 +1,4 @@
-import { Button, Stack, Typography } from "@mui/material";
+import { Stack } from "@mui/material";
 import {
   DataGrid,
   DataGridProps,
@@ -10,6 +10,8 @@ import {
 import { isFunction } from "lodash";
 import { ComponentsQuery } from "../../../graphql/generated";
 import { DestinationTypeCell, SourceTypeCell } from "./cells";
+
+import styles from "./cells.module.scss";
 
 export enum ComponentsTableField {
   NAME = "name",
@@ -34,12 +36,12 @@ export const ComponentsDataGrid: React.FC<ComponentsDataGridProps> = ({
   function renderNameCell(cellParams: GridCellParams<string>): JSX.Element {
     if (cellParams.row.kind === "Destination") {
       return (
-        <Button
-          variant="text"
+        <button
           onClick={() => onEditDestination(cellParams.value!)}
+          className={styles.link}
         >
           {cellParams.value}
-        </Button>
+        </button>
       );
     }
 
@@ -78,6 +80,7 @@ export const ComponentsDataGrid: React.FC<ComponentsDataGridProps> = ({
 
   return (
     <DataGrid
+      disableSelectionOnClick
       {...dataGridProps}
       onSelectionModelChange={handleSelect}
       components={{
@@ -104,5 +107,5 @@ function renderTypeCell(cellParams: GridCellParams<string>): JSX.Element {
 }
 
 function renderStringCell(cellParams: GridCellParams<string>): JSX.Element {
-  return <Typography>{cellParams.value}</Typography>;
+  return <>{cellParams.value}</>;
 }
