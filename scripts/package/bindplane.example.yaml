@@ -15,6 +15,14 @@ host: "127.0.0.1"
 #
 port: "3001"
 
+# The full http URL used for communication between client and server.
+# Defaults to "http://127.0.0.1:3001".
+# Set to the IP address of the server, this should never be "0.0.0.0".
+# Use "https" when TLS is enabled.
+#
+#
+serverURL: http://127.0.0.1:3001
+
 # Basic auth username. Defaults to "admin".
 # Uncomment and set to something secure.
 #
@@ -61,14 +69,6 @@ bindplaneHome: /var/lib/bindplane
 # Server configuration used by "bindplane serve"
 #
 server:
-  # The full http URL used for communication between client and server.
-  # Defaults to "http://127.0.0.1:3001".
-  # Set to the IP address of the server, this should never be "0.0.0.0".
-  # Use "https" when TLS is enabled.
-  #
-  #
-  serverURL: http://127.0.0.1:3001
-
   # The full websocket URL used for communication between agent and server.
   # Defaults to "ws://127.0.0.1:3001".
   # Set to the IP address of the server, this should never be "0.0.0.0".
