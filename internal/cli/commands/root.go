@@ -162,10 +162,22 @@ func initViper(conf *common.Config) error {
 	err := viper.Unmarshal(conf, func(dc *mapstructure.DecoderConfig) {
 		dc.Squash = true
 	})
+
+	serverURL := conf.Server.BindPlaneURL()
+
 	if err != nil {
 		return err
 	}
-	return viper.Unmarshal(conf)
+
+	err = viper.Unmarshal(conf)
+
+	// We use the unnested value of serverURL to overwrite any value nested under
+	// Client or Server.  This is to solve an issue where linux users had serverURL
+	// value set by the default config file, when we prefer the top level.
+	conf.Server.ServerURL = serverURL
+	conf.Client.ServerURL = serverURL
+
+	return err
 }
 
 func initTracing(bindplane *cli.BindPlane) error {
