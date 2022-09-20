@@ -36,7 +36,7 @@ require (
 require (
 	cloud.google.com/go/datastore v1.6.0
 	cloud.google.com/go/pubsub v1.3.1
-	github.com/AlecAivazis/survey/v2 v2.3.5
+	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.8.6
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/gin-contrib/zap v0.0.2
