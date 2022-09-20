@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM debian:11.4-slim as certs
+FROM debian:11.5-slim as certs
 RUN apt-get update -qq && apt-get install -qq -y ca-certificates
 
-FROM debian:11.4-slim
+FROM debian:11.5-slim
 
 COPY --from=certs /etc/ssl /etc/ssl
 
