@@ -549,7 +549,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "409": {
-                        "description": "Conflict",
+                        "description": "If the agent does not support upgrade",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }

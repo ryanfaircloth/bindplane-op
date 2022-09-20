@@ -452,7 +452,7 @@ func upgradeAgents(c *gin.Context, bindplane server.BindPlane) {
 // @Router /agents/{id}/version [post]
 // @Param 	name	path	string	true "the id of the agent"
 // @Param body body model.PostAgentVersionRequest true "request body containing version"
-// @Failure 409 {object} ErrorResponse If the agent does not support upgrade
+// @Failure 409 {object} ErrorResponse "If the agent does not support upgrade"
 // @Failure 500 {object} ErrorResponse
 func upgradeAgent(c *gin.Context, bindplane server.BindPlane) {
 	ctx, span := tracer.Start(c.Request.Context(), "rest/upgradeAgent")
