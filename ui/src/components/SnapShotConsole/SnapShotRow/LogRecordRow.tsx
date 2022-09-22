@@ -73,7 +73,7 @@ export const LogRecordRow: React.FC<LogRecordRowProps> = ({ message }) => {
 
           <TableRow>
             <CellLabel>body</CellLabel>
-            <CellValue>{message.body}</CellValue>
+            <CellValue whiteSpace="pre-wrap">{message.body}</CellValue>
           </TableRow>
 
           <TableRow>

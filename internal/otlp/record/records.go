@@ -15,8 +15,11 @@
 package record
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/collector/pdata/ptrace"
@@ -192,7 +195,7 @@ func ConvertLogs(logs plog.Logs) []*Log {
 				log := scopeLogs.LogRecords().At(j)
 				record := Log{
 					Timestamp:  log.Timestamp().AsTime(),
-					Body:       log.Body().AsString(),
+					Body:       getLogMessage(log.Body()),
 					Severity:   severityNumberToString(int32(log.SeverityNumber())),
 					Attributes: log.Attributes().AsRaw(),
 					Resource:   resourceAttributes,
@@ -202,6 +205,26 @@ func ConvertLogs(logs plog.Logs) []*Log {
 		}
 	}
 	return records
+}
+
+// getLogMessage retrieves the body of a plog.LogEntry to display in snapshots
+//
+// If the body is a Map, it's formatted the same way as in the logging exporter.
+// Otherwise, AsString() is returned.
+func getLogMessage(body pcommon.Value) string {
+	if body.Type() != pcommon.ValueTypeMap {
+		return body.AsString()
+	}
+
+	var b strings.Builder
+	b.WriteString("{\n")
+	// Sort to ensure logs with the same attributes display in the same order
+	body.MapVal().Sort().Range(func(k string, v pcommon.Value) bool {
+		fmt.Fprintf(&b, "\t-> %s: %s(%s)\n", k, v.Type(), v.AsString())
+		return true
+	})
+	b.WriteByte('}')
+	return b.String()
 }
 
 var severityMap = map[int32]string{
