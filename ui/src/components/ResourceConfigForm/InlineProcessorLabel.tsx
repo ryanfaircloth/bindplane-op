@@ -54,6 +54,7 @@ gql`
             trackUnchecked
             gridColumns
             sectionHeader
+            multiline
             metricCategories {
               label
               column

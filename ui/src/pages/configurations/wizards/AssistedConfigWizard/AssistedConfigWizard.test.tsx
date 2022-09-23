@@ -42,8 +42,10 @@ const dummySourceType: SourceTypesQuery["sourceTypes"][0] = {
         type: ParameterType.Bool,
         default: true,
         required: false,
+        documentation: [],
         validValues: null,
         relevantIf: null,
+        advancedConfig: false,
         options: {
           creatable: null,
           trackUnchecked: null,
@@ -55,6 +57,7 @@ const dummySourceType: SourceTypesQuery["sourceTypes"][0] = {
       {
         __typename: "ParameterDefinition",
         name: "parameter2",
+        documentation: [],
         label: "Second Parameter",
         description: "A description for the second parameter",
         type: ParameterType.String,
@@ -62,6 +65,7 @@ const dummySourceType: SourceTypesQuery["sourceTypes"][0] = {
         required: false,
         validValues: null,
         relevantIf: null,
+        advancedConfig: false,
         options: {
           creatable: null,
           trackUnchecked: null,
@@ -99,7 +103,9 @@ const dummyDestinationType: DestinationsAndTypesQuery["destinationTypes"][0] = {
         description: "A description for the first parameter",
         type: ParameterType.Bool,
         default: true,
+        documentation: [],
         required: false,
+        advancedConfig: false,
         validValues: null,
         relevantIf: null,
         options: {
@@ -113,10 +119,12 @@ const dummyDestinationType: DestinationsAndTypesQuery["destinationTypes"][0] = {
       {
         __typename: "ParameterDefinition",
         name: "parameter2",
+        documentation: [],
         label: "Second Parameter",
         description: "A description for the second parameter",
         type: ParameterType.String,
         default: "default-value",
+        advancedConfig: false,
         required: false,
         validValues: null,
         relevantIf: null,

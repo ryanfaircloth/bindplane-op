@@ -1,6 +1,5 @@
 import {
   FormHelperText,
-  Grid,
   Typography,
   Stack,
   OutlinedInput,
@@ -117,20 +116,15 @@ const MapParamInputComponent: React.FC<
         {definition.description}
       </FormHelperText>
 
-      <Grid container spacing={1} marginY={1}>
-        <Grid item xs={6}>
-          <Typography marginLeft={4} fontWeight={600}>
+      <Stack spacing={1}>
+        <Stack direction="row">
+          <Typography marginLeft={1} fontWeight={600} width={220}>
             Key
           </Typography>
-        </Grid>
-        <Grid item xs={6}>
           <Typography marginLeft={2} fontWeight={600}>
             Value
           </Typography>
-        </Grid>
-      </Grid>
-
-      <Stack spacing={1}>
+        </Stack>
         {controlValue.map(([k, v], rowIndex) => {
           return (
             <Stack
@@ -139,7 +133,12 @@ const MapParamInputComponent: React.FC<
               spacing={1}
             >
               <OutlinedInput
-                autoFocus={rowIndex === controlValue.length - 1}
+                // Don't autofocus if this is the first input,
+                // but autofocus any new inputs we create after
+                // Enter key or New Row click.
+                autoFocus={
+                  rowIndex !== 0 && rowIndex === controlValue.length - 1
+                }
                 id={`${definition.name}-input-${rowIndex * 2}`}
                 key={`${definition.name}-${rowIndex}-0-input`}
                 data-testid={`${definition.name}-${rowIndex}-0-input`}
@@ -149,6 +148,7 @@ const MapParamInputComponent: React.FC<
                 onChange={(e) => onChangeInput(e, rowIndex, 0)}
                 onBlur={handleBlur}
                 onKeyDown={(e) => handleKeyFieldEnter(e, rowIndex)}
+                sx={{ width: 230 }}
               />
 
               <OutlinedInput
@@ -161,6 +161,7 @@ const MapParamInputComponent: React.FC<
                 onChange={(e) => onChangeInput(e, rowIndex, 1)}
                 onBlur={handleBlur}
                 onKeyDown={(e) => handleValueFieldEnter(e, rowIndex)}
+                sx={{ width: 230 }}
               />
 
               <IconButton

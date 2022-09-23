@@ -91,6 +91,9 @@ type ParameterOptions struct {
 	SectionHeader *bool `json:"sectionHeader,omitempty" yaml:"sectionHeader,omitempty"`
 
 	MetricCategories []MetricCategory `json:"metricCategories" yaml:"metricCategories"`
+
+	// Multiline indicates that a multiline textarea should be used for editing a "string" parameter.
+	Multiline bool `json:"multiline,omitempty" yaml:"multiline,omitempty"`
 }
 
 // MetricCategory consists of the label, optional column, and metrics for a metricsType Parameter
@@ -268,6 +271,15 @@ func (p ParameterDefinition) validateOptions(errs validation.Errors) {
 			errors.NewError(
 				fmt.Sprintf("trackUnchecked is true for parameter of type `%s`", p.Type),
 				"remove 'trackUnchecked' field or change type to 'enums`",
+			),
+		)
+	}
+
+	if p.Options.Multiline && p.Type != "string" {
+		errs.Add(
+			errors.NewError(
+				fmt.Sprintf("multiline is true for parameter of type `%s`", p.Type),
+				"remove 'multiline' field or change type to 'string`",
 			),
 		)
 	}

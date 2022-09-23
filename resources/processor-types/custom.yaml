@@ -12,6 +12,8 @@ spec:
       label: Configuration
       description: Enter any supported Processor and the YAML will be inserted into the configuration.
       type: yaml
+      options:
+        gridColumns: 12
       required: true
       documentation:
         - text: Processor Syntax

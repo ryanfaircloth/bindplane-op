@@ -7,21 +7,25 @@ metadata:
   description: Serve Prometheus compatible metrics, scrapable by a Prometheus server.
 spec:
   parameters:
-    - name: listen_port
-      label: Listen Port
-      description: The TCP port the Prometheus exporter should listen on, to be scraped by a Prometheus server
-      type: int
-      default: 9000
-
     - name: listen_address
       label: Listen Address
-      description: The IP address the Prometheus exporter should listen on, to be scraped by a Prometheus server
+      description: >
+        The IP address the Prometheus exporter should 
+        listen on, to be scraped by a Prometheus server.
       type: string
       default: "127.0.0.1"
 
+    - name: listen_port
+      label: Listen Port
+      description: >
+        The TCP port the Prometheus exporter should listen on,
+        to be scraped by a Prometheus server.
+      type: int
+      default: 9000
+
     - name: namespace
       label: Namespace
-      description: When set, exports metrics under the provided value
+      description: When set, exports metrics under the provided value.
       type: string
       advancedConfig: true
       required: false

@@ -242,6 +242,7 @@ type ParameterOptions {
   gridColumns: Int
   sectionHeader: Boolean
   metricCategories: [MetricCategory!]
+  multiline: Boolean
 }
 
 type MetricCategory {

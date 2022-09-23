@@ -30,7 +30,23 @@ const CreateProcessorConfigureViewComponent: React.FC<CreateProcessorConfigureVi
   ({ processorType, onSave, onBack }) => {
     const { formValues } = useResourceFormValues();
     const { onClose } = useResourceDialog();
-    const { errors } = useValidationContext();
+    const { touchAll, setErrors } = useValidationContext();
+
+    function handleSave() {
+      const errors = initFormErrors(
+        processorType.spec.parameters,
+        formValues,
+        "processor"
+      );
+
+      if (!isValid(errors)) {
+        setErrors(errors);
+        touchAll();
+        return;
+      }
+
+      onSave(formValues);
+    }
 
     return (
       <>
@@ -49,12 +65,7 @@ const CreateProcessorConfigureViewComponent: React.FC<CreateProcessorConfigureVi
             Back
           </Button>
 
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => onSave(formValues)}
-            disabled={!isValid(errors)}
-          >
+          <Button variant="contained" color="primary" onClick={handleSave}>
             Save
           </Button>
         </ActionsSection>
@@ -74,7 +85,7 @@ export const CreateProcessorConfigureView: React.FC<CreateProcessorConfigureView
       <FormValueContextProvider initValues={initValues}>
         <ValidationContextProvider
           initErrors={initErrors}
-          definitions={props.parameterDefinitions}
+          definitions={props.processorType.spec.parameters}
         >
           <CreateProcessorConfigureViewComponent {...props} />
         </ValidationContextProvider>

@@ -7,15 +7,6 @@ metadata:
   description: Send metrics, logs, and traces to an OTLP endpoint.
 spec:
   parameters:
-    - name: protocol
-      label: Protocol
-      description: The OTLP protocol to use when sending OTLP telemetry.
-      type: enum
-      default: grpc
-      validValues:
-        - grpc
-        - http
-
     - name: hostname
       label: Hostname
       description: Hostname or IP address where the exporter will send OTLP data.
@@ -42,6 +33,15 @@ spec:
         - name: protocol
           operator: equals
           value: "http"
+
+    - name: protocol
+      label: Protocol
+      description: The OTLP protocol to use when sending OTLP telemetry.
+      type: enum
+      default: grpc
+      validValues:
+        - grpc
+        - http
 
     - name: enable_tls
       label: Enable TLS

@@ -79,6 +79,7 @@ gql`
           required
           options {
             creatable
+            multiline
             trackUnchecked
             sectionHeader
             gridColumns

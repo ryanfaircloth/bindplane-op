@@ -1,4 +1,9 @@
-import { TextField, createFilterOptions, Autocomplete } from "@mui/material";
+import {
+  TextField,
+  createFilterOptions,
+  Autocomplete,
+  Typography,
+} from "@mui/material";
 import { isFunction } from "lodash";
 import { ChangeEvent, memo } from "react";
 import { ParamInputProps } from "./ParameterInput";
@@ -26,7 +31,15 @@ const SelectParamInput: React.FC<ParamInputProps<string>> = ({
       fullWidth
       size="small"
       label={definition.label}
-      helperText={definition.description}
+      helperText={
+        <Typography
+          component={"span"}
+          whiteSpace={"pre-wrap"}
+          fontSize="0.75rem"
+        >
+          {definition.description}
+        </Typography>
+      }
       required={definition.required}
       select
       SelectProps={{ native: true }}

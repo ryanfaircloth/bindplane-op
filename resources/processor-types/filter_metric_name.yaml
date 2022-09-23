@@ -29,6 +29,8 @@ spec:
       label: Metrics
       description: List of metric names to match against. All matches are filtered.
       type: strings
+      options:
+        gridColumns: 12
       required: true
 
   metrics:

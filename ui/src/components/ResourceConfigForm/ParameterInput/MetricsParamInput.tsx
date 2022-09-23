@@ -107,7 +107,7 @@ const CategoryStack: React.FC<{
       {metricCategories?.map((category) => {
         const allValues = category.metrics.map((m) => m.name);
         return (
-          <>
+          <div key={category.label}>
             <div className={styles["metric-category-label"]}>
               <Stack
                 direction="row"
@@ -139,6 +139,7 @@ const CategoryStack: React.FC<{
               {category.metrics.map((m) => {
                 return (
                   <FormControlLabel
+                    key={m.name}
                     control={
                       <Checkbox
                         onChange={() => {
@@ -149,12 +150,16 @@ const CategoryStack: React.FC<{
                       />
                     }
                     classes={{ root: styles["metric-label"] }}
-                    label={<Typography overflow="hidden" textOverflow={"ellipsis"}>{m.name}</Typography>}
+                    label={
+                      <Typography overflow="hidden" textOverflow={"ellipsis"}>
+                        {m.name}
+                      </Typography>
+                    }
                   />
                 );
               })}
             </Stack>
-          </>
+          </div>
         );
       })}
     </Grid>

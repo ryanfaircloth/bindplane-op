@@ -19,8 +19,6 @@ spec:
         - ERROR
         - FATAL
       default: TRACE
-      options:
-        gridColumns: 12
 
   logs:
     processors: |

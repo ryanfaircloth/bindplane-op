@@ -1,11 +1,7 @@
 import { Grid, Button, Typography } from "@mui/material";
 import { isFunction } from "lodash";
 import { ParameterDefinition } from "../../graphql/generated";
-import {
-  ResourceNameInput,
-  useValidationContext,
-  isValid,
-} from ".";
+import { ResourceNameInput, useValidationContext, isValid } from ".";
 import { InlineProcessorContainer } from "./InlineProcessorContainer";
 import { useResourceFormValues } from "./ResourceFormContext";
 import { useResourceDialog } from "../ResourceDialog/ResourceDialogContext";
@@ -14,7 +10,7 @@ import { TitleSection } from "../ResourceDialog/TitleSection";
 import { ContentSection } from "../ResourceDialog/ContentSection";
 import { ActionsSection } from "../ResourceDialog/ActionSection";
 import { initFormErrors } from "./init-form-values";
-import { ParameterSection } from './ParameterSection';
+import { ParameterSection } from "./ParameterSection";
 
 import mixins from "../../styles/mixins.module.scss";
 
@@ -27,7 +23,7 @@ function groupParameters(parameters: ParameterDefinition[]): ParameterGroup[] {
   const groups: ParameterGroup[] = [];
   let group: ParameterGroup | undefined;
 
-  for (const p of parameters){
+  for (const p of parameters) {
     const advanced = p.advancedConfig ?? false;
     if (group == null || advanced !== group.advanced) {
       // start a new group
@@ -167,7 +163,9 @@ export const MainViewComponent: React.FC<MainProps> = ({
               </Grid>
             ) : (
               <>
-                  {groups.map((g) => <ParameterSection group={g} />)}
+                {groups.map((g, ix) => (
+                  <ParameterSection key={`param-group-${ix}`} group={g} />
+                ))}
               </>
             )}
           </Grid>

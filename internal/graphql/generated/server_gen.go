@@ -233,6 +233,7 @@ type ComplexityRoot struct {
 		Creatable        func(childComplexity int) int
 		GridColumns      func(childComplexity int) int
 		MetricCategories func(childComplexity int) int
+		Multiline        func(childComplexity int) int
 		SectionHeader    func(childComplexity int) int
 		TrackUnchecked   func(childComplexity int) int
 	}
@@ -1151,6 +1152,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ParameterOptions.MetricCategories(childComplexity), true
 
+	case "ParameterOptions.multiline":
+		if e.complexity.ParameterOptions.Multiline == nil {
+			break
+		}
+
+		return e.complexity.ParameterOptions.Multiline(childComplexity), true
+
 	case "ParameterOptions.sectionHeader":
 		if e.complexity.ParameterOptions.SectionHeader == nil {
 			break
@@ -1989,6 +1997,7 @@ type ParameterOptions {
   gridColumns: Int
   sectionHeader: Boolean
   metricCategories: [MetricCategory!]
+  multiline: Boolean
 }
 
 type MetricCategory {
@@ -6942,6 +6951,8 @@ func (ec *executionContext) fieldContext_ParameterDefinition_options(ctx context
 				return ec.fieldContext_ParameterOptions_sectionHeader(ctx, field)
 			case "metricCategories":
 				return ec.fieldContext_ParameterOptions_metricCategories(ctx, field)
+			case "multiline":
+				return ec.fieldContext_ParameterOptions_multiline(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParameterOptions", field.Name)
 		},
@@ -7204,6 +7215,47 @@ func (ec *executionContext) fieldContext_ParameterOptions_metricCategories(ctx c
 				return ec.fieldContext_MetricCategory_metrics(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type MetricCategory", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ParameterOptions_multiline(ctx context.Context, field graphql.CollectedField, obj *model.ParameterOptions) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParameterOptions_multiline(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Multiline, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalOBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParameterOptions_multiline(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParameterOptions",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -13618,6 +13670,10 @@ func (ec *executionContext) _ParameterOptions(ctx context.Context, sel ast.Selec
 		case "metricCategories":
 
 			out.Values[i] = ec._ParameterOptions_metricCategories(ctx, field, obj)
+
+		case "multiline":
+
+			out.Values[i] = ec._ParameterOptions_multiline(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))

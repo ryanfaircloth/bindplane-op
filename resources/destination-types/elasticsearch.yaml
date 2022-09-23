@@ -9,9 +9,15 @@ spec:
   parameters:
     - name: endpoints
       label: Endpoints
-      description: List of Elasticsearch URLs. If endpoints and cloudid is missing, the ELASTICSEARCH_URL environment variable will be used.
+      description: List of Elasticsearch URLs. If endpoints and Cloud ID is missing, the ELASTICSEARCH_URL environment variable will be used.
       type: strings
       default: []
+
+    - name: index
+      label: Index
+      description: The index or datastream name to publish events to.
+      type: string
+      default: "logs-generic-default"
 
     - name: cloudid
       label: CloudID
@@ -19,12 +25,6 @@ spec:
       type: string
       default: ""
       advancedConfig: true
-
-    - name: index
-      label: Index
-      description: The index or datastream name to publish events to.
-      type: string
-      default: "logs-generic-default"
 
     - name: pipeline
       label: Pipeline

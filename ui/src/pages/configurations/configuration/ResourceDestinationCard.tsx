@@ -57,6 +57,7 @@ gql`
             advancedConfig
             validValues
             options {
+              multiline
               creatable
               trackUnchecked
               sectionHeader

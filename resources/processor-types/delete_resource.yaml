@@ -10,6 +10,8 @@ spec:
     - name: resources
       label: Resource Keys
       type: strings
+      options:
+        gridColumns: 12
       required: true
 
     - name: telemetry_types

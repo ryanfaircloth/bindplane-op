@@ -10,7 +10,6 @@ spec:
   parameters:
     - name: log_level
       label: Log Level
-      description: The log level
       required: false
       type: enum
       validValues:

@@ -66,6 +66,7 @@ gql`
           default
           options {
             creatable
+            multiline
             trackUnchecked
             sectionHeader
             gridColumns

@@ -2,6 +2,8 @@ import { FormControl, InputLabel, FormHelperText } from "@mui/material";
 import { isEmpty, isFunction } from "lodash";
 import { useState, ChangeEvent, memo } from "react";
 import { YamlEditor } from "../../YamlEditor";
+import { validateYamlField } from "../validation-functions";
+import { useValidationContext } from "../ValidationContext";
 import { ParamInputProps } from "./ParameterInput";
 
 const YamlParamInputComponent: React.FC<ParamInputProps<string>> = ({
@@ -11,10 +13,16 @@ const YamlParamInputComponent: React.FC<ParamInputProps<string>> = ({
 }) => {
   const [isFocused, setFocused] = useState(false);
 
+  const { touch, touched, errors, setError } = useValidationContext();
+
   const shrinkLabel = isFocused || !isEmpty(value);
 
   function handleValueChange(e: ChangeEvent<HTMLTextAreaElement>) {
-    isFunction(onValueChange) && onValueChange(e.target.value);
+    const value = e.target.value;
+    isFunction(onValueChange) && onValueChange(value);
+
+    setError(definition.name, validateYamlField(value, definition.required));
+    touch(definition.name);
   }
 
   return (
@@ -39,6 +47,9 @@ const YamlParamInputComponent: React.FC<ParamInputProps<string>> = ({
         onBlur={() => setFocused(false)}
         minHeight={200}
       />
+      {touched[definition.name] && errors[definition.name] && (
+        <FormHelperText error>{errors[definition.name]}</FormHelperText>
+      )}
       <FormHelperText>{definition.description}</FormHelperText>
       {(definition.documentation ?? []).map((d) => {
         return (

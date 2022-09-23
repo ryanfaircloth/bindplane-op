@@ -28,6 +28,7 @@ const StringParamInputComponent: React.FC<ParamInputProps<string>> = ({
 
   return (
     <TextField
+      multiline={definition.options.multiline ?? undefined}
       value={value}
       onChange={handleValueChange}
       onBlur={() => touch(definition.name)}

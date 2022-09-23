@@ -84,7 +84,11 @@ exports[`EnumParameter renders correctly 1`] = `
     <p
       className="MuiFormHelperText-root MuiFormHelperText-sizeSmall MuiFormHelperText-contained Mui-required css-k4qjio-MuiFormHelperText-root"
     >
-      description
+      <span
+        className="MuiTypography-root MuiTypography-body1 css-1uz5ads-MuiTypography-root"
+      >
+        description
+      </span>
     </p>
   </div>
 </div>
@@ -179,7 +183,11 @@ exports[`EnumParameter renders creatable enum correctly 1`] = `
       className="MuiFormHelperText-root MuiFormHelperText-sizeSmall MuiFormHelperText-contained Mui-required css-k4qjio-MuiFormHelperText-root"
       id="mui-22-helper-text"
     >
-      description
+      <span
+        className="MuiTypography-root MuiTypography-body1 css-1uz5ads-MuiTypography-root"
+      >
+        description
+      </span>
     </p>
   </div>
 </div>
@@ -399,40 +407,32 @@ exports[`MapParamInput renders correctly 1`] = `
     description
   </p>
   <div
-    className="MuiGrid-root MuiGrid-container MuiGrid-spacing-xs-1 css-1fshczy-MuiGrid-root"
+    className="css-1okj3ks-MuiStack-root"
   >
     <div
-      className="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-6 css-1osj8n2-MuiGrid-root"
+      className="css-m69qwo-MuiStack-root"
     >
       <p
-        className="MuiTypography-root MuiTypography-body1 css-1ksu6kl-MuiTypography-root"
+        className="MuiTypography-root MuiTypography-body1 css-isiq0q-MuiTypography-root"
       >
         Key
       </p>
-    </div>
-    <div
-      className="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-6 css-1osj8n2-MuiGrid-root"
-    >
       <p
         className="MuiTypography-root MuiTypography-body1 css-13qb2yq-MuiTypography-root"
       >
         Value
       </p>
     </div>
-  </div>
-  <div
-    className="css-1okj3ks-MuiStack-root"
-  >
     <div
       className="css-w4z10b-MuiStack-root"
     >
       <div
-        className="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-sizeSmall css-9ddj71-MuiInputBase-root-MuiOutlinedInput-root"
+        className="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-sizeSmall css-vsqhek-MuiInputBase-root-MuiOutlinedInput-root"
         data-testid="map_type_param-0-0-input"
         onClick={[Function]}
       >
         <input
-          autoFocus={true}
+          autoFocus={false}
           className="MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-1n4twyu-MuiInputBase-input-MuiOutlinedInput-input"
           id="map_type_param-input-0"
           onAnimationStart={[Function]}
@@ -459,7 +459,7 @@ exports[`MapParamInput renders correctly 1`] = `
         </fieldset>
       </div>
       <div
-        className="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-sizeSmall css-9ddj71-MuiInputBase-root-MuiOutlinedInput-root"
+        className="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-sizeSmall css-vsqhek-MuiInputBase-root-MuiOutlinedInput-root"
         data-testid="map_type_param-0-1-input"
         onClick={[Function]}
       >

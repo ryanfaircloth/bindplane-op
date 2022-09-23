@@ -16,11 +16,13 @@ spec:
 
     - name: auth_type
       label: Authentication Method
-      description: The method used for authenticating to Google Cloud. 'auto' will attempt to use the collector's environment, useful when running on Google Cloud or when you have set GOOGLE_APPLICATION_CREDENTIALS in the collector's environment. 'json' takes the json contents of a Google Service Account's credentials file. 'file' is the file path to a Google Service Account credential file.
+      description: |
+        The method used for authenticating to Google Cloud.
+        auto: use the collectors environment when running on Google Cloud or the GOOGLE_APPLICATION_CREDENTIALS environment variable.
+        json: contents of a Google Service Account credentials file.
+        file: file path to a Google Service Account credential file.
       type: enum
       default: "auto"
-      options:
-        gridColumns: 12
       validValues:
         - "auto"
         - "json"
@@ -32,6 +34,9 @@ spec:
       description: JSON value from a Google Service Account credential file.
       type: string
       default: ""
+      options:
+        gridColumns: 12
+        multiline: true
       relevantIf:
         - name: auth_type
           operator: equals
@@ -43,6 +48,8 @@ spec:
       description: Path to a Google Service Account credential file on the collector system. The collector's runtime user must have permission to read this file.
       type: string
       default: ""
+      options:
+        gridColumns: 12
       relevantIf:
         - name: auth_type
           operator: equals

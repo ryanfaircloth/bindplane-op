@@ -52,6 +52,7 @@ spec:
         #- tls
         - kerberos
       default: basic
+      advancedConfig: true
       options:
         gridColumns: 12
       relevantIf:
@@ -64,6 +65,7 @@ spec:
       type: string
       required: true
       default: ""
+      advancedConfig: true
       relevantIf:
         - name: enable_auth
           operator: equals
@@ -76,6 +78,7 @@ spec:
       label: Password
       type: string
       required: true
+      advancedConfig: true
       default: ""
       relevantIf:
         - name: enable_auth
@@ -89,6 +92,7 @@ spec:
       label: Username
       type: string
       required: true
+      advancedConfig: true
       default: ""
       relevantIf:
         - name: enable_auth
@@ -101,6 +105,7 @@ spec:
     - name: sasl_password
       label: Password
       type: string
+      advancedConfig: true
       required: true
       default: ""
       relevantIf:
@@ -118,6 +123,7 @@ spec:
         - SCRAM-SHA-256
         - SCRAM-SHA-512
         - PLAIN
+      advancedConfig: true
       default: SCRAM-SHA-256
       relevantIf:
         - name: enable_auth
@@ -131,6 +137,7 @@ spec:
       label: Service Name
       type: string
       required: true
+      advancedConfig: true
       default: ""
       relevantIf:
         - name: enable_auth
@@ -144,6 +151,7 @@ spec:
       label: Realm
       type: string
       required: true
+      advancedConfig: true
       default: ""
       relevantIf:
         - name: enable_auth
@@ -157,6 +165,7 @@ spec:
       label: Config File
       type: string
       default: /etc/krb5.conf
+      advancedConfig: true
       required: true
       relevantIf:
         - name: enable_auth
@@ -172,6 +181,7 @@ spec:
       validValues:
         - keytab
         - basic
+      advancedConfig: true
       default: keytab
       relevantIf:
         - name: enable_auth
@@ -186,6 +196,7 @@ spec:
       type: string
       required: true
       default: /etc/security/kafka.keytab
+      advancedConfig: true
       relevantIf:
         - name: enable_auth
           operator: equals
@@ -202,7 +213,7 @@ spec:
       type: string
       required: true
       default: ""
-
+      advancedConfig: true
       relevantIf:
         - name: enable_auth
           operator: equals
@@ -219,6 +230,7 @@ spec:
       type: string
       required: true
       default: ""
+      advancedConfig: true
       relevantIf:
         - name: enable_auth
           operator: equals
@@ -239,6 +251,8 @@ spec:
       label: Metric Topic
       description: The name of the topic to export metrics to.
       type: string
+      options:
+        gridColumns: 12
       default: otlp_metrics
       relevantIf:
         - name: enable_metrics
@@ -254,6 +268,8 @@ spec:
       label: Log Topic
       description: The name of the topic to export logs to.
       type: string
+      options:
+        gridColumns: 12
       default: otlp_logs
       relevantIf:
         - name: enable_logs
@@ -269,6 +285,8 @@ spec:
       label: Trace Topic
       description: The name of the topic to export traces to.
       type: string
+      options:
+        gridColumns: 12
       default: otlp_spans
       relevantIf:
         - name: enable_traces

@@ -9,7 +9,7 @@ spec:
   parameters:
     - name: endpoint
       label: OTLP Endpoint
-      description: |
+      description: >
         Endpoint where the exporter sends data to New Relic. Endpoints are region-specific,
         so use the one according to where your account is based.
       type: enum
@@ -37,4 +37,3 @@ spec:
             insecure: false
     processors: |
       - batch:
-
