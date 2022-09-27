@@ -39,7 +39,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.8.6
 	github.com/Masterminds/sprig/v3 v3.2.2
-	github.com/gin-contrib/zap v0.0.2
+	github.com/gin-contrib/zap v0.1.0
 	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/sessions v1.2.1
