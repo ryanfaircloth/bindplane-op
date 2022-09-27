@@ -276,7 +276,9 @@ deb_install() {
       package_file="./bindplane.deb"
     fi
 
-    sudo apt-get install -y -f "$package_file"  || error_exit "$LINENO" "Failed to install BindPlane"
+    sudo apt-get \
+      -o Dpkg::Options::='--force-confold' \
+      install -y -f "$package_file"  || error_exit "$LINENO" "Failed to install BindPlane"
 
     succeeded
     decrease_indent
