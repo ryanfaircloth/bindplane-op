@@ -50,7 +50,7 @@ func TestConvertLogs(t *testing.T) {
 				logRecord.Attributes().InsertInt("db_id", 22)
 
 				logRecord.SetSeverityText("ERROR")
-				logRecord.SetSeverityNumber(plog.SeverityNumberERROR)
+				logRecord.SetSeverityNumber(plog.SeverityNumberError)
 				logRecord.SetTimestamp(pcommon.NewTimestampFromTime(time.Date(2022, time.September, 15, 1, 1, 1, 1, time.UTC)))
 				pcommon.NewValueString("log message").CopyTo(logRecord.Body())
 				return l
