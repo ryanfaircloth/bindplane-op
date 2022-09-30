@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/99designs/gqlgen/client"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
@@ -43,7 +44,7 @@ const mockLatestVersion = "v1.5.0"
 
 func mockVersions() agent.Versions {
 	v := &mocks.Versions{}
-	v.On("LatestVersionString").Return(mockLatestVersion)
+	v.On("LatestVersionString", mock.Anything).Return(mockLatestVersion)
 	return v
 }
 
@@ -209,7 +210,7 @@ func TestConfigForAgent(t *testing.T) {
 		},
 	}
 
-	_, err = bindplane.Store().ApplyResources([]model.Resource{config})
+	_, err = bindplane.Store().ApplyResources(ctx, []model.Resource{config})
 	require.NoError(t, err)
 
 	resp := &struct {

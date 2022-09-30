@@ -15,6 +15,7 @@
 package model
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -122,7 +123,7 @@ type Resource interface {
 	Validate() (warnings string, errors error)
 
 	// ValidateWithStore ensures that the resource is valid and allows for extra validation given a store
-	ValidateWithStore(store ResourceStore) (warnings string, errors error)
+	ValidateWithStore(ctx context.Context, store ResourceStore) (warnings string, errors error)
 }
 
 // AnyResource is a resource not yet fully parsed and is the common structure of all Resources. The Spec, which is
@@ -211,7 +212,7 @@ func (r *ResourceMeta) Validate() (warnings string, errors error) {
 }
 
 // ValidateWithStore allows for additional validation when a store is available.
-func (r *ResourceMeta) ValidateWithStore(store ResourceStore) (warnings string, errors error) {
+func (r *ResourceMeta) ValidateWithStore(ctx context.Context, store ResourceStore) (warnings string, errors error) {
 	return r.Validate()
 }
 

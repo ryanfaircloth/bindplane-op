@@ -97,12 +97,12 @@ func InitDB(storageFilePath string) (*bbolt.DB, error) {
 }
 
 // AgentConfiguration returns the configuration that should be applied to an agent.
-func (s *boltstore) AgentConfiguration(agentID string) (*model.Configuration, error) {
+func (s *boltstore) AgentConfiguration(ctx context.Context, agentID string) (*model.Configuration, error) {
 	if agentID == "" {
 		return nil, fmt.Errorf("cannot return configuration for empty agentID")
 	}
 
-	agent, err := s.Agent(agentID)
+	agent, err := s.Agent(ctx, agentID)
 	if agent == nil {
 		return nil, nil
 	}
@@ -110,7 +110,7 @@ func (s *boltstore) AgentConfiguration(agentID string) (*model.Configuration, er
 	// check for configuration= label and use that
 	if configurationName, ok := agent.Labels.Set["configuration"]; ok {
 		// if there is a configuration label, this takes precedence and we don't need to look any further
-		return s.Configuration(configurationName)
+		return s.Configuration(ctx, configurationName)
 	}
 
 	var result *model.Configuration
@@ -142,8 +142,8 @@ func (s *boltstore) AgentConfiguration(agentID string) (*model.Configuration, er
 }
 
 // AgentsIDsMatchingConfiguration returns the list of agent IDs that are using the specified configuration
-func (s *boltstore) AgentsIDsMatchingConfiguration(configuration *model.Configuration) ([]string, error) {
-	ids := s.AgentIndex().Select(configuration.Spec.Selector.MatchLabels)
+func (s *boltstore) AgentsIDsMatchingConfiguration(ctx context.Context, configuration *model.Configuration) ([]string, error) {
+	ids := s.AgentIndex(ctx).Select(configuration.Spec.Selector.MatchLabels)
 	return ids, nil
 }
 
@@ -154,7 +154,7 @@ func (s *boltstore) Updates() eventbus.Source[*Updates] {
 // DeleteResources iterates threw a slice of resources, and removes them from storage by name.
 // Sends any successful pipeline deletes to the pipelineDeletes channel, to be handled by the manager.
 // Exporter and receiver deletes are sent to the manager via notifyUpdates.
-func (s *boltstore) DeleteResources(resources []model.Resource) ([]model.ResourceStatus, error) {
+func (s *boltstore) DeleteResources(ctx context.Context, resources []model.Resource) ([]model.ResourceStatus, error) {
 	updates := NewUpdates()
 
 	// track deleteStatuses to return
@@ -167,7 +167,7 @@ func (s *boltstore) DeleteResources(resources []model.Resource) ([]model.Resourc
 			continue
 		}
 
-		deleted, exists, err := deleteResource(s, r.GetKind(), r.Name(), empty)
+		deleted, exists, err := deleteResource(ctx, s, r.GetKind(), r.Name(), empty)
 
 		switch err.(type) {
 		case *DependencyError:
@@ -192,13 +192,13 @@ func (s *boltstore) DeleteResources(resources []model.Resource) ([]model.Resourc
 		updates.IncludeResource(deleted, EventTypeRemove)
 	}
 
-	s.notify(updates)
+	s.notify(ctx, updates)
 	return deleteStatuses, nil
 }
 
 // Apply resources iterates through a slice of resources, then adds them to storage,
 // and calls notify updates on the updated resources.
-func (s *boltstore) ApplyResources(resources []model.Resource) ([]model.ResourceStatus, error) {
+func (s *boltstore) ApplyResources(ctx context.Context, resources []model.Resource) ([]model.ResourceStatus, error) {
 	updates := NewUpdates()
 
 	// resourceStatuses to return for the applied resources
@@ -210,7 +210,7 @@ func (s *boltstore) ApplyResources(resources []model.Resource) ([]model.Resource
 		// the resource already exists (using the existing resource ID)
 		resource.EnsureID()
 
-		warn, err := resource.ValidateWithStore(s)
+		warn, err := resource.ValidateWithStore(ctx, s)
 		if err != nil {
 			resourceStatuses = append(resourceStatuses, *model.NewResourceStatusWithReason(resource, model.StatusInvalid, err.Error()))
 			continue
@@ -248,15 +248,15 @@ func (s *boltstore) ApplyResources(resources []model.Resource) ([]model.Resource
 		}
 	}
 
-	s.notify(updates)
+	s.notify(ctx, updates)
 
 	return resourceStatuses, errs
 }
 
 // ----------------------------------------------------------------------
 
-func (s *boltstore) notify(updates *Updates) {
-	err := updates.addTransitiveUpdates(s)
+func (s *boltstore) notify(ctx context.Context, updates *Updates) {
+	err := updates.addTransitiveUpdates(ctx, s)
 	if err != nil {
 		// TODO: if we can't notify about all updates, what do we do?
 		s.logger.Error("unable to add transitive updates", zap.Any("updates", updates), zap.Error(err))
@@ -319,7 +319,7 @@ func (s *boltstore) UpsertAgents(ctx context.Context, agentIDs []string, updater
 	}
 
 	// notify results
-	s.notify(updates)
+	s.notify(ctx, updates)
 	return agents, nil
 }
 
@@ -350,7 +350,7 @@ func (s *boltstore) UpsertAgent(ctx context.Context, id string, updater AgentUpd
 		s.logger.Error("failed to update the search index", zap.String("agentID", updatedAgent.ID))
 	}
 
-	s.notify(updates)
+	s.notify(ctx, updates)
 
 	return updatedAgent, nil
 }
@@ -453,7 +453,7 @@ func (s *boltstore) DeleteAgents(ctx context.Context, agentIDs []string) ([]*mod
 	}
 
 	// notify updates
-	s.notify(updates)
+	s.notify(ctx, updates)
 
 	return deleted, nil
 }
@@ -490,7 +490,7 @@ func (s *boltstore) AgentsCount(ctx context.Context, options ...QueryOption) (in
 	return len(agents), nil
 }
 
-func (s *boltstore) Agent(id string) (*model.Agent, error) {
+func (s *boltstore) Agent(ctx context.Context, id string) (*model.Agent, error) {
 	var agent *model.Agent
 
 	err := s.db.View(func(tx *bbolt.Tx) error {
@@ -505,33 +505,33 @@ func (s *boltstore) Agent(id string) (*model.Agent, error) {
 	return agent, err
 }
 
-func (s *boltstore) AgentVersion(name string) (*model.AgentVersion, error) {
+func (s *boltstore) AgentVersion(ctx context.Context, name string) (*model.AgentVersion, error) {
 	item, exists, err := resource[*model.AgentVersion](s, model.KindAgentVersion, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *boltstore) AgentVersions() ([]*model.AgentVersion, error) {
+func (s *boltstore) AgentVersions(ctx context.Context) ([]*model.AgentVersion, error) {
 	result, err := resources[*model.AgentVersion](s, model.KindAgentVersion)
 	if err == nil {
 		model.SortAgentVersionsLatestFirst(result)
 	}
 	return result, err
 }
-func (s *boltstore) DeleteAgentVersion(name string) (*model.AgentVersion, error) {
-	item, exists, err := deleteResourceAndNotify(s, model.KindAgentVersion, name, &model.AgentVersion{})
+func (s *boltstore) DeleteAgentVersion(ctx context.Context, name string) (*model.AgentVersion, error) {
+	item, exists, err := deleteResourceAndNotify(ctx, s, model.KindAgentVersion, name, &model.AgentVersion{})
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *boltstore) Configurations(options ...QueryOption) ([]*model.Configuration, error) {
+func (s *boltstore) Configurations(ctx context.Context, options ...QueryOption) ([]*model.Configuration, error) {
 	opts := makeQueryOptions(options)
 	// search is implemented using the search index
 	if opts.query != nil {
-		names, err := s.configurationIndex.Search(context.TODO(), opts.query)
+		names, err := s.configurationIndex.Search(ctx, opts.query)
 		if err != nil {
 			return nil, err
 		}
@@ -542,123 +542,123 @@ func (s *boltstore) Configurations(options ...QueryOption) ([]*model.Configurati
 		return opts.selector.Matches(c.GetLabels())
 	})
 }
-func (s *boltstore) Configuration(name string) (*model.Configuration, error) {
+func (s *boltstore) Configuration(ctx context.Context, name string) (*model.Configuration, error) {
 	item, exists, err := resource[*model.Configuration](s, model.KindConfiguration, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *boltstore) DeleteConfiguration(name string) (*model.Configuration, error) {
-	item, exists, err := deleteResourceAndNotify(s, model.KindConfiguration, name, &model.Configuration{})
+func (s *boltstore) DeleteConfiguration(ctx context.Context, name string) (*model.Configuration, error) {
+	item, exists, err := deleteResourceAndNotify(ctx, s, model.KindConfiguration, name, &model.Configuration{})
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *boltstore) Source(name string) (*model.Source, error) {
+func (s *boltstore) Source(ctx context.Context, name string) (*model.Source, error) {
 	item, exists, err := resource[*model.Source](s, model.KindSource, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *boltstore) Sources() ([]*model.Source, error) {
+func (s *boltstore) Sources(ctx context.Context) ([]*model.Source, error) {
 	return resources[*model.Source](s, model.KindSource)
 }
-func (s *boltstore) DeleteSource(name string) (*model.Source, error) {
-	item, exists, err := deleteResourceAndNotify(s, model.KindSource, name, &model.Source{})
+func (s *boltstore) DeleteSource(ctx context.Context, name string) (*model.Source, error) {
+	item, exists, err := deleteResourceAndNotify(ctx, s, model.KindSource, name, &model.Source{})
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *boltstore) SourceType(name string) (*model.SourceType, error) {
+func (s *boltstore) SourceType(ctx context.Context, name string) (*model.SourceType, error) {
 	item, exists, err := resource[*model.SourceType](s, model.KindSourceType, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *boltstore) SourceTypes() ([]*model.SourceType, error) {
+func (s *boltstore) SourceTypes(ctx context.Context) ([]*model.SourceType, error) {
 	return resources[*model.SourceType](s, model.KindSourceType)
 }
-func (s *boltstore) DeleteSourceType(name string) (*model.SourceType, error) {
-	item, exists, err := deleteResourceAndNotify(s, model.KindSourceType, name, &model.SourceType{})
+func (s *boltstore) DeleteSourceType(ctx context.Context, name string) (*model.SourceType, error) {
+	item, exists, err := deleteResourceAndNotify(ctx, s, model.KindSourceType, name, &model.SourceType{})
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *boltstore) Processor(name string) (*model.Processor, error) {
+func (s *boltstore) Processor(ctx context.Context, name string) (*model.Processor, error) {
 	item, exists, err := resource[*model.Processor](s, model.KindProcessor, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *boltstore) Processors() ([]*model.Processor, error) {
+func (s *boltstore) Processors(ctx context.Context) ([]*model.Processor, error) {
 	return resources[*model.Processor](s, model.KindProcessor)
 }
-func (s *boltstore) DeleteProcessor(name string) (*model.Processor, error) {
-	item, exists, err := deleteResourceAndNotify(s, model.KindProcessor, name, &model.Processor{})
+func (s *boltstore) DeleteProcessor(ctx context.Context, name string) (*model.Processor, error) {
+	item, exists, err := deleteResourceAndNotify(ctx, s, model.KindProcessor, name, &model.Processor{})
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *boltstore) ProcessorType(name string) (*model.ProcessorType, error) {
+func (s *boltstore) ProcessorType(ctx context.Context, name string) (*model.ProcessorType, error) {
 	item, exists, err := resource[*model.ProcessorType](s, model.KindProcessorType, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *boltstore) ProcessorTypes() ([]*model.ProcessorType, error) {
+func (s *boltstore) ProcessorTypes(ctx context.Context) ([]*model.ProcessorType, error) {
 	return resources[*model.ProcessorType](s, model.KindProcessorType)
 }
-func (s *boltstore) DeleteProcessorType(name string) (*model.ProcessorType, error) {
-	item, exists, err := deleteResourceAndNotify(s, model.KindProcessorType, name, &model.ProcessorType{})
+func (s *boltstore) DeleteProcessorType(ctx context.Context, name string) (*model.ProcessorType, error) {
+	item, exists, err := deleteResourceAndNotify(ctx, s, model.KindProcessorType, name, &model.ProcessorType{})
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *boltstore) Destination(name string) (*model.Destination, error) {
+func (s *boltstore) Destination(ctx context.Context, name string) (*model.Destination, error) {
 	item, exists, err := resource[*model.Destination](s, model.KindDestination, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *boltstore) Destinations() ([]*model.Destination, error) {
+func (s *boltstore) Destinations(ctx context.Context) ([]*model.Destination, error) {
 	return resources[*model.Destination](s, model.KindDestination)
 }
-func (s *boltstore) DeleteDestination(name string) (*model.Destination, error) {
-	item, exists, err := deleteResourceAndNotify(s, model.KindDestination, name, &model.Destination{})
+func (s *boltstore) DeleteDestination(ctx context.Context, name string) (*model.Destination, error) {
+	item, exists, err := deleteResourceAndNotify(ctx, s, model.KindDestination, name, &model.Destination{})
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *boltstore) DestinationType(name string) (*model.DestinationType, error) {
+func (s *boltstore) DestinationType(ctx context.Context, name string) (*model.DestinationType, error) {
 	item, exists, err := resource[*model.DestinationType](s, model.KindDestinationType, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *boltstore) DestinationTypes() ([]*model.DestinationType, error) {
+func (s *boltstore) DestinationTypes(ctx context.Context) ([]*model.DestinationType, error) {
 	return resources[*model.DestinationType](s, model.KindDestinationType)
 }
-func (s *boltstore) DeleteDestinationType(name string) (*model.DestinationType, error) {
-	item, exists, err := deleteResourceAndNotify(s, model.KindDestinationType, name, &model.DestinationType{})
+func (s *boltstore) DeleteDestinationType(ctx context.Context, name string) (*model.DestinationType, error) {
+	item, exists, err := deleteResourceAndNotify(ctx, s, model.KindDestinationType, name, &model.DestinationType{})
 	if !exists {
 		return nil, err
 	}
@@ -666,8 +666,8 @@ func (s *boltstore) DeleteDestinationType(name string) (*model.DestinationType, 
 }
 
 // CleanupDisconnectedAgents removes agents that have disconnected before the specified time
-func (s *boltstore) CleanupDisconnectedAgents(since time.Time) error {
-	agents, err := s.Agents(context.TODO())
+func (s *boltstore) CleanupDisconnectedAgents(ctx context.Context, since time.Time) error {
+	agents, err := s.Agents(ctx)
 	if err != nil {
 		return err
 	}
@@ -690,17 +690,17 @@ func (s *boltstore) CleanupDisconnectedAgents(since time.Time) error {
 		}
 	}
 
-	s.notify(changes)
+	s.notify(ctx, changes)
 	return nil
 }
 
 // Index provides access to the search Index implementation managed by the Store
-func (s *boltstore) AgentIndex() search.Index {
+func (s *boltstore) AgentIndex(ctx context.Context) search.Index {
 	return s.agentIndex
 }
 
 // ConfigurationIndex provides access to the search Index for Configurations
-func (s *boltstore) ConfigurationIndex() search.Index {
+func (s *boltstore) ConfigurationIndex(ctx context.Context) search.Index {
 	return s.configurationIndex
 }
 
@@ -899,13 +899,13 @@ func resourcesByName[R model.Resource](s *boltstore, kind model.Kind, names []st
 	return results, errs
 }
 
-func deleteResourceAndNotify[R model.Resource](s *boltstore, kind model.Kind, name string, emptyResource R) (resource R, exists bool, err error) {
-	deleted, exists, err := deleteResource(s, kind, name, emptyResource)
+func deleteResourceAndNotify[R model.Resource](ctx context.Context, s *boltstore, kind model.Kind, name string, emptyResource R) (resource R, exists bool, err error) {
+	deleted, exists, err := deleteResource(ctx, s, kind, name, emptyResource)
 
 	if err == nil && exists {
 		updates := NewUpdates()
 		updates.IncludeResource(deleted, EventTypeRemove)
-		s.notify(updates)
+		s.notify(ctx, updates)
 	}
 
 	return deleted, exists, err
@@ -915,7 +915,7 @@ func deleteResourceAndNotify[R model.Resource](s *boltstore, kind model.Kind, na
 // found. Returns DependencyError if the resource is referenced by another.
 // emptyResource will be populated with the deleted resource. For convenience, if the delete is successful, the
 // populated resource will also be returned. If there was an error, nil will be returned for the resource.
-func deleteResource[R model.Resource](s *boltstore, kind model.Kind, name string, emptyResource R) (resource R, exists bool, err error) {
+func deleteResource[R model.Resource](ctx context.Context, s *boltstore, kind model.Kind, name string, emptyResource R) (resource R, exists bool, err error) {
 	var dependencies DependentResources
 
 	err = s.db.Update(func(tx *bbolt.Tx) error {
@@ -934,7 +934,7 @@ func deleteResource[R model.Resource](s *boltstore, kind model.Kind, name string
 			exists = true
 
 			// Check if the resources is referenced by another
-			dependencies, err = FindDependentResources(context.TODO(), s, emptyResource)
+			dependencies, err = FindDependentResources(ctx, s, emptyResource)
 			if !dependencies.empty() {
 				return ErrResourceInUse
 			}

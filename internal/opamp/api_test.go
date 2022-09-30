@@ -538,7 +538,7 @@ service:
 			verify: func(t *testing.T, server *opampServer, result *protobufs.ServerToAgent) {
 				// gross! inserting a new configuration here and making sure we get it in the next test
 				raw := testResource[*model.Configuration](t, "configuration-raw.yaml")
-				statuses, err := testMapStore.ApplyResources([]model.Resource{raw})
+				statuses, err := testMapStore.ApplyResources(context.Background(), []model.Resource{raw})
 				require.Equal(t, model.StatusCreated, statuses[0].Status)
 				require.NoError(t, err)
 			},

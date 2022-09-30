@@ -91,8 +91,8 @@ func (s *googleCloudStore) Clear() {
 	// TODO no easy way to clear everything, maybe GetAll (KeysOnly) and DeleteMulti (by page)
 }
 
-func (s *googleCloudStore) Agent(id string) (*model.Agent, error) {
-	item, exists, err := getDatastoreResource[*model.Agent](s, model.KindAgent, id)
+func (s *googleCloudStore) Agent(ctx context.Context, id string) (*model.Agent, error) {
+	item, exists, err := getDatastoreResource[*model.Agent](ctx, s, model.KindAgent, id)
 	if !exists {
 		item = nil
 	}
@@ -128,7 +128,7 @@ func (s *googleCloudStore) AgentsCount(ctx context.Context, options ...QueryOpti
 func (s *googleCloudStore) getAndUpdateAgent(ctx context.Context, agentID string, updater AgentUpdater, updates *Updates) (agent *model.Agent, err error) {
 	agentEventType := EventTypeUpdate
 
-	agent, exists, err := getDatastoreResource[*model.Agent](s, model.KindAgent, agentID)
+	agent, exists, err := getDatastoreResource[*model.Agent](ctx, s, model.KindAgent, agentID)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +197,7 @@ func (s *googleCloudStore) UpsertAgents(ctx context.Context, agentIDs []string, 
 	}
 
 	// notify updates
-	s.notify(updates)
+	s.notify(ctx, updates)
 
 	return nil, nil
 }
@@ -215,7 +215,7 @@ func (s *googleCloudStore) UpsertAgent(ctx context.Context, agentID string, upda
 	}
 
 	// store the changes
-	err = upsertDatastoreAgent(s, agent)
+	err = upsertDatastoreAgent(ctx, s, agent)
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +227,7 @@ func (s *googleCloudStore) UpsertAgent(ctx context.Context, agentID string, upda
 	}
 
 	// notify agent updates
-	s.notify(updates)
+	s.notify(ctx, updates)
 
 	return agent, nil
 
@@ -237,146 +237,146 @@ func (s *googleCloudStore) DeleteAgents(ctx context.Context, agentIDs []string) 
 	return deleteDatastoreAgents(ctx, s, agentIDs)
 }
 
-func (s *googleCloudStore) AgentVersion(name string) (*model.AgentVersion, error) {
-	item, exists, err := getDatastoreResource[*model.AgentVersion](s, model.KindAgentVersion, name)
+func (s *googleCloudStore) AgentVersion(ctx context.Context, name string) (*model.AgentVersion, error) {
+	item, exists, err := getDatastoreResource[*model.AgentVersion](ctx, s, model.KindAgentVersion, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *googleCloudStore) AgentVersions() ([]*model.AgentVersion, error) {
-	return getDatastoreResources[*model.AgentVersion](s, model.KindAgentVersion, nil)
+func (s *googleCloudStore) AgentVersions(ctx context.Context) ([]*model.AgentVersion, error) {
+	return getDatastoreResources[*model.AgentVersion](ctx, s, model.KindAgentVersion, nil)
 }
-func (s *googleCloudStore) DeleteAgentVersion(name string) (*model.AgentVersion, error) {
-	item, exists, err := deleteDatastoreResourceAndNotify[*model.AgentVersion](s, model.KindAgentVersion, name)
+func (s *googleCloudStore) DeleteAgentVersion(ctx context.Context, name string) (*model.AgentVersion, error) {
+	item, exists, err := deleteDatastoreResourceAndNotify[*model.AgentVersion](ctx, s, model.KindAgentVersion, name)
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *googleCloudStore) Configurations(options ...QueryOption) ([]*model.Configuration, error) {
+func (s *googleCloudStore) Configurations(ctx context.Context, options ...QueryOption) ([]*model.Configuration, error) {
 	opts := makeQueryOptions(options)
-	return getDatastoreResourcesWithQuery[*model.Configuration](context.TODO(), s, s.configurationIndex, model.KindConfiguration, &opts)
+	return getDatastoreResourcesWithQuery[*model.Configuration](ctx, s, s.configurationIndex, model.KindConfiguration, &opts)
 }
 
-func (s *googleCloudStore) Configuration(name string) (*model.Configuration, error) {
-	item, exists, err := getDatastoreResource[*model.Configuration](s, model.KindConfiguration, name)
+func (s *googleCloudStore) Configuration(ctx context.Context, name string) (*model.Configuration, error) {
+	item, exists, err := getDatastoreResource[*model.Configuration](ctx, s, model.KindConfiguration, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *googleCloudStore) DeleteConfiguration(name string) (*model.Configuration, error) {
-	item, exists, err := deleteDatastoreResourceAndNotify[*model.Configuration](s, model.KindConfiguration, name)
+func (s *googleCloudStore) DeleteConfiguration(ctx context.Context, name string) (*model.Configuration, error) {
+	item, exists, err := deleteDatastoreResourceAndNotify[*model.Configuration](ctx, s, model.KindConfiguration, name)
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *googleCloudStore) Source(name string) (*model.Source, error) {
-	item, exists, err := getDatastoreResource[*model.Source](s, model.KindSource, name)
+func (s *googleCloudStore) Source(ctx context.Context, name string) (*model.Source, error) {
+	item, exists, err := getDatastoreResource[*model.Source](ctx, s, model.KindSource, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *googleCloudStore) Sources() ([]*model.Source, error) {
-	return getDatastoreResources[*model.Source](s, model.KindSource, nil)
+func (s *googleCloudStore) Sources(ctx context.Context) ([]*model.Source, error) {
+	return getDatastoreResources[*model.Source](ctx, s, model.KindSource, nil)
 }
-func (s *googleCloudStore) DeleteSource(name string) (*model.Source, error) {
-	item, exists, err := deleteDatastoreResourceAndNotify[*model.Source](s, model.KindSource, name)
+func (s *googleCloudStore) DeleteSource(ctx context.Context, name string) (*model.Source, error) {
+	item, exists, err := deleteDatastoreResourceAndNotify[*model.Source](ctx, s, model.KindSource, name)
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *googleCloudStore) SourceType(name string) (*model.SourceType, error) {
-	item, exists, err := getDatastoreResource[*model.SourceType](s, model.KindSourceType, name)
+func (s *googleCloudStore) SourceType(ctx context.Context, name string) (*model.SourceType, error) {
+	item, exists, err := getDatastoreResource[*model.SourceType](ctx, s, model.KindSourceType, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *googleCloudStore) SourceTypes() ([]*model.SourceType, error) {
-	return getDatastoreResources[*model.SourceType](s, model.KindSourceType, nil)
+func (s *googleCloudStore) SourceTypes(ctx context.Context) ([]*model.SourceType, error) {
+	return getDatastoreResources[*model.SourceType](ctx, s, model.KindSourceType, nil)
 }
-func (s *googleCloudStore) DeleteSourceType(name string) (*model.SourceType, error) {
-	item, exists, err := deleteDatastoreResourceAndNotify[*model.SourceType](s, model.KindSourceType, name)
+func (s *googleCloudStore) DeleteSourceType(ctx context.Context, name string) (*model.SourceType, error) {
+	item, exists, err := deleteDatastoreResourceAndNotify[*model.SourceType](ctx, s, model.KindSourceType, name)
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *googleCloudStore) Processor(name string) (*model.Processor, error) {
-	item, exists, err := getDatastoreResource[*model.Processor](s, model.KindProcessor, name)
+func (s *googleCloudStore) Processor(ctx context.Context, name string) (*model.Processor, error) {
+	item, exists, err := getDatastoreResource[*model.Processor](ctx, s, model.KindProcessor, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *googleCloudStore) Processors() ([]*model.Processor, error) {
-	return getDatastoreResources[*model.Processor](s, model.KindProcessor, nil)
+func (s *googleCloudStore) Processors(ctx context.Context) ([]*model.Processor, error) {
+	return getDatastoreResources[*model.Processor](ctx, s, model.KindProcessor, nil)
 }
-func (s *googleCloudStore) DeleteProcessor(name string) (*model.Processor, error) {
-	item, exists, err := deleteDatastoreResourceAndNotify[*model.Processor](s, model.KindProcessor, name)
+func (s *googleCloudStore) DeleteProcessor(ctx context.Context, name string) (*model.Processor, error) {
+	item, exists, err := deleteDatastoreResourceAndNotify[*model.Processor](ctx, s, model.KindProcessor, name)
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *googleCloudStore) ProcessorType(name string) (*model.ProcessorType, error) {
-	item, exists, err := getDatastoreResource[*model.ProcessorType](s, model.KindProcessorType, name)
+func (s *googleCloudStore) ProcessorType(ctx context.Context, name string) (*model.ProcessorType, error) {
+	item, exists, err := getDatastoreResource[*model.ProcessorType](ctx, s, model.KindProcessorType, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *googleCloudStore) ProcessorTypes() ([]*model.ProcessorType, error) {
-	return getDatastoreResources[*model.ProcessorType](s, model.KindProcessorType, nil)
+func (s *googleCloudStore) ProcessorTypes(ctx context.Context) ([]*model.ProcessorType, error) {
+	return getDatastoreResources[*model.ProcessorType](ctx, s, model.KindProcessorType, nil)
 }
-func (s *googleCloudStore) DeleteProcessorType(name string) (*model.ProcessorType, error) {
-	item, exists, err := deleteDatastoreResourceAndNotify[*model.ProcessorType](s, model.KindProcessorType, name)
+func (s *googleCloudStore) DeleteProcessorType(ctx context.Context, name string) (*model.ProcessorType, error) {
+	item, exists, err := deleteDatastoreResourceAndNotify[*model.ProcessorType](ctx, s, model.KindProcessorType, name)
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *googleCloudStore) Destination(name string) (*model.Destination, error) {
-	item, exists, err := getDatastoreResource[*model.Destination](s, model.KindDestination, name)
+func (s *googleCloudStore) Destination(ctx context.Context, name string) (*model.Destination, error) {
+	item, exists, err := getDatastoreResource[*model.Destination](ctx, s, model.KindDestination, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *googleCloudStore) Destinations() ([]*model.Destination, error) {
-	return getDatastoreResources[*model.Destination](s, model.KindDestination, nil)
+func (s *googleCloudStore) Destinations(ctx context.Context) ([]*model.Destination, error) {
+	return getDatastoreResources[*model.Destination](ctx, s, model.KindDestination, nil)
 }
-func (s *googleCloudStore) DeleteDestination(name string) (*model.Destination, error) {
-	item, exists, err := deleteDatastoreResourceAndNotify[*model.Destination](s, model.KindDestination, name)
+func (s *googleCloudStore) DeleteDestination(ctx context.Context, name string) (*model.Destination, error) {
+	item, exists, err := deleteDatastoreResourceAndNotify[*model.Destination](ctx, s, model.KindDestination, name)
 	if !exists {
 		return nil, err
 	}
 	return item, err
 }
 
-func (s *googleCloudStore) DestinationType(name string) (*model.DestinationType, error) {
-	item, exists, err := getDatastoreResource[*model.DestinationType](s, model.KindDestinationType, name)
+func (s *googleCloudStore) DestinationType(ctx context.Context, name string) (*model.DestinationType, error) {
+	item, exists, err := getDatastoreResource[*model.DestinationType](ctx, s, model.KindDestinationType, name)
 	if !exists {
 		item = nil
 	}
 	return item, err
 }
-func (s *googleCloudStore) DestinationTypes() ([]*model.DestinationType, error) {
-	return getDatastoreResources[*model.DestinationType](s, model.KindDestinationType, nil)
+func (s *googleCloudStore) DestinationTypes(ctx context.Context) ([]*model.DestinationType, error) {
+	return getDatastoreResources[*model.DestinationType](ctx, s, model.KindDestinationType, nil)
 }
-func (s *googleCloudStore) DeleteDestinationType(name string) (*model.DestinationType, error) {
-	item, exists, err := deleteDatastoreResourceAndNotify[*model.DestinationType](s, model.KindDestinationType, name)
+func (s *googleCloudStore) DeleteDestinationType(ctx context.Context, name string) (*model.DestinationType, error) {
+	item, exists, err := deleteDatastoreResourceAndNotify[*model.DestinationType](ctx, s, model.KindDestinationType, name)
 	if !exists {
 		return nil, err
 	}
@@ -385,7 +385,7 @@ func (s *googleCloudStore) DeleteDestinationType(name string) (*model.Destinatio
 
 // ----------------------------------------------------------------------
 
-func (s *googleCloudStore) ApplyResources(resources []model.Resource) ([]model.ResourceStatus, error) {
+func (s *googleCloudStore) ApplyResources(ctx context.Context, resources []model.Resource) ([]model.ResourceStatus, error) {
 	updates := NewUpdates()
 
 	// resourceStatuses to return for the applied resources
@@ -397,13 +397,13 @@ func (s *googleCloudStore) ApplyResources(resources []model.Resource) ([]model.R
 		// the resource already exists (using the existing resource ID)
 		resource.EnsureID()
 
-		warn, err := resource.ValidateWithStore(s)
+		warn, err := resource.ValidateWithStore(ctx, s)
 		if err != nil {
 			resourceStatuses = append(resourceStatuses, *model.NewResourceStatusWithReason(resource, model.StatusInvalid, err.Error()))
 			continue
 		}
 
-		status, err := upsertAnyDatastoreResource(s, resource)
+		status, err := upsertAnyDatastoreResource(ctx, s, resource)
 		if err != nil {
 			resourceStatuses = append(resourceStatuses, *model.NewResourceStatusWithReason(resource, model.StatusError, err.Error()))
 			errs = multierror.Append(errs, err)
@@ -419,7 +419,7 @@ func (s *googleCloudStore) ApplyResources(resources []model.Resource) ([]model.R
 		}
 
 	}
-	s.notify(updates)
+	s.notify(ctx, updates)
 
 	s.logger.Info("ApplyResources complete", zap.Any("resourceStatuses", resourceStatuses))
 
@@ -427,14 +427,14 @@ func (s *googleCloudStore) ApplyResources(resources []model.Resource) ([]model.R
 }
 
 // Batch delete of a slice of resources, returns the successfully deleted resources or an error.
-func (s *googleCloudStore) DeleteResources(resources []model.Resource) ([]model.ResourceStatus, error) {
+func (s *googleCloudStore) DeleteResources(ctx context.Context, resources []model.Resource) ([]model.ResourceStatus, error) {
 	updates := NewUpdates()
 
 	// track deleteStatuses to return
 	deleteStatuses := make([]model.ResourceStatus, 0)
 
 	for _, r := range resources {
-		deleted, exists, err := deleteAnyDatastoreResource(s, r)
+		deleted, exists, err := deleteAnyDatastoreResource(ctx, s, r)
 
 		switch err.(type) {
 		case *DependencyError:
@@ -459,19 +459,19 @@ func (s *googleCloudStore) DeleteResources(resources []model.Resource) ([]model.
 		updates.IncludeResource(deleted, EventTypeRemove)
 	}
 
-	s.notify(updates)
+	s.notify(ctx, updates)
 	return deleteStatuses, nil
 }
 
 // ----------------------------------------------------------------------
 
 // AgentConfiguration returns the configuration that should be applied to an agent.
-func (s *googleCloudStore) AgentConfiguration(agentID string) (*model.Configuration, error) {
+func (s *googleCloudStore) AgentConfiguration(ctx context.Context, agentID string) (*model.Configuration, error) {
 	if agentID == "" {
 		return nil, fmt.Errorf("cannot return configuration for empty agentID")
 	}
 
-	agent, err := s.Agent(agentID)
+	agent, err := s.Agent(ctx, agentID)
 	if agent == nil {
 		return nil, nil
 	}
@@ -479,11 +479,11 @@ func (s *googleCloudStore) AgentConfiguration(agentID string) (*model.Configurat
 	// check for configuration= label and use that
 	if configurationName, ok := agent.Labels.Set["configuration"]; ok {
 		// if there is a configuration label, this takes precedence and we don't need to look any further
-		return s.Configuration(configurationName)
+		return s.Configuration(ctx, configurationName)
 	}
 
 	// iterate over all configurations and look for matches
-	configurations, err := s.Configurations()
+	configurations, err := s.Configurations(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -497,13 +497,13 @@ func (s *googleCloudStore) AgentConfiguration(agentID string) (*model.Configurat
 }
 
 // AgentsIDsMatchingConfiguration returns the list of agent IDs that are using the specified configuration
-func (s *googleCloudStore) AgentsIDsMatchingConfiguration(configuration *model.Configuration) ([]string, error) {
-	ids := s.AgentIndex().Select(configuration.Spec.Selector.MatchLabels)
+func (s *googleCloudStore) AgentsIDsMatchingConfiguration(ctx context.Context, configuration *model.Configuration) ([]string, error) {
+	ids := s.AgentIndex(ctx).Select(configuration.Spec.Selector.MatchLabels)
 	return ids, nil
 }
 
 // CleanupDisconnectedAgents removes agents that have disconnected before the specified time
-func (s *googleCloudStore) CleanupDisconnectedAgents(since time.Time) error {
+func (s *googleCloudStore) CleanupDisconnectedAgents(ctx context.Context, since time.Time) error {
 	// TODO: find agents where status=disconnected and disconnectedAt < since
 	return nil
 }
@@ -516,12 +516,12 @@ func (s *googleCloudStore) Updates() eventbus.Source[*Updates] {
 }
 
 // Index provides access to the search Index implementation managed by the Store
-func (s *googleCloudStore) AgentIndex() search.Index {
+func (s *googleCloudStore) AgentIndex(ctx context.Context) search.Index {
 	return s.agentIndex
 }
 
 // ConfigurationIndex provides access to the search Index for Configurations
-func (s *googleCloudStore) ConfigurationIndex() search.Index {
+func (s *googleCloudStore) ConfigurationIndex(ctx context.Context) search.Index {
 	return s.configurationIndex
 }
 
@@ -534,11 +534,11 @@ func (s *googleCloudStore) UserSessions() sessions.Store {
 // ----------------------------------------------------------------------
 // events
 
-func (s *googleCloudStore) notify(updates *Updates) {
-	ctx, span := tracer.Start(context.TODO(), "store/notify")
+func (s *googleCloudStore) notify(ctx context.Context, updates *Updates) {
+	ctx, span := tracer.Start(ctx, "store/notify")
 	defer span.End()
 
-	err := updates.addTransitiveUpdates(s)
+	err := updates.addTransitiveUpdates(ctx, s)
 	if err != nil {
 		// TODO: if we can't notify about all updates, what do we do?
 		s.logger.Error("unable to add transitive updates", zap.Any("updates", updates), zap.Error(err))
@@ -696,37 +696,37 @@ func decodeDatastoreResource[T any](dr *datastoreResource, resource *T) error {
 
 // ----------------------------------------------------------------------
 
-func upsertAnyDatastoreResource(s *googleCloudStore, r model.Resource) (model.UpdateStatus, error) {
+func upsertAnyDatastoreResource(ctx context.Context, s *googleCloudStore, r model.Resource) (model.UpdateStatus, error) {
 	// TODO if resource type and kind get out of sync, this will cause issues
 	switch r.GetKind() {
 	case model.KindAgentVersion:
-		return upsertDatastoreResource(s, r.(*model.AgentVersion))
+		return upsertDatastoreResource(ctx, s, r.(*model.AgentVersion))
 	case model.KindConfiguration:
-		return upsertDatastoreResource(s, r.(*model.Configuration))
+		return upsertDatastoreResource(ctx, s, r.(*model.Configuration))
 	case model.KindSource:
-		return upsertDatastoreResource(s, r.(*model.Source))
+		return upsertDatastoreResource(ctx, s, r.(*model.Source))
 	case model.KindSourceType:
-		return upsertDatastoreResource(s, r.(*model.SourceType))
+		return upsertDatastoreResource(ctx, s, r.(*model.SourceType))
 	case model.KindProcessor:
-		return upsertDatastoreResource(s, r.(*model.Processor))
+		return upsertDatastoreResource(ctx, s, r.(*model.Processor))
 	case model.KindProcessorType:
-		return upsertDatastoreResource(s, r.(*model.ProcessorType))
+		return upsertDatastoreResource(ctx, s, r.(*model.ProcessorType))
 	case model.KindDestination:
-		return upsertDatastoreResource(s, r.(*model.Destination))
+		return upsertDatastoreResource(ctx, s, r.(*model.Destination))
 	case model.KindDestinationType:
-		return upsertDatastoreResource(s, r.(*model.DestinationType))
+		return upsertDatastoreResource(ctx, s, r.(*model.DestinationType))
 	default:
 		return model.StatusError, fmt.Errorf("unable to use ApplyResource with %s", string(r.GetKind()))
 	}
 }
 
-func upsertDatastoreAgent(s *googleCloudStore, agent *model.Agent) error {
+func upsertDatastoreAgent(ctx context.Context, s *googleCloudStore, agent *model.Agent) error {
 	dsr, err := newDatastoreAgent(agent)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.client.Put(context.TODO(), dsr.Key, dsr)
+	_, err = s.client.Put(ctx, dsr.Key, dsr)
 	if err != nil {
 		return err
 	}
@@ -734,9 +734,9 @@ func upsertDatastoreAgent(s *googleCloudStore, agent *model.Agent) error {
 	return nil
 }
 
-func upsertDatastoreResource[R model.Resource](s *googleCloudStore, r R) (model.UpdateStatus, error) {
+func upsertDatastoreResource[R model.Resource](ctx context.Context, s *googleCloudStore, r R) (model.UpdateStatus, error) {
 	successStatus := model.StatusCreated
-	existing, exists, err := getDatastoreResource[R](s, r.GetKind(), r.Name())
+	existing, exists, err := getDatastoreResource[R](ctx, s, r.GetKind(), r.Name())
 	if err != nil {
 		return model.StatusError, err
 	} else if exists {
@@ -750,7 +750,7 @@ func upsertDatastoreResource[R model.Resource](s *googleCloudStore, r R) (model.
 		return model.StatusUnchanged, fmt.Errorf("failed to marshal the resource: %w", err)
 	}
 
-	_, err = s.client.Put(context.TODO(), dsr.Key, dsr)
+	_, err = s.client.Put(ctx, dsr.Key, dsr)
 	if err != nil {
 		return model.StatusUnchanged, fmt.Errorf("failed to put the resource: %w", err)
 	}
@@ -759,10 +759,10 @@ func upsertDatastoreResource[R model.Resource](s *googleCloudStore, r R) (model.
 	return successStatus, err
 }
 
-func getDatastoreResource[R any](s *googleCloudStore, kind model.Kind, name string) (resource R, exists bool, err error) {
+func getDatastoreResource[R any](ctx context.Context, s *googleCloudStore, kind model.Kind, name string) (resource R, exists bool, err error) {
 	var dsr datastoreResource
 
-	if err = s.client.Get(context.TODO(), datastoreKey(kind, name), &dsr); err != nil {
+	if err = s.client.Get(ctx, datastoreKey(kind, name), &dsr); err != nil {
 		if errors.Is(err, datastore.ErrNoSuchEntity) {
 			return resource, false, nil
 		}
@@ -777,45 +777,45 @@ func getDatastoreResource[R any](s *googleCloudStore, kind model.Kind, name stri
 	return resource, true, nil
 }
 
-func deleteDatastoreResourceAndNotify[R model.Resource](s *googleCloudStore, kind model.Kind, name string) (resource R, exists bool, err error) {
-	deleted, exists, err := deleteDatastoreResource[R](s, kind, name)
+func deleteDatastoreResourceAndNotify[R model.Resource](ctx context.Context, s *googleCloudStore, kind model.Kind, name string) (resource R, exists bool, err error) {
+	deleted, exists, err := deleteDatastoreResource[R](ctx, s, kind, name)
 
 	if err == nil && exists {
 		updates := NewUpdates()
 		updates.IncludeResource(deleted, EventTypeRemove)
-		s.notify(updates)
+		s.notify(ctx, updates)
 	}
 
 	return deleted, exists, err
 }
 
-func deleteAnyDatastoreResource(s *googleCloudStore, r model.Resource) (model.Resource, bool, error) {
+func deleteAnyDatastoreResource(ctx context.Context, s *googleCloudStore, r model.Resource) (model.Resource, bool, error) {
 	// TODO if resource type and kind get out of sync, this will cause issues
 	switch r.GetKind() {
 	case model.KindAgentVersion:
-		return deleteDatastoreResource[*model.AgentVersion](s, r.GetKind(), r.Name())
+		return deleteDatastoreResource[*model.AgentVersion](ctx, s, r.GetKind(), r.Name())
 	case model.KindConfiguration:
-		return deleteDatastoreResource[*model.Configuration](s, r.GetKind(), r.Name())
+		return deleteDatastoreResource[*model.Configuration](ctx, s, r.GetKind(), r.Name())
 	case model.KindSource:
-		return deleteDatastoreResource[*model.Source](s, r.GetKind(), r.Name())
+		return deleteDatastoreResource[*model.Source](ctx, s, r.GetKind(), r.Name())
 	case model.KindSourceType:
-		return deleteDatastoreResource[*model.SourceType](s, r.GetKind(), r.Name())
+		return deleteDatastoreResource[*model.SourceType](ctx, s, r.GetKind(), r.Name())
 	case model.KindProcessor:
-		return deleteDatastoreResource[*model.Processor](s, r.GetKind(), r.Name())
+		return deleteDatastoreResource[*model.Processor](ctx, s, r.GetKind(), r.Name())
 	case model.KindProcessorType:
-		return deleteDatastoreResource[*model.ProcessorType](s, r.GetKind(), r.Name())
+		return deleteDatastoreResource[*model.ProcessorType](ctx, s, r.GetKind(), r.Name())
 	case model.KindDestination:
-		return deleteDatastoreResource[*model.Destination](s, r.GetKind(), r.Name())
+		return deleteDatastoreResource[*model.Destination](ctx, s, r.GetKind(), r.Name())
 	case model.KindDestinationType:
-		return deleteDatastoreResource[*model.DestinationType](s, r.GetKind(), r.Name())
+		return deleteDatastoreResource[*model.DestinationType](ctx, s, r.GetKind(), r.Name())
 	default:
 		return nil, false, fmt.Errorf("unable to use DeleteResources with %s", string(r.GetKind()))
 	}
 }
 
-func deleteDatastoreResource[R model.Resource](s *googleCloudStore, kind model.Kind, name string) (resource R, exists bool, err error) {
+func deleteDatastoreResource[R model.Resource](ctx context.Context, s *googleCloudStore, kind model.Kind, name string) (resource R, exists bool, err error) {
 	var dsr datastoreResource
-	if err = s.client.Get(context.TODO(), datastoreKey(kind, name), &dsr); err != nil {
+	if err = s.client.Get(ctx, datastoreKey(kind, name), &dsr); err != nil {
 		if errors.Is(err, datastore.ErrNoSuchEntity) {
 			return resource, false, nil
 		}
@@ -826,21 +826,21 @@ func deleteDatastoreResource[R model.Resource](s *googleCloudStore, kind model.K
 	}
 
 	// Check if the resources is referenced by another
-	dependencies, err := FindDependentResources(context.TODO(), s, resource)
+	dependencies, err := FindDependentResources(ctx, s, resource)
 	if !dependencies.empty() {
 		return resource, true, ErrResourceInUse
 	}
 
-	if err = s.client.Delete(context.TODO(), datastoreKey(kind, name)); err != nil {
+	if err = s.client.Delete(ctx, datastoreKey(kind, name)); err != nil {
 		return resource, true, fmt.Errorf("failed to delete the resource: %w", err)
 	}
 	return resource, true, nil
 }
 
-func getDatastoreResources[R any](s *googleCloudStore, kind model.Kind, opts *queryOptions) ([]R, error) {
+func getDatastoreResources[R any](ctx context.Context, s *googleCloudStore, kind model.Kind, opts *queryOptions) ([]R, error) {
 	query := datastoreQuery(kind, opts)
 	var list []datastoreResource
-	if _, err := s.client.GetAll(context.TODO(), query, &list); err != nil {
+	if _, err := s.client.GetAll(ctx, query, &list); err != nil {
 		return nil, err
 	}
 
@@ -868,7 +868,7 @@ func getDatastoreResourcesWithQuery[R any](ctx context.Context, s *googleCloudSt
 		return getDatastoreResourcesByID[R](ctx, s, kind, ids)
 	}
 
-	return getDatastoreResources[R](s, kind, opts)
+	return getDatastoreResources[R](ctx, s, kind, opts)
 }
 
 func getDatastoreResourcesByID[R any](ctx context.Context, s *googleCloudStore, kind model.Kind, ids []string) ([]R, error) {

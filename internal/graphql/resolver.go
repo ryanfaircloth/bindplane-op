@@ -48,7 +48,7 @@ func NewResolver(bindplane server.BindPlane) *Resolver {
 	}
 
 	// relay events from the store to the resolver where they will be dispatched to individual graphql subscriptions
-	eventbus.Relay(context.TODO(), bindplane.Store().Updates(), resolver.updates)
+	eventbus.Relay(context.Background(), bindplane.Store().Updates(), resolver.updates)
 
 	return resolver
 }
@@ -114,6 +114,9 @@ func applyQueryToEvents[T model.Resource](query *search.Query, index search.Inde
 }
 
 func (r *Resolver) parseSelectorAndQuery(selector *string, query *string) (*model.Selector, *search.Query, error) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	var parsedSelector *model.Selector
 	if selector != nil {
 		sel, err := model.SelectorFromString(*selector)
@@ -127,7 +130,7 @@ func (r *Resolver) parseSelectorAndQuery(selector *string, query *string) (*mode
 	var parsedQuery *search.Query
 	if query != nil && *query != "" {
 		q := search.ParseQuery(*query)
-		q.ReplaceVersionLatest(r.bindplane.Versions())
+		q.ReplaceVersionLatest(ctx, r.bindplane.Versions())
 		parsedQuery = q
 	}
 

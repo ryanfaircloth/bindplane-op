@@ -15,6 +15,8 @@
 package serve
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
@@ -36,7 +38,7 @@ func Command(bindplane *cli.BindPlane, h profile.Helper) *cobra.Command {
 			s := Server{
 				logger: bindplane.Logger(),
 			}
-			if err := s.Start(bindplane, h, forceConsoleColor, skipSeed); err != nil {
+			if err := s.Start(context.Background(), bindplane, h, forceConsoleColor, skipSeed); err != nil {
 				bindplane.Logger().Error("unable to Start the server", zap.Error(err))
 				return err
 			}

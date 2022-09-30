@@ -16,6 +16,7 @@ package model
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"text/template"
@@ -269,7 +270,7 @@ func (rt *ResourceType) Validate() (warnings string, errors error) {
 }
 
 // ValidateWithStore returns an error if any part of the ResourceType is invalid
-func (rt *ResourceType) ValidateWithStore(store ResourceStore) (warnings string, errors error) {
+func (rt *ResourceType) ValidateWithStore(ctx context.Context, store ResourceStore) (warnings string, errors error) {
 	return rt.Validate()
 }
 

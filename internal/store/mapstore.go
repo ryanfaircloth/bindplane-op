@@ -132,12 +132,12 @@ func (r *resourceStore[T]) remove(name string) (item T, exists bool) {
 	return existing, ok
 }
 
-func (r *resourceStore[T]) removeAndNotify(name string, store *mapStore) (item T, exists bool, err error) {
+func (r *resourceStore[T]) removeAndNotify(ctx context.Context, name string, store *mapStore) (item T, exists bool, err error) {
 	r.mtx.Lock()
 	existing, ok := r.store[name]
 
 	if ok {
-		dependencies, err := FindDependentResources(context.TODO(), store, existing)
+		dependencies, err := FindDependentResources(ctx, store, existing)
 		if err != nil {
 			r.mtx.Unlock()
 			return existing, ok, err
@@ -154,7 +154,7 @@ func (r *resourceStore[T]) removeAndNotify(name string, store *mapStore) (item T
 	if ok {
 		updates := NewUpdates()
 		updates.IncludeResource(existing, EventTypeRemove)
-		store.notify(updates)
+		store.notify(ctx, updates)
 	}
 
 	return existing, ok, nil
@@ -198,7 +198,7 @@ func (mapstore *mapStore) UpsertAgents(ctx context.Context, agentIDs []string, u
 		agents = append(agents, mapstore.upsertAgent(id, updater, u))
 	}
 
-	mapstore.notify(u)
+	mapstore.notify(ctx, u)
 
 	return agents, nil
 }
@@ -210,7 +210,7 @@ func (mapstore *mapStore) UpsertAgent(ctx context.Context, agentID string, updat
 	u := NewUpdates()
 	agent := mapstore.upsertAgent(agentID, updater, u)
 
-	mapstore.notify(u)
+	mapstore.notify(ctx, u)
 
 	return agent, nil
 }
@@ -249,7 +249,7 @@ func (mapstore *mapStore) AgentsCount(ctx context.Context, options ...QueryOptio
 	return len(agents), nil
 }
 
-func (mapstore *mapStore) Agent(id string) (*model.Agent, error) {
+func (mapstore *mapStore) Agent(ctx context.Context, id string) (*model.Agent, error) {
 	mapstore.RLock()
 	defer mapstore.RUnlock()
 	return mapstore.agents[id], nil
@@ -283,19 +283,19 @@ func (mapstore *mapStore) DeleteAgents(ctx context.Context, agentIDs []string) (
 		}
 	}
 
-	mapstore.notify(updates)
+	mapstore.notify(ctx, updates)
 
 	return deleted, nil
 }
 
-func (mapstore *mapStore) AgentVersion(name string) (*model.AgentVersion, error) {
+func (mapstore *mapStore) AgentVersion(ctx context.Context, name string) (*model.AgentVersion, error) {
 	return mapstore.agentVersions.get(name), nil
 }
-func (mapstore *mapStore) AgentVersions() ([]*model.AgentVersion, error) {
+func (mapstore *mapStore) AgentVersions(ctx context.Context) ([]*model.AgentVersion, error) {
 	return mapstore.agentVersions.list(), nil
 }
-func (mapstore *mapStore) DeleteAgentVersion(name string) (*model.AgentVersion, error) {
-	item, exists, err := mapstore.agentVersions.removeAndNotify(name, mapstore)
+func (mapstore *mapStore) DeleteAgentVersion(ctx context.Context, name string) (*model.AgentVersion, error) {
+	item, exists, err := mapstore.agentVersions.removeAndNotify(ctx, name, mapstore)
 	if err != nil {
 		return item, err
 	}
@@ -305,7 +305,7 @@ func (mapstore *mapStore) DeleteAgentVersion(name string) (*model.AgentVersion, 
 	return item, nil
 }
 
-func (mapstore *mapStore) Configurations(options ...QueryOption) ([]*model.Configuration, error) {
+func (mapstore *mapStore) Configurations(ctx context.Context, options ...QueryOption) ([]*model.Configuration, error) {
 	opts := makeQueryOptions(options)
 	config := mapstore.configurations.list()
 	if opts.sort == "" {
@@ -316,11 +316,11 @@ func (mapstore *mapStore) Configurations(options ...QueryOption) ([]*model.Confi
 		return item.Name()
 	}), nil
 }
-func (mapstore *mapStore) Configuration(name string) (*model.Configuration, error) {
+func (mapstore *mapStore) Configuration(ctx context.Context, name string) (*model.Configuration, error) {
 	return mapstore.configurations.get(name), nil
 }
-func (mapstore *mapStore) DeleteConfiguration(name string) (*model.Configuration, error) {
-	item, exists, err := mapstore.configurations.removeAndNotify(name, mapstore)
+func (mapstore *mapStore) DeleteConfiguration(ctx context.Context, name string) (*model.Configuration, error) {
+	item, exists, err := mapstore.configurations.removeAndNotify(ctx, name, mapstore)
 	if err != nil {
 		return item, err
 	}
@@ -331,14 +331,14 @@ func (mapstore *mapStore) DeleteConfiguration(name string) (*model.Configuration
 	return item, nil
 }
 
-func (mapstore *mapStore) Source(name string) (*model.Source, error) {
+func (mapstore *mapStore) Source(ctx context.Context, name string) (*model.Source, error) {
 	return mapstore.sources.get(name), nil
 }
-func (mapstore *mapStore) Sources() ([]*model.Source, error) {
+func (mapstore *mapStore) Sources(ctx context.Context) ([]*model.Source, error) {
 	return mapstore.sources.list(), nil
 }
-func (mapstore *mapStore) DeleteSource(name string) (*model.Source, error) {
-	item, exists, err := mapstore.sources.removeAndNotify(name, mapstore)
+func (mapstore *mapStore) DeleteSource(ctx context.Context, name string) (*model.Source, error) {
+	item, exists, err := mapstore.sources.removeAndNotify(ctx, name, mapstore)
 	if err != nil {
 		return item, err
 	}
@@ -349,14 +349,14 @@ func (mapstore *mapStore) DeleteSource(name string) (*model.Source, error) {
 	return item, nil
 }
 
-func (mapstore *mapStore) SourceType(name string) (*model.SourceType, error) {
+func (mapstore *mapStore) SourceType(ctx context.Context, name string) (*model.SourceType, error) {
 	return mapstore.sourceTypes.get(name), nil
 }
-func (mapstore *mapStore) SourceTypes() ([]*model.SourceType, error) {
+func (mapstore *mapStore) SourceTypes(ctx context.Context) ([]*model.SourceType, error) {
 	return mapstore.sourceTypes.list(), nil
 }
-func (mapstore *mapStore) DeleteSourceType(name string) (*model.SourceType, error) {
-	item, exists, err := mapstore.sourceTypes.removeAndNotify(name, mapstore)
+func (mapstore *mapStore) DeleteSourceType(ctx context.Context, name string) (*model.SourceType, error) {
+	item, exists, err := mapstore.sourceTypes.removeAndNotify(ctx, name, mapstore)
 	if err != nil {
 		return item, err
 	}
@@ -367,14 +367,14 @@ func (mapstore *mapStore) DeleteSourceType(name string) (*model.SourceType, erro
 	return item, nil
 }
 
-func (mapstore *mapStore) Processor(name string) (*model.Processor, error) {
+func (mapstore *mapStore) Processor(ctx context.Context, name string) (*model.Processor, error) {
 	return mapstore.processors.get(name), nil
 }
-func (mapstore *mapStore) Processors() ([]*model.Processor, error) {
+func (mapstore *mapStore) Processors(ctx context.Context) ([]*model.Processor, error) {
 	return mapstore.processors.list(), nil
 }
-func (mapstore *mapStore) DeleteProcessor(name string) (*model.Processor, error) {
-	item, exists, err := mapstore.processors.removeAndNotify(name, mapstore)
+func (mapstore *mapStore) DeleteProcessor(ctx context.Context, name string) (*model.Processor, error) {
+	item, exists, err := mapstore.processors.removeAndNotify(ctx, name, mapstore)
 	if err != nil {
 		return item, err
 	}
@@ -385,14 +385,14 @@ func (mapstore *mapStore) DeleteProcessor(name string) (*model.Processor, error)
 	return item, nil
 }
 
-func (mapstore *mapStore) ProcessorType(name string) (*model.ProcessorType, error) {
+func (mapstore *mapStore) ProcessorType(ctx context.Context, name string) (*model.ProcessorType, error) {
 	return mapstore.processorTypes.get(name), nil
 }
-func (mapstore *mapStore) ProcessorTypes() ([]*model.ProcessorType, error) {
+func (mapstore *mapStore) ProcessorTypes(ctx context.Context) ([]*model.ProcessorType, error) {
 	return mapstore.processorTypes.list(), nil
 }
-func (mapstore *mapStore) DeleteProcessorType(name string) (*model.ProcessorType, error) {
-	item, exists, err := mapstore.processorTypes.removeAndNotify(name, mapstore)
+func (mapstore *mapStore) DeleteProcessorType(ctx context.Context, name string) (*model.ProcessorType, error) {
+	item, exists, err := mapstore.processorTypes.removeAndNotify(ctx, name, mapstore)
 	if err != nil {
 		return item, err
 	}
@@ -403,14 +403,14 @@ func (mapstore *mapStore) DeleteProcessorType(name string) (*model.ProcessorType
 	return item, nil
 }
 
-func (mapstore *mapStore) Destination(name string) (*model.Destination, error) {
+func (mapstore *mapStore) Destination(ctx context.Context, name string) (*model.Destination, error) {
 	return mapstore.destinations.get(name), nil
 }
-func (mapstore *mapStore) Destinations() ([]*model.Destination, error) {
+func (mapstore *mapStore) Destinations(ctx context.Context) ([]*model.Destination, error) {
 	return mapstore.destinations.list(), nil
 }
-func (mapstore *mapStore) DeleteDestination(name string) (*model.Destination, error) {
-	item, exists, err := mapstore.destinations.removeAndNotify(name, mapstore)
+func (mapstore *mapStore) DeleteDestination(ctx context.Context, name string) (*model.Destination, error) {
+	item, exists, err := mapstore.destinations.removeAndNotify(ctx, name, mapstore)
 	if err != nil {
 		return item, err
 	}
@@ -421,14 +421,14 @@ func (mapstore *mapStore) DeleteDestination(name string) (*model.Destination, er
 	return item, nil
 }
 
-func (mapstore *mapStore) DestinationType(name string) (*model.DestinationType, error) {
+func (mapstore *mapStore) DestinationType(ctx context.Context, name string) (*model.DestinationType, error) {
 	return mapstore.destinationTypes.get(name), nil
 }
-func (mapstore *mapStore) DestinationTypes() ([]*model.DestinationType, error) {
+func (mapstore *mapStore) DestinationTypes(ctx context.Context) ([]*model.DestinationType, error) {
 	return mapstore.destinationTypes.list(), nil
 }
-func (mapstore *mapStore) DeleteDestinationType(name string) (*model.DestinationType, error) {
-	item, exists, err := mapstore.destinationTypes.removeAndNotify(name, mapstore)
+func (mapstore *mapStore) DeleteDestinationType(ctx context.Context, name string) (*model.DestinationType, error) {
+	item, exists, err := mapstore.destinationTypes.removeAndNotify(ctx, name, mapstore)
 	if err != nil {
 		return item, err
 	}
@@ -439,7 +439,7 @@ func (mapstore *mapStore) DeleteDestinationType(name string) (*model.Destination
 	return item, nil
 }
 
-func (mapstore *mapStore) ApplyResources(resources []model.Resource) ([]model.ResourceStatus, error) {
+func (mapstore *mapStore) ApplyResources(ctx context.Context, resources []model.Resource) ([]model.ResourceStatus, error) {
 	mapstore.Lock()
 	defer mapstore.Unlock()
 	var result error
@@ -448,7 +448,7 @@ func (mapstore *mapStore) ApplyResources(resources []model.Resource) ([]model.Re
 	resourceStatuses := make([]model.ResourceStatus, 0)
 
 	for _, resource := range resources {
-		_, err := resource.ValidateWithStore(mapstore)
+		_, err := resource.ValidateWithStore(ctx, mapstore)
 		if err != nil {
 			resourceStatuses = append(resourceStatuses, *model.NewResourceStatusWithReason(resource, model.StatusInvalid, err.Error()))
 			continue
@@ -491,11 +491,11 @@ func (mapstore *mapStore) ApplyResources(resources []model.Resource) ([]model.Re
 		}
 	}
 
-	mapstore.notify(updates)
+	mapstore.notify(ctx, updates)
 	return resourceStatuses, result
 }
 
-func (mapstore *mapStore) DeleteResources(resources []model.Resource) ([]model.ResourceStatus, error) {
+func (mapstore *mapStore) DeleteResources(ctx context.Context, resources []model.Resource) ([]model.ResourceStatus, error) {
 	mapstore.Lock()
 	defer mapstore.Unlock()
 
@@ -505,7 +505,7 @@ func (mapstore *mapStore) DeleteResources(resources []model.Resource) ([]model.R
 	resourceStatuses := make([]model.ResourceStatus, 0)
 
 	for _, r := range resources {
-		dependencies, err := FindDependentResources(context.TODO(), mapstore, r)
+		dependencies, err := FindDependentResources(ctx, mapstore, r)
 		if err != nil {
 			mapstore.logger.Error("failed to get dependent resources", zap.Error(err))
 			continue
@@ -561,16 +561,16 @@ func (mapstore *mapStore) DeleteResources(resources []model.Resource) ([]model.R
 		}
 	}
 
-	mapstore.notify(updates)
+	mapstore.notify(ctx, updates)
 	return resourceStatuses, nil
 }
 
 // AgentConfiguration returns the configuration that should be applied to an agent.
-func (mapstore *mapStore) AgentConfiguration(agentID string) (*model.Configuration, error) {
+func (mapstore *mapStore) AgentConfiguration(ctx context.Context, agentID string) (*model.Configuration, error) {
 	mapstore.RLock()
 	defer mapstore.RUnlock()
 
-	agent, err := mapstore.Agent(agentID)
+	agent, err := mapstore.Agent(ctx, agentID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot return configuration for unknown agent: %w", err)
 	}
@@ -589,7 +589,7 @@ func (mapstore *mapStore) AgentConfiguration(agentID string) (*model.Configurati
 }
 
 // AgentsIDsMatchingConfiguration returns the list of agent IDs that are using the specified configuration
-func (mapstore *mapStore) AgentsIDsMatchingConfiguration(configuration *model.Configuration) ([]string, error) {
+func (mapstore *mapStore) AgentsIDsMatchingConfiguration(ctx context.Context, configuration *model.Configuration) ([]string, error) {
 	ids := mapstore.agentIndex.Select(configuration.Spec.Selector.MatchLabels)
 	return ids, nil
 }
@@ -599,7 +599,7 @@ func (mapstore *mapStore) Updates() eventbus.Source[*Updates] {
 }
 
 // CleanupDisconnectedAgents removes agents that have disconnected before the specified time
-func (mapstore *mapStore) CleanupDisconnectedAgents(since time.Time) error {
+func (mapstore *mapStore) CleanupDisconnectedAgents(ctx context.Context, since time.Time) error {
 	mapstore.Lock()
 	defer mapstore.Unlock()
 
@@ -612,18 +612,18 @@ func (mapstore *mapStore) CleanupDisconnectedAgents(since time.Time) error {
 		}
 	}
 
-	mapstore.notify(updates)
+	mapstore.notify(ctx, updates)
 
 	return nil
 }
 
 // Index provides access to the search Index implementation managed by the Store
-func (mapstore *mapStore) AgentIndex() search.Index {
+func (mapstore *mapStore) AgentIndex(ctx context.Context) search.Index {
 	return mapstore.agentIndex
 }
 
 // ConfigurationIndex provides access to the search Index for Configurations
-func (mapstore *mapStore) ConfigurationIndex() search.Index {
+func (mapstore *mapStore) ConfigurationIndex(ctx context.Context) search.Index {
 	return mapstore.configurationIndex
 }
 
@@ -668,8 +668,8 @@ func (mapstore *mapStore) upsertAgent(agentID string, updater AgentUpdater, upda
 	return agent
 }
 
-func (mapstore *mapStore) notify(updates *Updates) {
-	err := updates.addTransitiveUpdates(mapstore)
+func (mapstore *mapStore) notify(ctx context.Context, updates *Updates) {
+	err := updates.addTransitiveUpdates(ctx, mapstore)
 	if err != nil {
 		// TODO: if we can't notify about all updates, what do we do?
 		mapstore.logger.Error("unable to add transitive updates", zap.Any("updates", updates), zap.Error(err))

@@ -34,9 +34,9 @@ const (
 // Versions manages versions of agents that are used during install and upgrade. The versions are stored in the Store as
 // agent-version resources, but Versions provides quick access to the latest version.
 type Versions interface {
-	LatestVersionString() string
-	LatestVersion() (*model.AgentVersion, error)
-	Version(version string) (*model.AgentVersion, error)
+	LatestVersionString(ctx context.Context) string
+	LatestVersion(ctx context.Context) (*model.AgentVersion, error)
+	Version(ctx context.Context, version string) (*model.AgentVersion, error)
 
 	SyncVersion(version string) (*model.AgentVersion, error)
 	SyncVersions() ([]*model.AgentVersion, error)
@@ -93,8 +93,8 @@ func NewVersions(ctx context.Context, client Client, store store.Store, settings
 	return v
 }
 
-func (v *versions) LatestVersionString() string {
-	version, err := v.LatestVersion()
+func (v *versions) LatestVersionString(ctx context.Context) string {
+	version, err := v.LatestVersion(ctx)
 	if err != nil {
 		return ""
 	}
@@ -102,14 +102,14 @@ func (v *versions) LatestVersionString() string {
 }
 
 // LatestVersion returns the latest *model.AgentVersion.
-func (v *versions) LatestVersion() (*model.AgentVersion, error) {
+func (v *versions) LatestVersion(ctx context.Context) (*model.AgentVersion, error) {
 	// check if we have a remembered result
 	if remembered := v.latestVersion.Get(); remembered != nil {
 		return remembered, nil
 	}
 
 	// find the latest public version
-	agentVersions, err := v.store.AgentVersions()
+	agentVersions, err := v.store.AgentVersions(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -133,14 +133,14 @@ func (v *versions) LatestVersion() (*model.AgentVersion, error) {
 
 // Version returns the specified agent version. If the version is invalid or does not exist, it returns an error. If
 // version is "latest", it returns the latest version.
-func (v *versions) Version(version string) (*model.AgentVersion, error) {
+func (v *versions) Version(ctx context.Context, version string) (*model.AgentVersion, error) {
 	if version == VersionLatest {
-		return v.LatestVersion()
+		return v.LatestVersion(ctx)
 	}
 
 	name := fmt.Sprintf("%s-%s", model.AgentTypeNameObservIQOtelCollector, version)
 
-	found, err := v.store.AgentVersion(name)
+	found, err := v.store.AgentVersion(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +195,7 @@ func (v *versions) syncAgentVersionsOnce() {
 		resources = append(resources, agentVersion)
 	}
 
-	resourceStatuses, err := v.store.ApplyResources(resources)
+	resourceStatuses, err := v.store.ApplyResources(context.Background(), resources)
 	if err != nil {
 		v.logger.Error("error during syncAgentVersions ApplyResources", zap.Error(err))
 		return

@@ -63,7 +63,7 @@ func (r *agentResolver) Configuration(ctx context.Context, obj *model.Agent) (*m
 
 // ConfigurationResource is the resolver for the configurationResource field.
 func (r *agentResolver) ConfigurationResource(ctx context.Context, obj *model.Agent) (*model.Configuration, error) {
-	return r.bindplane.Store().AgentConfiguration(obj.ID)
+	return r.bindplane.Store().AgentConfiguration(ctx, obj.ID)
 }
 
 // UpgradeAvailable is the resolver for the upgradeAvailable field.
@@ -72,7 +72,7 @@ func (r *agentResolver) UpgradeAvailable(ctx context.Context, obj *model.Agent) 
 		return nil, nil
 	}
 
-	latestVersion, err := r.bindplane.Versions().LatestVersion()
+	latestVersion, err := r.bindplane.Versions().LatestVersion(ctx)
 	if err != nil {
 		return nil, nil
 	}
@@ -110,7 +110,7 @@ func (r *configurationResolver) Kind(ctx context.Context, obj *model.Configurati
 
 // AgentCount is the resolver for the agentCount field.
 func (r *configurationResolver) AgentCount(ctx context.Context, obj *model.Configuration) (*int, error) {
-	ids, err := r.bindplane.Store().AgentsIDsMatchingConfiguration(obj)
+	ids, err := r.bindplane.Store().AgentsIDsMatchingConfiguration(ctx, obj)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +190,7 @@ func (r *queryResolver) Agents(ctx context.Context, selector *string, query *str
 	ctx, span := tracer.Start(ctx, "graphql/Agents")
 	defer span.End()
 
-	options, suggestions, err := r.queryOptionsAndSuggestions(selector, query, r.bindplane.Store().AgentIndex())
+	options, suggestions, err := r.queryOptionsAndSuggestions(selector, query, r.bindplane.Store().AgentIndex(ctx))
 	agents, err := r.bindplane.Store().Agents(ctx, options...)
 	if err != nil {
 		r.bindplane.Logger().Error("error in graphql Agents", zap.Error(err))
@@ -201,19 +201,19 @@ func (r *queryResolver) Agents(ctx context.Context, selector *string, query *str
 		Agents:        agents,
 		Query:         query,
 		Suggestions:   suggestions,
-		LatestVersion: r.bindplane.Versions().LatestVersionString(),
+		LatestVersion: r.bindplane.Versions().LatestVersionString(ctx),
 	}, nil
 }
 
 // Agent is the resolver for the agent field.
 func (r *queryResolver) Agent(ctx context.Context, id string) (*model.Agent, error) {
-	return r.bindplane.Store().Agent(id)
+	return r.bindplane.Store().Agent(ctx, id)
 }
 
 // Configurations is the resolver for the configurations field.
 func (r *queryResolver) Configurations(ctx context.Context, selector *string, query *string) (*model1.Configurations, error) {
-	options, suggestions, err := r.queryOptionsAndSuggestions(selector, query, r.bindplane.Store().ConfigurationIndex())
-	configurations, err := r.bindplane.Store().Configurations(options...)
+	options, suggestions, err := r.queryOptionsAndSuggestions(selector, query, r.bindplane.Store().ConfigurationIndex(ctx))
+	configurations, err := r.bindplane.Store().Configurations(ctx, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -226,64 +226,64 @@ func (r *queryResolver) Configurations(ctx context.Context, selector *string, qu
 
 // Configuration is the resolver for the configuration field.
 func (r *queryResolver) Configuration(ctx context.Context, name string) (*model.Configuration, error) {
-	return r.bindplane.Store().Configuration(name)
+	return r.bindplane.Store().Configuration(ctx, name)
 }
 
 // Sources is the resolver for the sources field.
 func (r *queryResolver) Sources(ctx context.Context) ([]*model.Source, error) {
-	return r.bindplane.Store().Sources()
+	return r.bindplane.Store().Sources(ctx)
 }
 
 // Source is the resolver for the source field.
 func (r *queryResolver) Source(ctx context.Context, name string) (*model.Source, error) {
-	return r.bindplane.Store().Source(name)
+	return r.bindplane.Store().Source(ctx, name)
 }
 
 // SourceTypes is the resolver for the sourceTypes field.
 func (r *queryResolver) SourceTypes(ctx context.Context) ([]*model.SourceType, error) {
-	return r.bindplane.Store().SourceTypes()
+	return r.bindplane.Store().SourceTypes(ctx)
 }
 
 // SourceType is the resolver for the sourceType field.
 func (r *queryResolver) SourceType(ctx context.Context, name string) (*model.SourceType, error) {
-	return r.bindplane.Store().SourceType(name)
+	return r.bindplane.Store().SourceType(ctx, name)
 }
 
 // Processors is the resolver for the processors field.
 func (r *queryResolver) Processors(ctx context.Context) ([]*model.Processor, error) {
-	return r.bindplane.Store().Processors()
+	return r.bindplane.Store().Processors(ctx)
 }
 
 // Processor is the resolver for the processor field.
 func (r *queryResolver) Processor(ctx context.Context, name string) (*model.Processor, error) {
-	return r.bindplane.Store().Processor(name)
+	return r.bindplane.Store().Processor(ctx, name)
 }
 
 // ProcessorTypes is the resolver for the processorTypes field.
 func (r *queryResolver) ProcessorTypes(ctx context.Context) ([]*model.ProcessorType, error) {
-	return r.bindplane.Store().ProcessorTypes()
+	return r.bindplane.Store().ProcessorTypes(ctx)
 }
 
 // ProcessorType is the resolver for the processorType field.
 func (r *queryResolver) ProcessorType(ctx context.Context, name string) (*model.ProcessorType, error) {
-	return r.bindplane.Store().ProcessorType(name)
+	return r.bindplane.Store().ProcessorType(ctx, name)
 }
 
 // Destinations is the resolver for the destinations field.
 func (r *queryResolver) Destinations(ctx context.Context) ([]*model.Destination, error) {
-	return r.bindplane.Store().Destinations()
+	return r.bindplane.Store().Destinations(ctx)
 }
 
 // Destination is the resolver for the destination field.
 func (r *queryResolver) Destination(ctx context.Context, name string) (*model.Destination, error) {
-	return r.bindplane.Store().Destination(name)
+	return r.bindplane.Store().Destination(ctx, name)
 }
 
 // DestinationWithType is the resolver for the destinationWithType field.
 func (r *queryResolver) DestinationWithType(ctx context.Context, name string) (*model1.DestinationWithType, error) {
 	resp := &model1.DestinationWithType{}
 
-	dest, err := r.bindplane.Store().Destination(name)
+	dest, err := r.bindplane.Store().Destination(ctx, name)
 	if err != nil {
 		return resp, err
 	}
@@ -292,7 +292,7 @@ func (r *queryResolver) DestinationWithType(ctx context.Context, name string) (*
 		return resp, nil
 	}
 
-	destinationType, err := r.bindplane.Store().DestinationType(dest.Spec.Type)
+	destinationType, err := r.bindplane.Store().DestinationType(ctx, dest.Spec.Type)
 	if err != nil {
 		return resp, err
 	}
@@ -305,12 +305,12 @@ func (r *queryResolver) DestinationWithType(ctx context.Context, name string) (*
 
 // DestinationTypes is the resolver for the destinationTypes field.
 func (r *queryResolver) DestinationTypes(ctx context.Context) ([]*model.DestinationType, error) {
-	return r.bindplane.Store().DestinationTypes()
+	return r.bindplane.Store().DestinationTypes(ctx)
 }
 
 // DestinationType is the resolver for the destinationType field.
 func (r *queryResolver) DestinationType(ctx context.Context, name string) (*model.DestinationType, error) {
-	return r.bindplane.Store().DestinationType(name)
+	return r.bindplane.Store().DestinationType(ctx, name)
 }
 
 // Components is the resolver for the components field.
@@ -319,7 +319,7 @@ func (r *queryResolver) Components(ctx context.Context) (*model1.Components, err
 	destinations := make([]*model.Destination, 0)
 	var err error
 
-	sources, err = r.bindplane.Store().Sources()
+	sources, err = r.bindplane.Store().Sources(ctx)
 	if err != nil {
 		return &model1.Components{
 			Destinations: destinations,
@@ -327,7 +327,7 @@ func (r *queryResolver) Components(ctx context.Context) (*model1.Components, err
 		}, err
 	}
 
-	destinations, err = r.bindplane.Store().Destinations()
+	destinations, err = r.bindplane.Store().Destinations(ctx)
 	if err != nil {
 		return &model1.Components{
 			Destinations: destinations,
@@ -349,7 +349,7 @@ func (r *queryResolver) Snapshot(ctx context.Context, agentID string, pipelineTy
 	signals := &model1.Snapshot{}
 
 	// construct a reporting config for this agent
-	config, err := r.bindplane.Store().AgentConfiguration(agentID)
+	config, err := r.bindplane.Store().AgentConfiguration(ctx, agentID)
 	if err != nil {
 		return signals, err
 	}
@@ -453,7 +453,7 @@ func (r *subscriptionResolver) AgentChanges(ctx context.Context, selector *strin
 		// if the observer is using a selector or query, we want to change Update to Remove if it no longer matches the
 		// selector or query
 		events := applySelectorToChanges(parsedSelector, updates.Agents)
-		events = applyQueryToChanges(parsedQuery, r.bindplane.Store().AgentIndex(), events)
+		events = applyQueryToChanges(parsedQuery, r.bindplane.Store().AgentIndex(ctx), events)
 
 		return model1.ToAgentChangeArray(events), !events.Empty()
 	})
@@ -477,7 +477,7 @@ func (r *subscriptionResolver) ConfigurationChanges(ctx context.Context, selecto
 		if r.hasAgentConfigurationChanges(updates) {
 			configUpdates = configUpdates.Clone()
 			// add all configurations here as updates since we don't know what agent counts could be affected
-			if configs, err := r.bindplane.Store().Configurations(); err == nil {
+			if configs, err := r.bindplane.Store().Configurations(ctx); err == nil {
 				for _, config := range configs {
 					// don't add configuration pseudo-updates that already have updates associated with them
 					if _, ok := configUpdates[config.UniqueKey()]; !ok {
@@ -490,7 +490,7 @@ func (r *subscriptionResolver) ConfigurationChanges(ctx context.Context, selecto
 		}
 
 		events := applySelectorToEvents(parsedSelector, configUpdates)
-		events = applyQueryToEvents(parsedQuery, r.bindplane.Store().ConfigurationIndex(), events)
+		events = applyQueryToEvents(parsedQuery, r.bindplane.Store().ConfigurationIndex(ctx), events)
 
 		return model1.ToConfigurationChanges(events), len(events) > 0
 	})

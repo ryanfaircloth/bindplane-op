@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	"context"
+
 	model "github.com/observiq/bindplane-op/model"
 	mock "github.com/stretchr/testify/mock"
 
@@ -15,7 +17,7 @@ type Versions struct {
 }
 
 // LatestVersion provides a mock function with given fields:
-func (_m *Versions) LatestVersion() (*model.AgentVersion, error) {
+func (_m *Versions) LatestVersion(ctx context.Context) (*model.AgentVersion, error) {
 	ret := _m.Called()
 
 	var r0 *model.AgentVersion
@@ -38,7 +40,7 @@ func (_m *Versions) LatestVersion() (*model.AgentVersion, error) {
 }
 
 // LatestVersionString provides a mock function with given fields:
-func (_m *Versions) LatestVersionString() string {
+func (_m *Versions) LatestVersionString(ctx context.Context) string {
 	ret := _m.Called()
 
 	var r0 string
@@ -52,7 +54,7 @@ func (_m *Versions) LatestVersionString() string {
 }
 
 // SyncVersion provides a mock function with given fields: version
-func (_m *Versions) SyncVersion(version string) (*model.AgentVersion, error) {
+func (_m *Versions) SyncVersion( version string) (*model.AgentVersion, error) {
 	ret := _m.Called(version)
 
 	var r0 *model.AgentVersion
@@ -98,7 +100,7 @@ func (_m *Versions) SyncVersions() ([]*model.AgentVersion, error) {
 }
 
 // Version provides a mock function with given fields: version
-func (_m *Versions) Version(version string) (*model.AgentVersion, error) {
+func (_m *Versions) Version(ctx context.Context, version string) (*model.AgentVersion, error) {
 	ret := _m.Called(version)
 
 	var r0 *model.AgentVersion

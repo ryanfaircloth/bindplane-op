@@ -45,7 +45,7 @@ type Options struct {
 type Store interface {
 	Clear()
 
-	Agent(string) (*model.Agent, error)
+	Agent(ctx context.Context, name string) (*model.Agent, error)
 	Agents(ctx context.Context, options ...QueryOption) ([]*model.Agent, error)
 	AgentsCount(context.Context, ...QueryOption) (int, error)
 	// UpsertAgent adds a new Agent to the Store or updates an existing one
@@ -53,50 +53,50 @@ type Store interface {
 	UpsertAgents(ctx context.Context, agentIDs []string, updater AgentUpdater) ([]*model.Agent, error)
 	DeleteAgents(ctx context.Context, agentIDs []string) ([]*model.Agent, error)
 
-	AgentVersion(name string) (*model.AgentVersion, error)
-	AgentVersions() ([]*model.AgentVersion, error)
-	DeleteAgentVersion(string) (*model.AgentVersion, error)
+	AgentVersion(ctx context.Context, name string) (*model.AgentVersion, error)
+	AgentVersions(ctx context.Context) ([]*model.AgentVersion, error)
+	DeleteAgentVersion(ctx context.Context, name string) (*model.AgentVersion, error)
 
-	Configurations(options ...QueryOption) ([]*model.Configuration, error)
-	Configuration(string) (*model.Configuration, error)
-	DeleteConfiguration(string) (*model.Configuration, error)
+	Configurations(ctx context.Context, options ...QueryOption) ([]*model.Configuration, error)
+	Configuration(ctx context.Context, name string) (*model.Configuration, error)
+	DeleteConfiguration(ctx context.Context, name string) (*model.Configuration, error)
 
-	Source(name string) (*model.Source, error)
-	Sources() ([]*model.Source, error)
-	DeleteSource(name string) (*model.Source, error)
+	Source(ctx context.Context, name string) (*model.Source, error)
+	Sources(ctx context.Context) ([]*model.Source, error)
+	DeleteSource(ctx context.Context, name string) (*model.Source, error)
 
-	SourceType(name string) (*model.SourceType, error)
-	SourceTypes() ([]*model.SourceType, error)
-	DeleteSourceType(name string) (*model.SourceType, error)
+	SourceType(ctx context.Context, name string) (*model.SourceType, error)
+	SourceTypes(ctx context.Context) ([]*model.SourceType, error)
+	DeleteSourceType(ctx context.Context, name string) (*model.SourceType, error)
 
-	Processor(name string) (*model.Processor, error)
-	Processors() ([]*model.Processor, error)
-	DeleteProcessor(name string) (*model.Processor, error)
+	Processor(ctx context.Context, name string) (*model.Processor, error)
+	Processors(ctx context.Context) ([]*model.Processor, error)
+	DeleteProcessor(ctx context.Context, name string) (*model.Processor, error)
 
-	ProcessorType(name string) (*model.ProcessorType, error)
-	ProcessorTypes() ([]*model.ProcessorType, error)
-	DeleteProcessorType(name string) (*model.ProcessorType, error)
+	ProcessorType(ctx context.Context, name string) (*model.ProcessorType, error)
+	ProcessorTypes(ctx context.Context) ([]*model.ProcessorType, error)
+	DeleteProcessorType(ctx context.Context, name string) (*model.ProcessorType, error)
 
-	Destination(name string) (*model.Destination, error)
-	Destinations() ([]*model.Destination, error)
-	DeleteDestination(name string) (*model.Destination, error)
+	Destination(ctx context.Context, name string) (*model.Destination, error)
+	Destinations(ctx context.Context) ([]*model.Destination, error)
+	DeleteDestination(ctx context.Context, name string) (*model.Destination, error)
 
-	DestinationType(name string) (*model.DestinationType, error)
-	DestinationTypes() ([]*model.DestinationType, error)
-	DeleteDestinationType(name string) (*model.DestinationType, error)
+	DestinationType(ctx context.Context, name string) (*model.DestinationType, error)
+	DestinationTypes(ctx context.Context) ([]*model.DestinationType, error)
+	DeleteDestinationType(ctx context.Context, name string) (*model.DestinationType, error)
 
-	ApplyResources([]model.Resource) ([]model.ResourceStatus, error)
+	ApplyResources(ctx context.Context, resources []model.Resource) ([]model.ResourceStatus, error)
 	// Batch delete of a slice of resources, returns the successfully deleted resources or an error.
-	DeleteResources([]model.Resource) ([]model.ResourceStatus, error)
+	DeleteResources(ctx context.Context, resources []model.Resource) ([]model.ResourceStatus, error)
 
 	// AgentConfiguration returns the configuration that should be applied to an agent.
-	AgentConfiguration(agentID string) (*model.Configuration, error)
+	AgentConfiguration(ctx context.Context, agentID string) (*model.Configuration, error)
 
 	// AgentsIDsMatchingConfiguration returns the list of agent IDs that are using the specified configuration
-	AgentsIDsMatchingConfiguration(*model.Configuration) ([]string, error)
+	AgentsIDsMatchingConfiguration(ctx context.Context, conf *model.Configuration) ([]string, error)
 
 	// CleanupDisconnectedAgents removes agents that have disconnected before the specified time
-	CleanupDisconnectedAgents(since time.Time) error
+	CleanupDisconnectedAgents(ctx context.Context, since time.Time) error
 
 	// Updates will receive pipelines and configurations that have been updated or deleted, either because the
 	// configuration changed or a component in them was updated. Agents inserted/updated from UpsertAgent and agents
@@ -104,10 +104,10 @@ type Store interface {
 	Updates() eventbus.Source[*Updates]
 
 	// AgentIndex provides access to the search AgentIndex implementation managed by the Store
-	AgentIndex() search.Index
+	AgentIndex(ctx context.Context) search.Index
 
 	// ConfigurationIndex provides access to the search Index for Configurations
-	ConfigurationIndex() search.Index
+	ConfigurationIndex(ctx context.Context) search.Index
 
 	// UserSessions must implement the gorilla sessions.Store interface
 	UserSessions() sessions.Store
@@ -194,10 +194,10 @@ func WithSort(field string) QueryOption {
 // seeding resources
 
 // Seed adds bundled resources to the store
-func Seed(store Store, logger *zap.Logger) error {
+func Seed(ctx context.Context, store Store, logger *zap.Logger) error {
 	var errs error
 	for _, dir := range embedded.SeedFolders {
-		err := seedDir(dir, store, logger)
+		err := seedDir(ctx, dir, store, logger)
 		if err != nil {
 			errs = multierror.Append(errs, err)
 		}
@@ -206,7 +206,7 @@ func Seed(store Store, logger *zap.Logger) error {
 }
 
 // seedDir adds bundled resources from the specified dir to the store
-func seedDir(dir string, store Store, logger *zap.Logger) error {
+func seedDir(ctx context.Context, dir string, store Store, logger *zap.Logger) error {
 	filesystem := embedded.Files
 	resourceTypes := make([]model.Resource, 0)
 
@@ -237,7 +237,7 @@ func seedDir(dir string, store Store, logger *zap.Logger) error {
 		return nil
 	})
 
-	updates, err := store.ApplyResources(resourceTypes)
+	updates, err := store.ApplyResources(ctx, resourceTypes)
 	if err != nil {
 		return err
 	}
@@ -302,7 +302,7 @@ func FindDependentResources(ctx context.Context, s Store, r model.Resource) (Dep
 
 	switch r.GetKind() {
 	case model.KindSource:
-		ids, err := search.Field(ctx, s.ConfigurationIndex(), "source", r.Name())
+		ids, err := search.Field(ctx, s.ConfigurationIndex(ctx), "source", r.Name())
 		if err != nil {
 			return nil, err
 		}
@@ -311,7 +311,7 @@ func FindDependentResources(ctx context.Context, s Store, r model.Resource) (Dep
 		}
 
 	case model.KindDestination:
-		ids, err := search.Field(ctx, s.ConfigurationIndex(), "destination", r.Name())
+		ids, err := search.Field(ctx, s.ConfigurationIndex(ctx), "destination", r.Name())
 		if err != nil {
 			return nil, err
 		}

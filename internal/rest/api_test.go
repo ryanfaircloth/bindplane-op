@@ -75,7 +75,7 @@ func resetStore(t *testing.T, store store.Store) {
 			Type: "string",
 		},
 	})
-	_, err := store.ApplyResources([]model.Resource{macos, nginx, cabin})
+	_, err := store.ApplyResources(context.Background(), []model.Resource{macos, nginx, cabin})
 	require.NoError(t, err)
 }
 
@@ -247,7 +247,7 @@ func TestREST(t *testing.T) {
 		destination2 := testDestinationWithParameters("destination-2", "cabin",
 			[]model.Parameter{{Name: "api_key", Value: "asdf"}})
 
-		_, err := s.ApplyResources([]model.Resource{destination1, destination2})
+		_, err := s.ApplyResources(context.Background(), []model.Resource{destination1, destination2})
 		require.NoError(t, err)
 
 		getRequest(t, client, endpoint, rr)
@@ -264,7 +264,7 @@ func TestREST(t *testing.T) {
 		destination2 := testDestinationWithParameters("destination-2", "cabin",
 			[]model.Parameter{{Name: "api_key", Value: "asdf"}})
 
-		_, err := s.ApplyResources([]model.Resource{destination1, destination2})
+		_, err := s.ApplyResources(ctx, []model.Resource{destination1, destination2})
 		require.NoError(t, err)
 
 		rr := &model.DestinationResponse{}
@@ -317,7 +317,7 @@ func TestREST(t *testing.T) {
 		destination1 := testDestination("destination-1", "cabin")
 		destination2 := testDestination("destination-2", "cabin")
 
-		_, err := s.ApplyResources([]model.Resource{destination1, destination2})
+		_, err := s.ApplyResources(ctx, []model.Resource{destination1, destination2})
 		require.NoError(t, err)
 
 		deleteEndpoint := fmt.Sprintf("/destinations/%s", url.PathEscape(destination1.Name()))
@@ -325,7 +325,7 @@ func TestREST(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNoContent, resp.StatusCode())
 
-		destinations, err := s.Destinations()
+		destinations, err := s.Destinations(ctx)
 		require.NoError(t, err)
 
 		assert.NotContains(t, destinations, destination1)
@@ -342,7 +342,7 @@ func TestREST(t *testing.T) {
 			Destinations: []model.ResourceConfiguration{{Name: "dest-1"}},
 		})
 
-		_, err := s.ApplyResources([]model.Resource{dest1, config})
+		_, err := s.ApplyResources(ctx, []model.Resource{dest1, config})
 		require.NoError(t, err)
 		deleteEndpoint := fmt.Sprintf("/destinations/%s", url.PathEscape(dest1.Name()))
 		resp, err := client.R().Delete(deleteEndpoint)
@@ -382,7 +382,7 @@ func TestREST(t *testing.T) {
 			[]model.Parameter{{Name: "version", Value: "0.0.2"}, {Name: "start_at", Value: "end"}},
 		)
 
-		_, err := s.ApplyResources([]model.Resource{source1, source2})
+		_, err := s.ApplyResources(ctx, []model.Resource{source1, source2})
 		require.NoError(t, err)
 
 		getRequest(t, client, endpoint, rr)
@@ -403,7 +403,7 @@ func TestREST(t *testing.T) {
 			"macos",
 		)
 
-		_, err := s.ApplyResources([]model.Resource{
+		_, err := s.ApplyResources(ctx, []model.Resource{
 			source1,
 			source2,
 		})
@@ -430,7 +430,7 @@ func TestREST(t *testing.T) {
 		source1 := testSource("source-1", "nginx")
 		source2 := testSource("source-2", "nginx")
 
-		_, err := s.ApplyResources([]model.Resource{
+		_, err := s.ApplyResources(ctx, []model.Resource{
 			source1,
 			source2,
 		})
@@ -441,7 +441,7 @@ func TestREST(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, http.StatusNoContent, resp.StatusCode())
 
-		sources, err := s.Sources()
+		sources, err := s.Sources(ctx)
 		require.NoError(t, err)
 
 		assert.NotContains(t, sources, source1)
@@ -459,7 +459,7 @@ func TestREST(t *testing.T) {
 			Sources: []model.ResourceConfiguration{{Name: "source-1"}},
 		})
 
-		_, err := store.ApplyResources([]model.Resource{source1, config})
+		_, err := store.ApplyResources(ctx, []model.Resource{source1, config})
 		require.NoError(t, err)
 
 		deleteEndpoint := fmt.Sprintf("/sources/%s", url.PathEscape("source-1"))
@@ -539,7 +539,7 @@ func TestREST(t *testing.T) {
 			t.Run(test.description, func(t *testing.T) {
 				// setup
 				resetStore(t, bindplane.Store())
-				_, err := bindplane.Store().ApplyResources(test.setupResources)
+				_, err := bindplane.Store().ApplyResources(ctx, test.setupResources)
 				require.NoError(t, err, "expect no error in setup")
 
 				result := &model.ApplyResponseClientSide{}
@@ -577,7 +577,7 @@ func TestREST(t *testing.T) {
 		testConfiguration1 := testRawConfiguration(uuid.NewString(), "test-configuration-1")
 		testConfiguration2 := testRawConfiguration(uuid.NewString(), "test-configuration-2")
 
-		_, err := bindplane.Store().ApplyResources([]model.Resource{
+		_, err := bindplane.Store().ApplyResources(ctx, []model.Resource{
 			testConfiguration1,
 			testConfiguration2,
 		})
@@ -595,7 +595,7 @@ func TestREST(t *testing.T) {
 		testConfiguration1 := testRawConfiguration(uuid.NewString(), "test-configuration-1")
 		testConfiguration2 := testRawConfiguration(uuid.NewString(), "test-configuration-2")
 
-		_, err := bindplane.Store().ApplyResources([]model.Resource{
+		_, err := bindplane.Store().ApplyResources(ctx, []model.Resource{
 			testConfiguration1,
 			testConfiguration2,
 		})
@@ -621,7 +621,7 @@ func TestREST(t *testing.T) {
 		testConfiguration1 := testRawConfiguration(uuid.NewString(), "test-configuration-1")
 		testConfiguration2 := testRawConfiguration(uuid.NewString(), "test-configuration-2")
 
-		_, err := bindplane.Store().ApplyResources([]model.Resource{
+		_, err := bindplane.Store().ApplyResources(ctx, []model.Resource{
 			testConfiguration1,
 			testConfiguration2,
 		})
@@ -632,7 +632,7 @@ func TestREST(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, resp.StatusCode(), http.StatusNoContent)
 
-		configurations, err := s.Configurations()
+		configurations, err := s.Configurations(ctx)
 		require.NoError(t, err)
 
 		assert.NotContains(t, configurations, testConfiguration1)
@@ -646,7 +646,7 @@ func TestREST(t *testing.T) {
 
 		original := testConfiguration(originalName)
 		third := testConfiguration(thirdName)
-		_, err := bindplane.Store().ApplyResources([]model.Resource{original, third})
+		_, err := bindplane.Store().ApplyResources(ctx, []model.Resource{original, third})
 		require.NoError(t, err)
 
 		t.Run("404 Not Found", func(t *testing.T) {
@@ -745,7 +745,7 @@ func TestREST(t *testing.T) {
 			t.Run(test.description, func(t *testing.T) {
 				// Setup
 				resetStore(t, bindplane.Store())
-				bindplane.Store().ApplyResources(test.seedResources)
+				bindplane.Store().ApplyResources(ctx, test.seedResources)
 
 				result := &model.DeleteResponseClientSide{}
 				resp, err := client.R().SetBody(test.payload).SetResult(result).Post("/delete")
@@ -799,7 +799,7 @@ func TestREST(t *testing.T) {
 			},
 		}
 
-		resources, err := bindplane.Store().ApplyResources([]model.Resource{config})
+		resources, err := bindplane.Store().ApplyResources(ctx, []model.Resource{config})
 		require.NoError(t, err)
 
 		expectConfiguration := resources[0].Resource
@@ -1686,22 +1686,22 @@ type mockStore struct {
 	mock.Mock
 }
 
-func (m *mockStore) ApplyResources(resources []model.Resource) ([]model.ResourceStatus, error) {
+func (m *mockStore) ApplyResources(ctx context.Context, resources []model.Resource) ([]model.ResourceStatus, error) {
 	args := m.Called(resources)
 	return args.Get(0).([]model.ResourceStatus), args.Error(1)
 }
 
-func (m *mockStore) DeleteResources(resources []model.Resource) ([]model.ResourceStatus, error) {
+func (m *mockStore) DeleteResources(ctx context.Context, resources []model.Resource) ([]model.ResourceStatus, error) {
 	args := m.Called(resources)
 	return args.Get(0).([]model.ResourceStatus), args.Error(1)
 }
 
-func (m *mockStore) Sources() ([]*model.Source, error) {
+func (m *mockStore) Sources(ctx context.Context) ([]*model.Source, error) {
 	args := m.Called()
 	return args.Get(0).([]*model.Source), args.Error(1)
 }
 
-func (m *mockStore) Source(name string) (*model.Source, error) {
+func (m *mockStore) Source(ctx context.Context, name string) (*model.Source, error) {
 	args := m.Called(name)
 	switch args.Get(0).(type) {
 	case nil:
@@ -1711,7 +1711,7 @@ func (m *mockStore) Source(name string) (*model.Source, error) {
 	}
 }
 
-func (m *mockStore) DeleteSource(name string) (*model.Source, error) {
+func (m *mockStore) DeleteSource(ctx context.Context, name string) (*model.Source, error) {
 	args := m.Called(name)
 	switch args.Get(0).(type) {
 	case nil:
@@ -1726,7 +1726,7 @@ func (m *mockStore) Agents(ctx context.Context, options ...store.QueryOption) ([
 	return args.Get(0).([]*model.Agent), args.Error(1)
 }
 
-func (m *mockStore) Agent(id string) (*model.Agent, error) {
+func (m *mockStore) Agent(ctx context.Context, id string) (*model.Agent, error) {
 	args := m.Called(id)
 	switch args.Get(0).(type) {
 	case nil:
@@ -1736,12 +1736,12 @@ func (m *mockStore) Agent(id string) (*model.Agent, error) {
 	}
 }
 
-func (m *mockStore) Destinations() ([]*model.Destination, error) {
+func (m *mockStore) Destinations(ctx context.Context) ([]*model.Destination, error) {
 	args := m.Called()
 	return args.Get(0).([]*model.Destination), args.Error(1)
 }
 
-func (m *mockStore) Destination(name string) (*model.Destination, error) {
+func (m *mockStore) Destination(ctx context.Context, name string) (*model.Destination, error) {
 	args := m.Called(name)
 	switch args.Get(0).(type) {
 	case nil:
@@ -1751,7 +1751,7 @@ func (m *mockStore) Destination(name string) (*model.Destination, error) {
 	}
 }
 
-func (m *mockStore) DeleteDestination(name string) (*model.Destination, error) {
+func (m *mockStore) DeleteDestination(ctx context.Context, name string) (*model.Destination, error) {
 	args := m.Called(name)
 	switch args.Get(0).(type) {
 	case nil:
@@ -1761,12 +1761,12 @@ func (m *mockStore) DeleteDestination(name string) (*model.Destination, error) {
 	}
 }
 
-func (m *mockStore) Configurations(options ...store.QueryOption) ([]*model.Configuration, error) {
+func (m *mockStore) Configurations(ctx context.Context, options ...store.QueryOption) ([]*model.Configuration, error) {
 	args := m.Called()
 	return args.Get(0).([]*model.Configuration), args.Error(1)
 }
 
-func (m *mockStore) Configuration(name string) (*model.Configuration, error) {
+func (m *mockStore) Configuration(ctx context.Context, name string) (*model.Configuration, error) {
 	args := m.Called(name)
 	switch args.Get(0).(type) {
 	case nil:
@@ -1776,7 +1776,7 @@ func (m *mockStore) Configuration(name string) (*model.Configuration, error) {
 	}
 }
 
-func (m *mockStore) DeleteConfiguration(name string) (*model.Configuration, error) {
+func (m *mockStore) DeleteConfiguration(ctx context.Context, name string) (*model.Configuration, error) {
 	args := m.Called(name)
 	switch args.Get(0).(type) {
 	case nil:

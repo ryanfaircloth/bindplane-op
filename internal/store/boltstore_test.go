@@ -42,7 +42,7 @@ func TestClear(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	s := NewBoltStore(ctx, db, testOptions, zap.NewNop())
-	s.ApplyResources([]model.Resource{
+	s.ApplyResources(ctx, []model.Resource{
 		macosSourceType,
 		macosSource,
 		cabinDestinationType,
@@ -52,11 +52,11 @@ func TestClear(t *testing.T) {
 
 	s.Clear()
 
-	sources, err := s.Sources()
+	sources, err := s.Sources(ctx)
 	require.NoError(t, err)
-	destinations, err := s.Destinations()
+	destinations, err := s.Destinations(ctx)
 	require.NoError(t, err)
-	configurations, err := s.Configurations()
+	configurations, err := s.Configurations(ctx)
 	require.NoError(t, err)
 
 	assert.Empty(t, sources)
@@ -107,7 +107,7 @@ func (x mockUnknownResource) GetKind() model.Kind                       { return
 func (x mockUnknownResource) Name() string                              { return "" }
 func (x mockUnknownResource) Description() string                       { return "" }
 func (x mockUnknownResource) Validate() (warnings string, errors error) { return "", nil }
-func (x mockUnknownResource) ValidateWithStore(model.ResourceStore) (warnings string, errors error) {
+func (x mockUnknownResource) ValidateWithStore(context.Context, model.ResourceStore) (warnings string, errors error) {
 	return "", nil
 }
 func (x mockUnknownResource) GetLabels() model.Labels { return model.MakeLabels() }
@@ -210,7 +210,7 @@ func TestAgent(t *testing.T) {
 	addAgent(s, a1)
 	addAgent(s, a2)
 
-	agent, err := s.Agent(a1.ID)
+	agent, err := s.Agent(ctx, a1.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, a1, agent)
 }
@@ -236,9 +236,9 @@ func TestUpsertAgent(t *testing.T) {
 
 	t.Run("creates a new agent if not found", func(t *testing.T) {
 		newAgentID := "3"
-		s.UpsertAgent(context.TODO(), newAgentID, testUpdater)
+		s.UpsertAgent(ctx, newAgentID, testUpdater)
 
-		got, err := s.Agent(newAgentID)
+		got, err := s.Agent(ctx, newAgentID)
 		require.NoError(t, err)
 
 		assert.NotNil(t, got)
@@ -250,7 +250,7 @@ func TestUpsertAgent(t *testing.T) {
 
 		assert.True(t, updaterCalled)
 
-		got, err := s.Agent(a1.ID)
+		got, err := s.Agent(ctx, a1.ID)
 		require.NoError(t, err)
 
 		assert.Equal(t, got.Name, "updated")

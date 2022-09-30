@@ -106,7 +106,7 @@ func (updates *Updates) Size() int {
 
 // TODO: how does this work in a distributed environment?
 // pub/sub individual event => pub/sub include dependencies => subscribers
-func (updates *Updates) addTransitiveUpdates(s Store) error {
+func (updates *Updates) addTransitiveUpdates(ctx context.Context, s Store) error {
 	// for sourceTypes, add sources
 	// for processorTypes, add sources and processors
 	// for destinationTypes, add destinations
@@ -116,22 +116,22 @@ func (updates *Updates) addTransitiveUpdates(s Store) error {
 
 	var errs error
 
-	err := updates.addProcessorUpdates(s)
+	err := updates.addProcessorUpdates(ctx, s)
 	if err != nil {
 		errs = multierror.Append(errs, err)
 	}
 
-	err = updates.addSourceUpdates(s)
+	err = updates.addSourceUpdates(ctx, s)
 	if err != nil {
 		errs = multierror.Append(errs, err)
 	}
 
-	err = updates.addDestinationUpdates(s)
+	err = updates.addDestinationUpdates(ctx, s)
 	if err != nil {
 		errs = multierror.Append(errs, err)
 	}
 
-	err = updates.addConfigurationUpdates(s)
+	err = updates.addConfigurationUpdates(ctx, s)
 	if err != nil {
 		errs = multierror.Append(errs, err)
 	}
@@ -139,13 +139,13 @@ func (updates *Updates) addTransitiveUpdates(s Store) error {
 	return errs
 }
 
-func (updates *Updates) addSourceUpdates(s Store) error {
+func (updates *Updates) addSourceUpdates(ctx context.Context, s Store) error {
 	if updates.SourceTypes.Empty() && updates.Processors.Empty() && updates.ProcessorTypes.Empty() {
 		return nil
 	}
 
 	// get all of the sources
-	sources, err := s.Sources()
+	sources, err := s.Sources(ctx)
 	if err != nil {
 		return err
 	}
@@ -188,12 +188,12 @@ sourceLoop:
 	return nil
 }
 
-func (updates *Updates) addProcessorUpdates(s Store) error {
+func (updates *Updates) addProcessorUpdates(ctx context.Context, s Store) error {
 	if updates.ProcessorTypes.Empty() {
 		return nil
 	}
 
-	processors, err := s.Processors()
+	processors, err := s.Processors(ctx)
 	if err != nil {
 		return err
 	}
@@ -213,13 +213,13 @@ func (updates *Updates) addProcessorUpdates(s Store) error {
 	return nil
 }
 
-func (updates *Updates) addDestinationUpdates(s Store) error {
+func (updates *Updates) addDestinationUpdates(ctx context.Context, s Store) error {
 	if updates.DestinationTypes.Empty() {
 		return nil
 	}
 
 	// get all of the destinations
-	destinations, err := s.Destinations()
+	destinations, err := s.Destinations(ctx)
 	if err != nil {
 		return err
 	}
@@ -240,8 +240,8 @@ func (updates *Updates) addDestinationUpdates(s Store) error {
 	return nil
 }
 
-func (updates *Updates) addConfigurationUpdates(s Store) error {
-	configurations, err := s.Configurations()
+func (updates *Updates) addConfigurationUpdates(ctx context.Context, s Store) error {
+	configurations, err := s.Configurations(ctx)
 	if err != nil {
 		return err
 	}

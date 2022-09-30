@@ -66,22 +66,22 @@ func newTestResourceStore() *testResourceStore {
 
 var _ ResourceStore = (*testResourceStore)(nil)
 
-func (s *testResourceStore) Source(name string) (*Source, error) {
+func (s *testResourceStore) Source(ctx context.Context, name string) (*Source, error) {
 	return s.sources[name], nil
 }
-func (s *testResourceStore) SourceType(name string) (*SourceType, error) {
+func (s *testResourceStore) SourceType(ctx context.Context, name string) (*SourceType, error) {
 	return s.sourceTypes[name], nil
 }
-func (s *testResourceStore) Processor(name string) (*Processor, error) {
+func (s *testResourceStore) Processor(ctx context.Context, name string) (*Processor, error) {
 	return s.processors[name], nil
 }
-func (s *testResourceStore) ProcessorType(name string) (*ProcessorType, error) {
+func (s *testResourceStore) ProcessorType(ctx context.Context, name string) (*ProcessorType, error) {
 	return s.processorTypes[name], nil
 }
-func (s *testResourceStore) Destination(name string) (*Destination, error) {
+func (s *testResourceStore) Destination(ctx context.Context, name string) (*Destination, error) {
 	return s.destinations[name], nil
 }
-func (s *testResourceStore) DestinationType(name string) (*DestinationType, error) {
+func (s *testResourceStore) DestinationType(ctx context.Context, name string) (*DestinationType, error) {
 	return s.destinationTypes[name], nil
 }
 

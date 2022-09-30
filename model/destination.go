@@ -15,6 +15,7 @@
 package model
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/observiq/bindplane-op/model/otel"
@@ -33,11 +34,11 @@ var _ parameterizedResource = (*Destination)(nil)
 
 // ValidateWithStore checks that the destination is valid, returning an error if it is not. It uses the store to
 // retrieve the destination type so that parameter values can be validated against the parameter definitions.
-func (d *Destination) ValidateWithStore(store ResourceStore) (warnings string, errors error) {
+func (d *Destination) ValidateWithStore(ctx context.Context, store ResourceStore) (warnings string, errors error) {
 	errs := validation.NewErrors()
 
 	d.validate(errs)
-	d.Spec.validateTypeAndParameters(KindDestination, errs, store)
+	d.Spec.validateTypeAndParameters(ctx, KindDestination, errs, store)
 
 	return errs.Warnings(), errs.Result()
 }
@@ -85,13 +86,13 @@ func NewDestinationWithSpec(name string, spec ParameterizedSpec) *Destination {
 
 // FindDestination returns a Destination from the store if it exists. If it doesn't exist, it creates a new Destination with the
 // specified defaultName.
-func FindDestination(destination *ResourceConfiguration, defaultName string, store ResourceStore) (*Destination, error) {
+func FindDestination(ctx context.Context, destination *ResourceConfiguration, defaultName string, store ResourceStore) (*Destination, error) {
 	if destination.Name == "" {
 		// inline destination
 		return NewDestination(defaultName, destination.Type, destination.Parameters), nil
 	}
 	// find the destination and override parameters
-	dest, err := store.Destination(destination.Name)
+	dest, err := store.Destination(ctx, destination.Name)
 	if err != nil {
 		return nil, err
 	}

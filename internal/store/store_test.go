@@ -136,7 +136,10 @@ var (
 )
 
 func applyTestTypes(t *testing.T, store Store) {
-	statuses, err := store.ApplyResources([]model.Resource{
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	statuses, err := store.ApplyResources(ctx, []model.Resource{
 		cabinDestinationType,
 		macosSourceType,
 		nginxSourceType,
@@ -146,7 +149,9 @@ func applyTestTypes(t *testing.T, store Store) {
 }
 
 func applyTestConfiguration(t *testing.T, store Store) {
-	statuses, err := store.ApplyResources([]model.Resource{
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	statuses, err := store.ApplyResources(ctx, []model.Resource{
 		cabinDestinationType,
 		cabinDestination1,
 		cabinDestination2,
@@ -162,7 +167,9 @@ func applyTestConfiguration(t *testing.T, store Store) {
 }
 
 func applyAllTestResources(t *testing.T, store Store) {
-	statuses, err := store.ApplyResources([]model.Resource{
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	statuses, err := store.ApplyResources(ctx, []model.Resource{
 		cabinDestinationType,
 		cabinDestination1,
 		cabinDestination2,
@@ -251,9 +258,11 @@ func verifyUpdates(t *testing.T, done chan bool, Updates <-chan *Updates, expect
 }
 
 func runNotifyUpdatesTests(t *testing.T, store Store, done chan bool) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	update := func(r model.Resource) {
-		status, err := store.ApplyResources([]model.Resource{r})
+		status, err := store.ApplyResources(ctx, []model.Resource{r})
 		require.NoError(t, err)
 		requireOkStatuses(t, status)
 	}
@@ -308,7 +317,7 @@ func runNotifyUpdatesTests(t *testing.T, store Store, done chan bool) {
 		go verifyUpdates(t, done, updates, []configurationChanges{
 			expectedUpdates(testConfiguration.Name()),
 		})
-		store.ApplyResources([]model.Resource{
+		store.ApplyResources(ctx, []model.Resource{
 			macosSource,
 			macosSourceType,
 			nginxSource,
@@ -329,7 +338,7 @@ func runNotifyUpdatesTests(t *testing.T, store Store, done chan bool) {
 		// setup
 		applyTestConfiguration(t, store)
 		// Test batch delete here
-		_, err := store.DeleteConfiguration(testConfiguration.Name())
+		_, err := store.DeleteConfiguration(ctx, testConfiguration.Name())
 		require.NoError(t, err)
 
 		ok := <-done
@@ -338,6 +347,9 @@ func runNotifyUpdatesTests(t *testing.T, store Store, done chan bool) {
 }
 
 func runDeleteChannelTests(t *testing.T, store Store, done chan bool) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	t.Run("delete configuration, expect configuration-1 in deleteconfigurations channel", func(t *testing.T) {
 		updates, unsubscribe := eventbus.Subscribe(store.Updates())
 		defer unsubscribe()
@@ -350,7 +362,7 @@ func runDeleteChannelTests(t *testing.T, store Store, done chan bool) {
 		store.Clear()
 		applyTestConfiguration(t, store)
 		// delete the configuration
-		_, err := store.DeleteResources([]model.Resource{
+		_, err := store.DeleteResources(ctx, []model.Resource{
 			testConfiguration,
 		})
 		require.NoError(t, err)
@@ -370,7 +382,7 @@ func runDeleteChannelTests(t *testing.T, store Store, done chan bool) {
 		// seed
 		store.Clear()
 		applyTestConfiguration(t, store)
-		_, err := store.DeleteResources([]model.Resource{
+		_, err := store.DeleteResources(ctx, []model.Resource{
 			testConfiguration,
 		})
 
@@ -390,7 +402,7 @@ func runDeleteChannelTests(t *testing.T, store Store, done chan bool) {
 		// seed
 		store.Clear()
 		applyTestConfiguration(t, store)
-		statuses, err := store.DeleteResources([]model.Resource{
+		statuses, err := store.DeleteResources(ctx, []model.Resource{
 			macosSourceChanged,
 		})
 		assert.NoError(t, err, "expect no error on valid delete")
@@ -417,7 +429,7 @@ func runDeleteChannelTests(t *testing.T, store Store, done chan bool) {
 		// seed
 		store.Clear()
 		applyTestConfiguration(t, store)
-		_, err := store.DeleteResources([]model.Resource{
+		_, err := store.DeleteResources(ctx, []model.Resource{
 			testConfiguration,
 			macosSource,
 		})
@@ -606,6 +618,9 @@ func runUpdateAgentsTests(t *testing.T, store Store) {
 
 // These tests that the ApplyResources methods return the expected resources with statuses
 func runApplyResourceReturnTests(t *testing.T, store Store) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		description string
 		// initial resources to seed
@@ -658,10 +673,10 @@ func runApplyResourceReturnTests(t *testing.T, store Store) {
 			// Setup
 			store.Clear()
 			applyTestTypes(t, store)
-			_, err := store.ApplyResources(test.initialResources)
+			_, err := store.ApplyResources(ctx, test.initialResources)
 			require.NoError(t, err, "expect no error in setup apply call")
 
-			statuses, err := store.ApplyResources(test.applyResources)
+			statuses, err := store.ApplyResources(ctx, test.applyResources)
 			require.NoError(t, err, "expect no error in valid apply call")
 
 			assert.ElementsMatch(t, test.expect, statuses)
@@ -670,6 +685,9 @@ func runApplyResourceReturnTests(t *testing.T, store Store) {
 }
 
 func runValidateApplyResourcesTests(t *testing.T, store Store) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name      string
 		resources []model.Resource
@@ -708,13 +726,13 @@ func runValidateApplyResourcesTests(t *testing.T, store Store) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			store.Clear()
-			_, err := store.ApplyResources([]model.Resource{
+			_, err := store.ApplyResources(ctx, []model.Resource{
 				macosSourceType,
 				nginxSourceType,
 				cabinDestinationType,
 			})
 			require.NoError(t, err)
-			result, err := store.ApplyResources(test.resources)
+			result, err := store.ApplyResources(ctx, test.resources)
 			require.NoError(t, err)
 			for i, status := range test.statuses {
 				require.Equal(t, status, result[i].Status, result[i].Reason)
@@ -725,6 +743,9 @@ func runValidateApplyResourcesTests(t *testing.T, store Store) {
 }
 
 func runDeleteResourcesReturnTests(t *testing.T, store Store) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		description      string
 		initialResources []model.Resource
@@ -787,10 +808,10 @@ func runDeleteResourcesReturnTests(t *testing.T, store Store) {
 			// setup
 			store.Clear()
 			applyTestTypes(t, store)
-			_, err := store.ApplyResources(test.initialResources)
+			_, err := store.ApplyResources(ctx, test.initialResources)
 			require.NoError(t, err, "expect no error in seed apply")
 
-			statuses, err := store.DeleteResources(test.deleteResources)
+			statuses, err := store.DeleteResources(ctx, test.deleteResources)
 			require.NoError(t, err, "expect no error on valid delete call")
 
 			assert.ElementsMatch(t, test.expect, statuses)
@@ -799,6 +820,9 @@ func runDeleteResourcesReturnTests(t *testing.T, store Store) {
 }
 
 func runDependentResourcesTests(t *testing.T, s Store) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		description      string
 		initialResources []model.Resource
@@ -842,7 +866,7 @@ func runDependentResourcesTests(t *testing.T, s Store) {
 	}
 
 	for _, test := range tests {
-		updates, err := s.ApplyResources(test.initialResources)
+		updates, err := s.ApplyResources(ctx, test.initialResources)
 		fmt.Println("UPDATES: ", updates)
 
 		dependencies, err := FindDependentResources(context.TODO(), s, test.testResource)
@@ -852,9 +876,12 @@ func runDependentResourcesTests(t *testing.T, s Store) {
 }
 
 func runIndividualDeleteTests(t *testing.T, store Store) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	setup := func() {
 		store.Clear()
-		_, err := store.ApplyResources([]model.Resource{
+		_, err := store.ApplyResources(ctx, []model.Resource{
 			macosSourceType,
 			macosSource,
 			nginxSourceType,
@@ -899,13 +926,16 @@ func runIndividualDeleteTests(t *testing.T, store Store) {
 		for _, test := range tests {
 			setup()
 
-			src, err := store.DeleteSource(test.source)
+			src, err := store.DeleteSource(ctx, test.source)
 			assert.Equal(t, test.expectSource, src)
 			assert.Equal(t, test.expectError, err)
 		}
 	})
 
 	t.Run("DeleteDestination", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
 		tests := []struct {
 			description  string
 			destination  string
@@ -940,7 +970,7 @@ func runIndividualDeleteTests(t *testing.T, store Store) {
 		for _, test := range tests {
 			setup()
 
-			dest, err := store.DeleteDestination(test.destination)
+			dest, err := store.DeleteDestination(ctx, test.destination)
 			assert.Equal(t, test.expectSource, dest)
 			assert.Equal(t, test.expectError, err)
 		}
@@ -1066,7 +1096,7 @@ func runDeleteAgentsTests(t *testing.T, store Store) {
 		addAgent(store, &model.Agent{ID: "1"})
 
 		// verify its in the index
-		results, err := search.Field(ctx, store.AgentIndex(), "id", "1")
+		results, err := search.Field(ctx, store.AgentIndex(ctx), "id", "1")
 		require.NoError(t, err)
 		assert.ElementsMatch(t, []string{"1"}, results)
 
@@ -1074,7 +1104,7 @@ func runDeleteAgentsTests(t *testing.T, store Store) {
 		_, err = store.DeleteAgents(ctx, []string{"1"})
 		require.NoError(t, err)
 
-		results, err = search.Field(ctx, store.AgentIndex(), "id", "1")
+		results, err = search.Field(ctx, store.AgentIndex(ctx), "id", "1")
 		require.NoError(t, err)
 		assert.ElementsMatch(t, []string{}, results)
 	})
@@ -1117,26 +1147,32 @@ func runDeleteAgentsTests(t *testing.T, store Store) {
 
 // runConfigurationsTests runs tests on Store.Configuration and Store.Configurations
 func runConfigurationsTests(t *testing.T, store Store) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	t.Run("lists all configurations", func(t *testing.T) {
 		// Setup
-		status, err := store.ApplyResources([]model.Resource{testRawConfiguration1, testRawConfiguration2})
+		status, err := store.ApplyResources(ctx, []model.Resource{testRawConfiguration1, testRawConfiguration2})
 		require.NoError(t, err)
 		requireOkStatuses(t, status)
 
-		configs, err := store.Configurations()
+		configs, err := store.Configurations(ctx)
 		assert.NoError(t, err)
 		assert.ElementsMatch(t, []*model.Configuration{testRawConfiguration1, testRawConfiguration2}, configs)
 	})
 }
 
 func runConfigurationTests(t *testing.T, store Store) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	t.Run("gets configuration by name", func(t *testing.T) {
 		// Setup
-		status, err := store.ApplyResources([]model.Resource{testRawConfiguration1, testRawConfiguration2})
+		status, err := store.ApplyResources(ctx, []model.Resource{testRawConfiguration1, testRawConfiguration2})
 		require.NoError(t, err)
 		requireOkStatuses(t, status)
 
-		config, err := store.Configuration(testRawConfiguration1.Name())
+		config, err := store.Configuration(ctx, testRawConfiguration1.Name())
 		assert.NoError(t, err)
 		assert.Equal(t, testRawConfiguration1, config)
 	})

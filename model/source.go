@@ -15,6 +15,7 @@
 package model
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/observiq/bindplane-op/model/otel"
@@ -33,11 +34,11 @@ var _ parameterizedResource = (*Source)(nil)
 
 // ValidateWithStore checks that the source is valid, returning an error if it is not. It uses the store to retrieve the
 // source type so that parameter values can be validated against the parameter definitions.
-func (s *Source) ValidateWithStore(store ResourceStore) (warnings string, errors error) {
+func (s *Source) ValidateWithStore(ctx context.Context, store ResourceStore) (warnings string, errors error) {
 	errs := validation.NewErrors()
 
 	s.validate(errs)
-	s.Spec.validateTypeAndParameters(KindSource, errs, store)
+	s.Spec.validateTypeAndParameters(ctx, KindSource, errs, store)
 
 	return errs.Warnings(), errs.Result()
 }
@@ -85,7 +86,7 @@ func NewSourceWithSpec(name string, spec ParameterizedSpec) *Source {
 
 // FindSource returns a Source from the store if it exists. If it doesn't exist, it creates a new Source with the
 // specified defaultName.
-func FindSource(source *ResourceConfiguration, defaultName string, store ResourceStore) (*Source, error) {
+func FindSource(ctx context.Context, source *ResourceConfiguration, defaultName string, store ResourceStore) (*Source, error) {
 	if source.Name == "" {
 		// inline source
 		src := NewSource(defaultName, source.Type, source.Parameters)
@@ -93,7 +94,7 @@ func FindSource(source *ResourceConfiguration, defaultName string, store Resourc
 		return src, nil
 	}
 	// find the source and override parameters
-	src, err := store.Source(source.Name)
+	src, err := store.Source(ctx, source.Name)
 	if err != nil {
 		return nil, err
 	}

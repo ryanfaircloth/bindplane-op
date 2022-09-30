@@ -96,7 +96,7 @@ func managerTestReset() {
 func TestHandleUpdatesEmpty(t *testing.T) {
 	managerTestReset()
 	updates := store.NewUpdates()
-	testManager.handleUpdates(updates)
+	testManager.handleUpdates(context.TODO(), updates)
 	testProtocol.AssertExpectations(t)
 }
 
@@ -113,7 +113,7 @@ func TestHandleUpdatesAgents(t *testing.T) {
 		On("Connected", testAgent.ID).Return(true).
 		On("UpdateAgent", mock.Anything, testAgent, agentUpdates).Return(nil)
 
-	testManager.handleUpdates(updates)
+	testManager.handleUpdates(context.TODO(), updates)
 
 	testProtocol.AssertExpectations(t)
 }
@@ -138,7 +138,7 @@ func TestHandleUpdatesTwoAgents(t *testing.T) {
 		On("UpdateAgent", mock.Anything, testAgentA, agentUpdates).Return(nil).
 		On("UpdateAgent", mock.Anything, testAgentB, agentUpdates).Return(nil)
 
-	testManager.handleUpdates(updates)
+	testManager.handleUpdates(context.TODO(), updates)
 
 	testProtocol.AssertExpectations(t)
 }
@@ -161,7 +161,7 @@ func TestHandleUpdatesAgentLabels(t *testing.T) {
 		On("Connected", testAgentA.ID).Return(true).
 		On("UpdateAgent", mock.Anything, testAgentA, agentUpdates).Return(nil)
 
-	testManager.handleUpdates(updates)
+	testManager.handleUpdates(context.TODO(), updates)
 
 	testProtocol.AssertExpectations(t)
 }
@@ -171,7 +171,7 @@ func TestHandleUpdatesNewConfiguration(t *testing.T) {
 	testAgentA := makeTestAgentWithLabels("A", "configuration=test")
 	makeTestAgentWithLabels("B", "configuration=other")
 	configuration := makeTestConfiguration(t, "test", "configuration=test", "raw:")
-	_, err := testMapstore.ApplyResources([]model.Resource{configuration})
+	_, err := testMapstore.ApplyResources(context.Background(), []model.Resource{configuration})
 	require.NoError(t, err)
 
 	updates := store.NewUpdates()
@@ -185,7 +185,7 @@ func TestHandleUpdatesNewConfiguration(t *testing.T) {
 		On("Connected", testAgentA.ID).Return(true).
 		On("UpdateAgent", mock.Anything, testAgentA, agentUpdates).Return(nil)
 
-	testManager.handleUpdates(updates)
+	testManager.handleUpdates(context.TODO(), updates)
 
 	testProtocol.AssertExpectations(t)
 }
@@ -196,7 +196,7 @@ func TestHandleUpdatesNewConfigurationAndLabels(t *testing.T) {
 	testAgentB := makeTestAgentWithLabels("B", "configuration=other")
 	testAgentC := makeTestAgentWithLabels("C", "configuration=test") // not connected
 	configuration := makeTestConfiguration(t, "test", "configuration=test", "raw:")
-	_, err := testMapstore.ApplyResources([]model.Resource{configuration})
+	_, err := testMapstore.ApplyResources(context.Background(), []model.Resource{configuration})
 	require.NoError(t, err)
 
 	testAgentB2, err := testMapstore.UpsertAgent(context.TODO(), "B", func(current *model.Agent) {
@@ -232,7 +232,7 @@ func TestHandleUpdatesNewConfigurationAndLabels(t *testing.T) {
 		On("UpdateAgent", mock.Anything, testAgentA, agentAUpdates).Return(nil).
 		On("UpdateAgent", mock.Anything, testAgentB2, agentBUpdates).Return(nil)
 
-	testManager.handleUpdates(updates)
+	testManager.handleUpdates(context.TODO(), updates)
 
 	testProtocol.AssertExpectations(t)
 }

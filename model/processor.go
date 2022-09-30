@@ -15,6 +15,7 @@
 package model
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/observiq/bindplane-op/model/otel"
@@ -33,11 +34,11 @@ var _ parameterizedResource = (*Processor)(nil)
 
 // ValidateWithStore checks that the processor is valid, returning an error if it is not. It uses the store to retrieve the
 // processor type so that parameter values can be validated against the parameter definitions.
-func (s *Processor) ValidateWithStore(store ResourceStore) (warnings string, errors error) {
+func (s *Processor) ValidateWithStore(ctx context.Context, store ResourceStore) (warnings string, errors error) {
 	errs := validation.NewErrors()
 
 	s.validate(errs)
-	s.Spec.validateTypeAndParameters(KindProcessor, errs, store)
+	s.Spec.validateTypeAndParameters(ctx, KindProcessor, errs, store)
 
 	return errs.Warnings(), errs.Result()
 }
@@ -85,13 +86,13 @@ func NewProcessorWithSpec(name string, spec ParameterizedSpec) *Processor {
 
 // FindProcessor returns a Processor from the store if it exists. If it doesn't exist, it creates a new Processor with the
 // specified defaultName.
-func FindProcessor(processor *ResourceConfiguration, defaultName string, store ResourceStore) (*Processor, error) {
+func FindProcessor(ctx context.Context, processor *ResourceConfiguration, defaultName string, store ResourceStore) (*Processor, error) {
 	if processor.Name == "" {
 		// inline source
 		return NewProcessor(defaultName, processor.Type, processor.Parameters), nil
 	}
 	// find the processor and override parameters
-	prc, err := store.Processor(processor.Name)
+	prc, err := store.Processor(ctx, processor.Name)
 	if err != nil {
 		return nil, err
 	}

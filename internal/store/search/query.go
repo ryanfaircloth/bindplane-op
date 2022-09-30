@@ -15,13 +15,14 @@
 package search
 
 import (
+	"context"
 	"strconv"
 	"strings"
 )
 
 // LatestVersionProvider provides the latest version string for an agent that matches version:latest
 type LatestVersionProvider interface {
-	LatestVersionString() string
+	LatestVersionString(ctx context.Context) string
 }
 
 // QueryToken represents a string in one of name:value, name=value, or just value. In the case of a value, the Name
@@ -102,10 +103,10 @@ func ParseQuery(query string) *Query {
 
 // ReplaceVersionLatest allows us to support version:latest queries by replacing the keyword latest with the actual
 // latest version.
-func (q *Query) ReplaceVersionLatest(latestVersionProvider LatestVersionProvider) {
+func (q *Query) ReplaceVersionLatest(ctx context.Context, latestVersionProvider LatestVersionProvider) {
 	for _, token := range q.Tokens {
 		if token.Name == "version" && token.Value == "latest" {
-			latest := latestVersionProvider.LatestVersionString()
+			latest := latestVersionProvider.LatestVersionString(ctx)
 			if latest != "" {
 				token.Value = latest
 			}

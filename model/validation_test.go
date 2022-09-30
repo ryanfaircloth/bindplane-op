@@ -15,6 +15,7 @@
 package model
 
 import (
+	"context"
 	"regexp"
 	"testing"
 
@@ -101,7 +102,7 @@ func TestConfigurationValidate(t *testing.T) {
 			}
 
 			// test special ValidateWithStore which can validate sources and destinations
-			_, err = config.ValidateWithStore(store)
+			_, err = config.ValidateWithStore(context.Background(), store)
 			if test.expectValidateWithStoreError == "" {
 				require.NoError(t, err)
 			} else {
@@ -240,7 +241,7 @@ func TestSourceValidate(t *testing.T) {
 			}
 
 			// test special ValidateWithStore which can validate sources and destinations
-			_, err = src.ValidateWithStore(store)
+			_, err = src.ValidateWithStore(context.Background(), store)
 			if test.expectValidateWithStoreError == "" {
 				require.NoError(t, err)
 			} else {

@@ -114,7 +114,7 @@ func (m *manager) Start(ctx context.Context) {
 				zap.Int("Agents", len(updates.Agents)),
 				zap.Int("Configurations", len(updates.Configurations)),
 			)
-			m.handleUpdates(updates)
+			m.handleUpdates(ctx, updates)
 
 			// TODO: determine if these need to be replaced and if so, replace them
 			// case <-m.agentCleanupTicker.C:
@@ -199,11 +199,11 @@ func updateWorker(ctx context.Context, wg *sync.WaitGroup, m *manager, updateCha
 	}
 }
 
-func (m *manager) handleUpdates(updates *store.Updates) {
+func (m *manager) handleUpdates(ctx context.Context, updates *store.Updates) {
 	if updates.Empty() {
 		return
 	}
-	ctx, span := tracer.Start(context.TODO(), "manager/handleUpdates")
+	ctx, span := tracer.Start(ctx, "manager/handleUpdates")
 	defer span.End()
 
 	pending := pendingAgentUpdates{}
@@ -239,7 +239,7 @@ func (m *manager) handleUpdates(updates *store.Updates) {
 		}
 
 		// if the labels changed, there may be new configuration
-		if configuration, err := m.store.AgentConfiguration(agent.ID); err != nil {
+		if configuration, err := m.store.AgentConfiguration(ctx, agent.ID); err != nil {
 			m.logger.Error("unable to find new agent configuration", zap.String("agentID", agent.ID), zap.String("labels", agent.Labels.String()))
 		} else {
 			if configuration != nil {
@@ -251,7 +251,7 @@ func (m *manager) handleUpdates(updates *store.Updates) {
 
 	for _, event := range updates.Configurations {
 		configuration := event.Item
-		agentIDs, err := m.store.AgentsIDsMatchingConfiguration(configuration)
+		agentIDs, err := m.store.AgentsIDsMatchingConfiguration(ctx, configuration)
 		if err != nil {
 			m.logger.Error("unable to apply configuration to agents", zap.String("configuration.name", configuration.Name()), zap.Error(err))
 			continue
@@ -263,7 +263,7 @@ func (m *manager) handleUpdates(updates *store.Updates) {
 				continue
 			}
 
-			agent, err := m.store.Agent(agentID)
+			agent, err := m.store.Agent(ctx, agentID)
 			if err != nil {
 				m.logger.Error("unable to apply configuration to agent", zap.String("agentID", agentID), zap.String("configuration.name", configuration.Name()), zap.Error(err))
 				continue
@@ -288,7 +288,7 @@ func (m *manager) handleUpdates(updates *store.Updates) {
 }
 
 func (m *manager) Agent(ctx context.Context, agentID string) (*model.Agent, error) {
-	return m.store.Agent(agentID)
+	return m.store.Agent(ctx, agentID)
 }
 
 func (m *manager) UpsertAgent(ctx context.Context, agentID string, updater store.AgentUpdater) (*model.Agent, error) {
@@ -297,7 +297,7 @@ func (m *manager) UpsertAgent(ctx context.Context, agentID string, updater store
 
 // AgentUpdates returns the updates that should be applied to an agent based on the current bindplane configuration
 func (m *manager) AgentUpdates(ctx context.Context, agent *model.Agent) (*AgentUpdates, error) {
-	newConfiguration, err := m.store.AgentConfiguration(agent.ID)
+	newConfiguration, err := m.store.AgentConfiguration(ctx, agent.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -341,26 +341,29 @@ func (m *manager) AgentVersion(ctx context.Context, version string) (*model.Agen
 
 	span.SetAttributes(attribute.String("version", version))
 
-	return m.versions.Version(version)
+	return m.versions.Version(ctx, version)
 }
 
 // ----------------------------------------------------------------------
 
 // handleAgentCleanup removes disconnected agents from the store.
 func (m *manager) handleAgentCleanup() {
-	_, span := tracer.Start(context.TODO(), "manager/handleAgentCleanup")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	_, span := tracer.Start(ctx, "manager/handleAgentCleanup")
 	defer span.End()
 
 	now := time.Now()
 	// TODO: in a cluster, move this to a job
-	err := m.store.CleanupDisconnectedAgents(now.Add(-AgentCleanupTTL))
+	err := m.store.CleanupDisconnectedAgents(ctx, now.Add(-AgentCleanupTTL))
 	if err != nil {
 		m.logger.Error("error cleaning up disconnected agents", zap.Error(err))
 	}
 }
 
-func (m *manager) handleAgentHeartbeat() {
-	ctx, span := tracer.Start(context.TODO(), "manager/handleAgentHeartbeat")
+func (m *manager) handleAgentHeartbeat(ctx context.Context) {
+	ctx, span := tracer.Start(ctx, "manager/handleAgentHeartbeat")
 	defer span.End()
 
 	for _, p := range m.protocols {

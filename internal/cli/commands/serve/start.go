@@ -56,7 +56,7 @@ type Server struct {
 }
 
 // Start starts the BindPlane using the specified Config.
-func (s *Server) Start(bindplane *cli.BindPlane, h profile.Helper, forceConsoleColor, skipSeed bool) error {
+func (s *Server) Start(ctx context.Context, bindplane *cli.BindPlane, h profile.Helper, forceConsoleColor, skipSeed bool) error {
 	config := &bindplane.Config.Server
 
 	// ensure that we have a secret key
@@ -78,17 +78,17 @@ func (s *Server) Start(bindplane *cli.BindPlane, h profile.Helper, forceConsoleC
 
 	// seed the store with the resourceTypes in /resources
 	if !skipSeed {
-		err := store.Seed(st, s.logger)
+		err := store.Seed(ctx, st, s.logger)
 		if err != nil {
 			s.logger.Error("failed to seed resourceTypes", zap.Error(err))
 		}
 	}
 
 	// seed the search index
-	s.seedSearchIndexes(st)
+	s.seedSearchIndexes(ctx, st)
 
 	// initialize the versions which provides agent versions for updates
-	versions := s.createVersions(config, st)
+	versions := s.createVersions(ctx, config, st)
 
 	// initialize the server which provides access to everything
 	server, err := server.NewBindPlane(config, s.logger, st, versions)
@@ -249,12 +249,12 @@ func (s *Server) createStore(config *common.Server) (store.Store, error) {
 	}
 }
 
-func (s *Server) createVersions(config *common.Server, st store.Store) agent.Versions {
+func (s *Server) createVersions(ctx context.Context, config *common.Server, st store.Store) agent.Versions {
 	var client agent.Client
 	if !config.Offline {
 		client = agent.NewClient()
 	}
-	return agent.NewVersions(context.TODO(), client, st, agent.VersionsSettings{
+	return agent.NewVersions(ctx, client, st, agent.VersionsSettings{
 		Logger:                    s.logger.Named("versions"),
 		SyncAgentVersionsInterval: config.SyncAgentVersionsInterval,
 		Offline:                   config.Offline,
@@ -274,32 +274,32 @@ func (s *Server) ensureSecretKey(config *common.Server, h profile.Helper) error 
 	return nil
 }
 
-func (s *Server) seedSearchIndexes(store store.Store) {
+func (s *Server) seedSearchIndexes(ctx context.Context, store store.Store) {
 	// seed search indexes
-	err := seedConfigurationsIndex(store)
+	err := seedConfigurationsIndex(ctx, store)
 	if err != nil {
 		s.logger.Error("unable to seed configurations into the search index, search results will be empty", zap.Error(err))
 	}
-	err = seedAgentsIndex(store)
+	err = seedAgentsIndex(ctx, store)
 	if err != nil {
 		s.logger.Error("unable to seed agents into the search index, search results will be empty", zap.Error(err))
 	}
 }
 
-func seedConfigurationsIndex(s store.Store) error {
-	configurations, err := s.Configurations()
+func seedConfigurationsIndex(ctx context.Context, s store.Store) error {
+	configurations, err := s.Configurations(ctx)
 	if err != nil {
 		return err
 	}
-	return seedIndex(configurations, s.ConfigurationIndex())
+	return seedIndex(configurations, s.ConfigurationIndex(ctx))
 }
 
-func seedAgentsIndex(s store.Store) error {
-	agents, err := s.Agents(context.TODO())
+func seedAgentsIndex(ctx context.Context, s store.Store) error {
+	agents, err := s.Agents(ctx)
 	if err != nil {
 		return err
 	}
-	return seedIndex(agents, s.AgentIndex())
+	return seedIndex(agents, s.AgentIndex(ctx))
 }
 
 func seedIndex[T search.Indexed](indexed []T, index search.Index) error {

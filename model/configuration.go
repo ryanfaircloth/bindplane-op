@@ -117,11 +117,11 @@ func (c *Configuration) validate(errs validation.Errors) {
 // ValidateWithStore checks that the configuration is valid, returning an error if it is not. It uses the store to
 // retrieve source types and destination types so that parameter values can be validated against the parameter
 // definitions.
-func (c *Configuration) ValidateWithStore(store ResourceStore) (warnings string, errors error) {
+func (c *Configuration) ValidateWithStore(ctx context.Context, store ResourceStore) (warnings string, errors error) {
 	errs := validation.NewErrors()
 
 	c.validate(errs)
-	c.Spec.validateSourcesAndDestinations(errs, store)
+	c.Spec.validateSourcesAndDestinations(ctx, errs, store)
 
 	return errs.Warnings(), errs.Result()
 }
@@ -147,12 +147,12 @@ func (c *Configuration) IsForAgent(agent *Agent) bool {
 
 // ResourceStore provides access to resources required to render configurations that use Sources and Destinations.
 type ResourceStore interface {
-	Source(name string) (*Source, error)
-	SourceType(name string) (*SourceType, error)
-	Processor(name string) (*Processor, error)
-	ProcessorType(name string) (*ProcessorType, error)
-	Destination(name string) (*Destination, error)
-	DestinationType(name string) (*DestinationType, error)
+	Source(ctx context.Context, name string) (*Source, error)
+	SourceType(ctx context.Context, name string) (*SourceType, error)
+	Processor(ctx context.Context, name string) (*Processor, error)
+	ProcessorType(ctx context.Context, name string) (*ProcessorType, error)
+	Destination(ctx context.Context, name string) (*Destination, error)
+	DestinationType(ctx context.Context, name string) (*DestinationType, error)
 }
 
 // Render converts the Configuration model to a configuration yaml that can be sent to an agent
@@ -164,18 +164,18 @@ func (c *Configuration) Render(ctx context.Context, agentFeatures AgentFeatures,
 		// we always prefer raw
 		return c.Spec.Raw, nil
 	}
-	return c.renderComponents(agentFeatures, store)
+	return c.renderComponents(ctx, agentFeatures, store)
 }
 
-func (c *Configuration) renderComponents(agentFeatures AgentFeatures, store ResourceStore) (string, error) {
-	configuration, err := c.otelConfiguration(agentFeatures, store)
+func (c *Configuration) renderComponents(ctx context.Context, agentFeatures AgentFeatures, store ResourceStore) (string, error) {
+	configuration, err := c.otelConfiguration(ctx, agentFeatures, store)
 	if err != nil {
 		return "", err
 	}
 	return configuration.YAML()
 }
 
-func (c *Configuration) otelConfiguration(agentFeatures AgentFeatures, store ResourceStore) (*otel.Configuration, error) {
+func (c *Configuration) otelConfiguration(ctx context.Context, agentFeatures AgentFeatures, store ResourceStore) (*otel.Configuration, error) {
 	if len(c.Spec.Sources) == 0 || len(c.Spec.Destinations) == 0 {
 		return nil, nil
 	}
@@ -190,7 +190,7 @@ func (c *Configuration) otelConfiguration(agentFeatures AgentFeatures, store Res
 	configuration := otel.NewConfiguration(options...)
 
 	// match each source with each destination to produce a pipeline
-	sources, destinations, err := c.evalComponents(store)
+	sources, destinations, err := c.evalComponents(ctx, store)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func (c *Configuration) otelConfiguration(agentFeatures AgentFeatures, store Res
 	return configuration, nil
 }
 
-func (c *Configuration) evalComponents(store ResourceStore) (sources map[string]otel.Partials, destinations map[string]otel.Partials, err error) {
+func (c *Configuration) evalComponents(ctx context.Context, store ResourceStore) (sources map[string]otel.Partials, destinations map[string]otel.Partials, err error) {
 	errorHandler := func(e error) {
 		if e != nil {
 			err = multierror.Append(err, e)
@@ -219,21 +219,21 @@ func (c *Configuration) evalComponents(store ResourceStore) (sources map[string]
 
 	for i, source := range c.Spec.Sources {
 		source := source // copy to local variable to securely pass a reference to a loop variable
-		sourceName, srcParts := evalSource(&source, fmt.Sprintf("source%d", i), store, errorHandler)
+		sourceName, srcParts := evalSource(ctx, &source, fmt.Sprintf("source%d", i), store, errorHandler)
 		sources[sourceName] = srcParts
 	}
 
 	for i, destination := range c.Spec.Destinations {
 		destination := destination // copy to local variable to securely pass a reference to a loop variable
-		destName, destParts := evalDestination(&destination, fmt.Sprintf("destination%d", i), store, errorHandler)
+		destName, destParts := evalDestination(ctx, &destination, fmt.Sprintf("destination%d", i), store, errorHandler)
 		destinations[destName] = destParts
 	}
 
 	return sources, destinations, err
 }
 
-func evalSource(source *ResourceConfiguration, defaultName string, store ResourceStore, errorHandler TemplateErrorHandler) (string, otel.Partials) {
-	src, srcType, err := findSourceAndType(source, defaultName, store)
+func evalSource(ctx context.Context, source *ResourceConfiguration, defaultName string, store ResourceStore, errorHandler TemplateErrorHandler) (string, otel.Partials) {
+	src, srcType, err := findSourceAndType(ctx, source, defaultName, store)
 	if err != nil {
 		errorHandler(err)
 		return "", nil
@@ -245,7 +245,7 @@ func evalSource(source *ResourceConfiguration, defaultName string, store Resourc
 	// evaluate the processors associated with the source
 	for i, processor := range source.Processors {
 		processor := processor
-		_, processorParts := evalProcessor(&processor, fmt.Sprintf("%s__processor%d", srcName, i), store, errorHandler)
+		_, processorParts := evalProcessor(ctx, &processor, fmt.Sprintf("%s__processor%d", srcName, i), store, errorHandler)
 		if processorParts == nil {
 			continue
 		}
@@ -255,8 +255,8 @@ func evalSource(source *ResourceConfiguration, defaultName string, store Resourc
 	return srcName, partials
 }
 
-func evalProcessor(processor *ResourceConfiguration, defaultName string, store ResourceStore, errorHandler TemplateErrorHandler) (string, otel.Partials) {
-	prc, prcType, err := findProcessorAndType(processor, defaultName, store)
+func evalProcessor(ctx context.Context, processor *ResourceConfiguration, defaultName string, store ResourceStore, errorHandler TemplateErrorHandler) (string, otel.Partials) {
+	prc, prcType, err := findProcessorAndType(ctx, processor, defaultName, store)
 	if err != nil {
 		errorHandler(err)
 		return "", nil
@@ -265,8 +265,8 @@ func evalProcessor(processor *ResourceConfiguration, defaultName string, store R
 	return prc.Name(), prcType.eval(prc, errorHandler)
 }
 
-func evalDestination(destination *ResourceConfiguration, defaultName string, store ResourceStore, errorHandler TemplateErrorHandler) (string, otel.Partials) {
-	dest, destType, err := findDestinationAndType(destination, defaultName, store)
+func evalDestination(ctx context.Context, destination *ResourceConfiguration, defaultName string, store ResourceStore, errorHandler TemplateErrorHandler) (string, otel.Partials) {
+	dest, destType, err := findDestinationAndType(ctx, destination, defaultName, store)
 	if err != nil {
 		errorHandler(err)
 		return "", nil
@@ -275,13 +275,13 @@ func evalDestination(destination *ResourceConfiguration, defaultName string, sto
 	return dest.Name(), destType.eval(dest, errorHandler)
 }
 
-func findSourceAndType(source *ResourceConfiguration, defaultName string, store ResourceStore) (*Source, *SourceType, error) {
-	src, err := FindSource(source, defaultName, store)
+func findSourceAndType(ctx context.Context, source *ResourceConfiguration, defaultName string, store ResourceStore) (*Source, *SourceType, error) {
+	src, err := FindSource(ctx, source, defaultName, store)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	srcType, err := store.SourceType(src.Spec.Type)
+	srcType, err := store.SourceType(ctx, src.Spec.Type)
 	if err == nil && srcType == nil {
 		err = fmt.Errorf("unknown %s: %s", KindSourceType, src.Spec.Type)
 	}
@@ -292,13 +292,13 @@ func findSourceAndType(source *ResourceConfiguration, defaultName string, store 
 	return src, srcType, nil
 }
 
-func findProcessorAndType(source *ResourceConfiguration, defaultName string, store ResourceStore) (*Processor, *ProcessorType, error) {
-	prc, err := FindProcessor(source, defaultName, store)
+func findProcessorAndType(ctx context.Context, source *ResourceConfiguration, defaultName string, store ResourceStore) (*Processor, *ProcessorType, error) {
+	prc, err := FindProcessor(ctx, source, defaultName, store)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	prcType, err := store.ProcessorType(prc.Spec.Type)
+	prcType, err := store.ProcessorType(ctx, prc.Spec.Type)
 	if err == nil && prcType == nil {
 		err = fmt.Errorf("unknown %s: %s", KindProcessorType, prc.Spec.Type)
 	}
@@ -309,13 +309,13 @@ func findProcessorAndType(source *ResourceConfiguration, defaultName string, sto
 	return prc, prcType, nil
 }
 
-func findDestinationAndType(destination *ResourceConfiguration, defaultName string, store ResourceStore) (*Destination, *DestinationType, error) {
-	dest, err := FindDestination(destination, defaultName, store)
+func findDestinationAndType(ctx context.Context, destination *ResourceConfiguration, defaultName string, store ResourceStore) (*Destination, *DestinationType, error) {
+	dest, err := FindDestination(ctx, destination, defaultName, store)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	destType, err := store.DestinationType(dest.Spec.Type)
+	destType, err := store.DestinationType(ctx, dest.Spec.Type)
 	if err == nil && destType == nil {
 		err = fmt.Errorf("unknown %s: %s", KindDestinationType, dest.Spec.Type)
 	}
@@ -326,22 +326,22 @@ func findDestinationAndType(destination *ResourceConfiguration, defaultName stri
 	return dest, destType, nil
 }
 
-func findResourceAndType(resourceKind Kind, resource *ResourceConfiguration, defaultName string, store ResourceStore) (Resource, *ResourceType, error) {
+func findResourceAndType(ctx context.Context, resourceKind Kind, resource *ResourceConfiguration, defaultName string, store ResourceStore) (Resource, *ResourceType, error) {
 	switch resourceKind {
 	case KindSource:
-		src, srcType, err := findSourceAndType(resource, defaultName, store)
+		src, srcType, err := findSourceAndType(ctx, resource, defaultName, store)
 		if srcType == nil {
 			return src, nil, err
 		}
 		return src, &srcType.ResourceType, err
 	case KindProcessor:
-		prc, prcType, err := findProcessorAndType(resource, defaultName, store)
+		prc, prcType, err := findProcessorAndType(ctx, resource, defaultName, store)
 		if prcType == nil {
 			return prc, nil, err
 		}
 		return prc, &prcType.ResourceType, err
 	case KindDestination:
-		dest, destType, err := findDestinationAndType(resource, defaultName, store)
+		dest, destType, err := findDestinationAndType(ctx, resource, defaultName, store)
 		if destType == nil {
 			return dest, nil, err
 		}
@@ -377,20 +377,20 @@ func (cs *ConfigurationSpec) validateRaw(errors validation.Errors) {
 	}
 }
 
-func (cs *ConfigurationSpec) validateSourcesAndDestinations(errors validation.Errors, store ResourceStore) {
+func (cs *ConfigurationSpec) validateSourcesAndDestinations(ctx context.Context, errors validation.Errors, store ResourceStore) {
 	for _, source := range cs.Sources {
-		source.validate(KindSource, errors, store)
+		source.validate(ctx, KindSource, errors, store)
 	}
 	for _, destination := range cs.Destinations {
-		destination.validate(KindDestination, errors, store)
+		destination.validate(ctx, KindDestination, errors, store)
 	}
 }
 
-func (rc *ResourceConfiguration) validate(resourceKind Kind, errors validation.Errors, store ResourceStore) {
+func (rc *ResourceConfiguration) validate(ctx context.Context, resourceKind Kind, errors validation.Errors, store ResourceStore) {
 	if rc.validateHasNameOrType(resourceKind, errors) {
-		rc.validateParameters(resourceKind, errors, store)
+		rc.validateParameters(ctx, resourceKind, errors, store)
 	}
-	rc.validateProcessors(resourceKind, errors, store)
+	rc.validateProcessors(ctx, resourceKind, errors, store)
 }
 
 func (rc *ResourceConfiguration) validateHasNameOrType(resourceKind Kind, errors validation.Errors) bool {
@@ -402,14 +402,14 @@ func (rc *ResourceConfiguration) validateHasNameOrType(resourceKind Kind, errors
 	return true
 }
 
-func (rc *ResourceConfiguration) validateParameters(resourceKind Kind, errors validation.Errors, store ResourceStore) {
+func (rc *ResourceConfiguration) validateParameters(ctx context.Context, resourceKind Kind, errors validation.Errors, store ResourceStore) {
 	// must have a name
 	for _, parameter := range rc.Parameters {
 		if parameter.Name == "" {
 			errors.Add(fmt.Errorf("all %s parameters must have a name", resourceKind))
 		}
 	}
-	_, resourceType, err := findResourceAndType(resourceKind, rc, string(resourceKind), store)
+	_, resourceType, err := findResourceAndType(ctx, resourceKind, rc, string(resourceKind), store)
 	if err != nil {
 		errors.Add(err)
 		return
@@ -431,9 +431,9 @@ func (rc *ResourceConfiguration) validateParameters(resourceKind Kind, errors va
 	}
 }
 
-func (rc *ResourceConfiguration) validateProcessors(resourceKind Kind, errors validation.Errors, store ResourceStore) {
+func (rc *ResourceConfiguration) validateProcessors(ctx context.Context, resourceKind Kind, errors validation.Errors, store ResourceStore) {
 	for _, processor := range rc.Processors {
-		processor.validate(KindProcessor, errors, store)
+		processor.validate(ctx, KindProcessor, errors, store)
 	}
 }
 

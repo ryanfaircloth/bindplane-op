@@ -15,6 +15,7 @@
 package search
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -208,11 +209,14 @@ type testLatestVersionProvider struct {
 	version string
 }
 
-func (v *testLatestVersionProvider) LatestVersionString() string {
+func (v *testLatestVersionProvider) LatestVersionString(ctx context.Context) string {
 	return v.version
 }
 
 func TestQueryReplaceVersion(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	latestVersionProvider := &testLatestVersionProvider{"18.9"}
 
 	tests := []struct {
@@ -244,7 +248,7 @@ func TestQueryReplaceVersion(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.query, func(t *testing.T) {
 			q := ParseQuery(test.query)
-			q.ReplaceVersionLatest(latestVersionProvider)
+			q.ReplaceVersionLatest(ctx, latestVersionProvider)
 			require.Equal(t, test.expect, q.testCombinedTokens())
 		})
 	}

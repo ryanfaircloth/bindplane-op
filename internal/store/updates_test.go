@@ -69,7 +69,7 @@ func updatesTestSetup(t *testing.T) {
 	for _, resource := range resources {
 		resourceMap[resource.Name()] = resource
 	}
-	_, err := updatesTestStore.ApplyResources(resources)
+	_, err := updatesTestStore.ApplyResources(context.Background(), resources)
 	require.NoError(t, err)
 }
 
@@ -138,6 +138,9 @@ func addUpdates[T model.Resource](t *testing.T, names []string, events Events[T]
 }
 
 func TestTransitiveUpdates(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	updatesTestSetup(t)
 	tests := []struct {
 		Name string
@@ -252,7 +255,7 @@ func TestTransitiveUpdates(t *testing.T) {
 			addUpdates(t, test.Configurations, updates.Configurations)
 
 			// add transitive
-			err := updates.addTransitiveUpdates(updatesTestStore)
+			err := updates.addTransitiveUpdates(ctx, updatesTestStore)
 			require.NoError(t, err)
 
 			// compare results

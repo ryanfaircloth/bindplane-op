@@ -110,7 +110,7 @@ func agents(c *gin.Context, bindplane server.BindPlane) {
 	query := c.DefaultQuery("query", "")
 	if query != "" {
 		q := search.ParseQuery(query)
-		q.ReplaceVersionLatest(bindplane.Versions())
+		q.ReplaceVersionLatest(ctx, bindplane.Versions())
 		options = append(options, store.WithQuery(q))
 	}
 
@@ -185,7 +185,7 @@ func deleteAgents(c *gin.Context, bindplane server.BindPlane) {
 func getAgent(c *gin.Context, bindplane server.BindPlane) {
 	id := c.Param("id")
 
-	agent, err := bindplane.Store().Agent(id)
+	agent, err := bindplane.Store().Agent(c, id)
 
 	switch {
 	case err != nil:
@@ -209,7 +209,7 @@ func getAgent(c *gin.Context, bindplane server.BindPlane) {
 func getAgentLabels(c *gin.Context, bindplane server.BindPlane) {
 	id := c.Param("id")
 
-	agent, err := bindplane.Store().Agent(id)
+	agent, err := bindplane.Store().Agent(c, id)
 
 	switch {
 	case err != nil:
@@ -233,7 +233,7 @@ func getAgentLabels(c *gin.Context, bindplane server.BindPlane) {
 func getAgentConfiguration(c *gin.Context, bindplane server.BindPlane) {
 	id := c.Param("id")
 
-	agent, err := bindplane.Store().Agent(id)
+	agent, err := bindplane.Store().Agent(c, id)
 	switch {
 	case err != nil:
 		handleErrorResponse(c, http.StatusInternalServerError, err)
@@ -243,7 +243,7 @@ func getAgentConfiguration(c *gin.Context, bindplane server.BindPlane) {
 		return
 	}
 
-	config, err := bindplane.Store().AgentConfiguration(id)
+	config, err := bindplane.Store().AgentConfiguration(c, id)
 	if err != nil {
 		handleErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -291,7 +291,7 @@ func labelAgents(c *gin.Context, bindplane server.BindPlane) {
 	upsertIDs := make([]string, 0, len(p.IDs))
 	apiErrors := make([]string, 0)
 	for _, id := range p.IDs {
-		curAgent, err := bindplane.Store().Agent(id)
+		curAgent, err := bindplane.Store().Agent(c, id)
 
 		switch {
 		case err != nil:
@@ -358,7 +358,7 @@ func patchAgentLabels(c *gin.Context, bindplane server.BindPlane) {
 		handleErrorResponse(c, http.StatusBadRequest, err)
 	}
 
-	curAgent, err := bindplane.Store().Agent(id)
+	curAgent, err := bindplane.Store().Agent(c, id)
 	switch {
 	case err != nil:
 		handleErrorResponse(c, http.StatusInternalServerError, err)
@@ -423,14 +423,14 @@ func upgradeAgents(c *gin.Context, bindplane server.BindPlane) {
 
 	var version string
 	if req.Version == "" {
-		version = bindplane.Versions().LatestVersionString()
+		version = bindplane.Versions().LatestVersionString(ctx)
 	} else {
 		version = req.Version
 	}
 
 	for _, id := range req.IDs {
 		// just ignore agents that don't exist or don't support upgrade
-		agent, err := bindplane.Store().Agent(id)
+		agent, err := bindplane.Store().Agent(c, id)
 		if err != nil || agent == nil || !agent.SupportsUpgrade() {
 			continue
 		}
@@ -466,7 +466,7 @@ func upgradeAgent(c *gin.Context, bindplane server.BindPlane) {
 		return
 	}
 
-	agent, err := bindplane.Store().Agent(id)
+	agent, err := bindplane.Store().Agent(c, id)
 	switch {
 	case err != nil:
 		handleErrorResponse(c, http.StatusInternalServerError, err)
@@ -501,7 +501,7 @@ func upgradeAgent(c *gin.Context, bindplane server.BindPlane) {
 // @Success 200 {object} model.AgentVersionsResponse
 // @Failure 500 {object} ErrorResponse
 func agentVersions(c *gin.Context, bindplane server.BindPlane) {
-	agentVersions, err := bindplane.Store().AgentVersions()
+	agentVersions, err := bindplane.Store().AgentVersions(c)
 	if okResponse(c, err) {
 		c.JSON(http.StatusOK, model.AgentVersionsResponse{
 			AgentVersions: agentVersions,
@@ -518,7 +518,7 @@ func agentVersions(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func agentVersion(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	agentVersion, err := bindplane.Store().AgentVersion(name)
+	agentVersion, err := bindplane.Store().AgentVersion(c, name)
 	if okResource(c, agentVersion == nil, err) {
 		c.JSON(http.StatusOK, model.AgentVersionResponse{
 			AgentVersion: agentVersion,
@@ -535,7 +535,7 @@ func agentVersion(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func deleteAgentVersion(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	agentVersion, err := bindplane.Store().DeleteAgentVersion(name)
+	agentVersion, err := bindplane.Store().DeleteAgentVersion(c, name)
 	if okResource(c, agentVersion == nil, err) {
 		c.Status(http.StatusNoContent)
 	}
@@ -549,7 +549,7 @@ func deleteAgentVersion(c *gin.Context, bindplane server.BindPlane) {
 // @Success 200 {object} model.ConfigurationsResponse
 // @Failure 500 {object} ErrorResponse
 func configurations(c *gin.Context, bindplane server.BindPlane) {
-	configs, err := bindplane.Store().Configurations()
+	configs, err := bindplane.Store().Configurations(c)
 	if err != nil {
 		handleErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -572,7 +572,7 @@ func configuration(c *gin.Context, bindplane server.BindPlane) {
 
 	name := c.Param("name")
 
-	config, err := bindplane.Store().Configuration(name)
+	config, err := bindplane.Store().Configuration(ctx, name)
 	if !okResource(c, config == nil, err) {
 		return
 	}
@@ -597,7 +597,7 @@ func configuration(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func deleteConfiguration(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	configuration, err := bindplane.Store().DeleteConfiguration(name)
+	configuration, err := bindplane.Store().DeleteConfiguration(c, name)
 	if okResource(c, configuration == nil, err) {
 		c.Status(http.StatusNoContent)
 	}
@@ -617,7 +617,7 @@ func copyConfig(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
 
 	// The config to make a duplicate of
-	config, err := bindplane.Store().Configuration(name)
+	config, err := bindplane.Store().Configuration(c, name)
 	if err != nil {
 		handleErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -635,7 +635,7 @@ func copyConfig(c *gin.Context, bindplane server.BindPlane) {
 	}
 
 	duplicateName := req.Name
-	duplicateConfig, err := bindplane.Store().Configuration(duplicateName)
+	duplicateConfig, err := bindplane.Store().Configuration(c, duplicateName)
 	if err != nil {
 		handleErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -648,7 +648,7 @@ func copyConfig(c *gin.Context, bindplane server.BindPlane) {
 
 	duplicateConfig = config.Duplicate(duplicateName)
 
-	updates, err := bindplane.Store().ApplyResources([]model.Resource{duplicateConfig})
+	updates, err := bindplane.Store().ApplyResources(c, []model.Resource{duplicateConfig})
 	if err != nil {
 		handleErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -687,7 +687,7 @@ func copyConfig(c *gin.Context, bindplane server.BindPlane) {
 // @Success 200 {object} model.SourcesResponse
 // @Failure 500 {object} ErrorResponse
 func sources(c *gin.Context, bindplane server.BindPlane) {
-	sources, err := bindplane.Store().Sources()
+	sources, err := bindplane.Store().Sources(c)
 	if okResponse(c, err) {
 		c.JSON(http.StatusOK, model.SourcesResponse{
 			Sources: sources,
@@ -704,7 +704,7 @@ func sources(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func source(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	source, err := bindplane.Store().Source(name)
+	source, err := bindplane.Store().Source(c, name)
 	if okResource(c, source == nil, err) {
 		c.JSON(http.StatusOK, model.SourceResponse{
 			Source: source,
@@ -721,7 +721,7 @@ func source(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func deleteSource(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	source, err := bindplane.Store().DeleteSource(name)
+	source, err := bindplane.Store().DeleteSource(c, name)
 
 	if okResource(c, source == nil, err) {
 		c.Status(http.StatusNoContent)
@@ -736,7 +736,7 @@ func deleteSource(c *gin.Context, bindplane server.BindPlane) {
 // @Success 200 {object} model.SourceTypesResponse
 // @Failure 500 {object} ErrorResponse
 func sourceTypes(c *gin.Context, bindplane server.BindPlane) {
-	sourceTypes, err := bindplane.Store().SourceTypes()
+	sourceTypes, err := bindplane.Store().SourceTypes(c)
 	if okResponse(c, err) {
 		c.JSON(http.StatusOK, model.SourceTypesResponse{
 			SourceTypes: sourceTypes,
@@ -753,7 +753,7 @@ func sourceTypes(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func sourceType(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	sourceType, err := bindplane.Store().SourceType(name)
+	sourceType, err := bindplane.Store().SourceType(c, name)
 	if okResource(c, sourceType == nil, err) {
 		c.JSON(http.StatusOK, model.SourceTypeResponse{
 			SourceType: sourceType,
@@ -770,7 +770,7 @@ func sourceType(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func deleteSourceType(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	sourceType, err := bindplane.Store().DeleteSourceType(name)
+	sourceType, err := bindplane.Store().DeleteSourceType(c, name)
 	if okResource(c, sourceType == nil, err) {
 		c.Status(http.StatusNoContent)
 	}
@@ -784,7 +784,7 @@ func deleteSourceType(c *gin.Context, bindplane server.BindPlane) {
 // @Success 200 {object} model.ProcessorsResponse
 // @Failure 500 {object} ErrorResponse
 func processors(c *gin.Context, bindplane server.BindPlane) {
-	processors, err := bindplane.Store().Processors()
+	processors, err := bindplane.Store().Processors(c)
 	if okResponse(c, err) {
 		c.JSON(http.StatusOK, model.ProcessorsResponse{
 			Processors: processors,
@@ -801,7 +801,7 @@ func processors(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func processor(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	processor, err := bindplane.Store().Processor(name)
+	processor, err := bindplane.Store().Processor(c, name)
 	if okResource(c, processor == nil, err) {
 		c.JSON(http.StatusOK, model.ProcessorResponse{
 			Processor: processor,
@@ -818,7 +818,7 @@ func processor(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func deleteProcessor(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	processor, err := bindplane.Store().DeleteProcessor(name)
+	processor, err := bindplane.Store().DeleteProcessor(c, name)
 	if okResource(c, processor == nil, err) {
 		c.Status(http.StatusNoContent)
 	}
@@ -832,7 +832,7 @@ func deleteProcessor(c *gin.Context, bindplane server.BindPlane) {
 // @Success 200 {object} model.ProcessorTypesResponse
 // @Failure 500 {object} ErrorResponse
 func processorTypes(c *gin.Context, bindplane server.BindPlane) {
-	processorTypes, err := bindplane.Store().ProcessorTypes()
+	processorTypes, err := bindplane.Store().ProcessorTypes(c)
 	if okResponse(c, err) {
 		c.JSON(http.StatusOK, model.ProcessorTypesResponse{
 			ProcessorTypes: processorTypes,
@@ -849,7 +849,7 @@ func processorTypes(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func processorType(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	processorType, err := bindplane.Store().ProcessorType(name)
+	processorType, err := bindplane.Store().ProcessorType(c, name)
 	if okResource(c, processorType == nil, err) {
 		c.JSON(http.StatusOK, model.ProcessorTypeResponse{
 			ProcessorType: processorType,
@@ -866,7 +866,7 @@ func processorType(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func deleteProcessorType(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	processorType, err := bindplane.Store().DeleteProcessorType(name)
+	processorType, err := bindplane.Store().DeleteProcessorType(c, name)
 	if okResource(c, processorType == nil, err) {
 		c.Status(http.StatusNoContent)
 	}
@@ -880,7 +880,7 @@ func deleteProcessorType(c *gin.Context, bindplane server.BindPlane) {
 // @Success 200 {object} model.DestinationsResponse
 // @Failure 500 {object} ErrorResponse
 func destinations(c *gin.Context, bindplane server.BindPlane) {
-	destinations, err := bindplane.Store().Destinations()
+	destinations, err := bindplane.Store().Destinations(c)
 	if okResponse(c, err) {
 		c.JSON(http.StatusOK, model.DestinationsResponse{
 			Destinations: destinations,
@@ -897,7 +897,7 @@ func destinations(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func destination(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	destination, err := bindplane.Store().Destination(name)
+	destination, err := bindplane.Store().Destination(c, name)
 	if okResource(c, destination == nil, err) {
 		c.JSON(http.StatusOK, model.DestinationResponse{
 			Destination: destination,
@@ -914,7 +914,7 @@ func destination(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func deleteDestination(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	destination, err := bindplane.Store().DeleteDestination(name)
+	destination, err := bindplane.Store().DeleteDestination(c, name)
 	if okResource(c, destination == nil, err) {
 		c.Status(http.StatusNoContent)
 	}
@@ -928,7 +928,7 @@ func deleteDestination(c *gin.Context, bindplane server.BindPlane) {
 // @Success 200 {object} model.DestinationTypesResponse
 // @Failure 500 {object} ErrorResponse
 func destinationTypes(c *gin.Context, bindplane server.BindPlane) {
-	destinationTypes, err := bindplane.Store().DestinationTypes()
+	destinationTypes, err := bindplane.Store().DestinationTypes(c)
 	if okResponse(c, err) {
 		c.JSON(http.StatusOK, model.DestinationTypesResponse{
 			DestinationTypes: destinationTypes,
@@ -945,7 +945,7 @@ func destinationTypes(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func destinationType(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	destinationType, err := bindplane.Store().DestinationType(name)
+	destinationType, err := bindplane.Store().DestinationType(c, name)
 	if okResource(c, destinationType == nil, err) {
 		c.JSON(http.StatusOK, model.DestinationTypeResponse{
 			DestinationType: destinationType,
@@ -962,7 +962,7 @@ func destinationType(c *gin.Context, bindplane server.BindPlane) {
 // @Failure 500 {object} ErrorResponse
 func deleteDestinationType(c *gin.Context, bindplane server.BindPlane) {
 	name := c.Param("name")
-	destinationType, err := bindplane.Store().DeleteDestinationType(name)
+	destinationType, err := bindplane.Store().DeleteDestinationType(c, name)
 	if okResource(c, destinationType == nil, err) {
 		c.Status(http.StatusNoContent)
 	}
@@ -1002,7 +1002,7 @@ func applyResources(c *gin.Context, bindplane server.BindPlane) {
 
 	bindplane.Logger().Info("/apply", zap.Int("count", len(resources)))
 
-	resourceStatuses, err := bindplane.Store().ApplyResources(resources)
+	resourceStatuses, err := bindplane.Store().ApplyResources(c, resources)
 	if err != nil {
 		handleErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -1043,7 +1043,7 @@ func deleteResources(c *gin.Context, bindplane server.BindPlane) {
 
 	bindplane.Logger().Info("/delete", zap.Int("count", len(resources)))
 
-	resourceStatuses, err := bindplane.Store().DeleteResources(resources)
+	resourceStatuses, err := bindplane.Store().DeleteResources(c, resources)
 	if err != nil {
 		handleErrorResponse(c, http.StatusInternalServerError, err)
 		return
@@ -1093,7 +1093,7 @@ func getInstallCommand(c *gin.Context, bindplane server.BindPlane) {
 	// if version is empty or "latest", find the latest version
 	version := c.Param("name")
 	if version == "" || version == "latest" {
-		v, err := bindplane.Versions().LatestVersion()
+		v, err := bindplane.Versions().LatestVersion(c)
 		if err != nil {
 			handleErrorResponse(c, http.StatusInternalServerError,
 				fmt.Errorf("unable to get the latest version of the agent: %w", err),
@@ -1158,7 +1158,7 @@ func syncAgentVersion(c *gin.Context, bindplane server.BindPlane) {
 		resources = append(resources, agentVersion)
 	}
 
-	resourceStatuses, err := bindplane.Store().ApplyResources(resources)
+	resourceStatuses, err := bindplane.Store().ApplyResources(c, resources)
 	if err != nil {
 		handleErrorResponse(c, http.StatusInternalServerError, err)
 		return
