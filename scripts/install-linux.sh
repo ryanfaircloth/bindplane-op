@@ -15,7 +15,8 @@
 
 set -e
 
-package_name="bindplane"
+# When --enterprise is passed, will be set to bindplane-ee
+package_artifact="bindplane"
 
 PREREQS="printf systemctl sed uname sudo curl"
 INDENT_WIDTH='  '
@@ -104,11 +105,14 @@ usage() {
   USAGE=$(cat <<EOF
 Usage:
   $(fg_yellow '-v, --version')
-      An optional BindPlane package version. Defaults to the latest version
+      An optional BindPlane OP package version. Defaults to the latest version
       present in the package repository.
 
   $(fg_yellow '-f, --file')
-      Install BindPlane package from a local file instead of downloading from Github.
+      Install BindPlane OP package from a local file instead of downloading from Github.
+
+  $(fg_yellow '-e, --enterprise')
+      Install BindPlane OP Enterprise.
 EOF
   )
   info "$USAGE"
@@ -263,11 +267,11 @@ download_url() {
 
   # Example:
   #       https://github.com/observIQ/bindplane-op/releases/download/v0.0.47/bindplane_0.0.47_linux_amd64.deb
-  echo "https://github.com/observiq/bindplane-op/releases/download/v$version/${package_name}_${version}_linux_${arch}.${package_type}"
+  echo "https://github.com/observiq/bindplane-op/releases/download/v$version/${package_artifact}_${version}_linux_${arch}.${package_type}"
 }
 
 deb_install() {
-    banner "Installing package ${package_name}"
+    banner "Installing package ${package_artifact}"
     increase_indent
 
     if [ -z "$package_file" ] ; then
@@ -285,7 +289,7 @@ deb_install() {
 }
 
 dnf_install() {
-    banner "Installing package ${package_name}"
+    banner "Installing package ${package_artifact}"
     increase_indent
 
     if [ -z "$package_file" ] ; then
@@ -305,7 +309,7 @@ dnf_install() {
 }
 
 yum_install() {
-    banner "Installing package ${package_name}"
+    banner "Installing package ${package_artifact}"
     increase_indent
 
     if [ -z "$package_file" ] ; then
@@ -325,7 +329,7 @@ yum_install() {
 }
 
 zypper_install() {
-    banner "Installing package ${package_name}"
+    banner "Installing package ${package_artifact}"
     increase_indent
 
     if [ -z "$package_file" ] ; then
@@ -404,6 +408,9 @@ main() {
           ;;
         -f|--file)
           package_file=$2 ; shift 2
+          ;;
+        -e|--enterprise)
+          package_artifact="bindplane-ee" ; shift 1
           ;;
         -h|--help)
           usage

@@ -15,7 +15,8 @@
 
 set -e
 
-package_name="bindplane"
+# When --enterprise is passed, will be set to bindplane-ee
+package_artifact="bindplane"
 
 PREREQS="printf sed uname curl"
 INDENT_WIDTH='  '
@@ -109,6 +110,9 @@ Usage:
   $(fg_yellow '-v, --version')
       An optional BindPlane package version. Defaults to the latest version
       present in the package repository.
+
+  $(fg_yellow '-e, --enterprise')
+      Install BindPlane OP Enterprise.
 EOF
   )
   info "$USAGE"
@@ -231,7 +235,7 @@ download_url() {
 
   # Example:
   #       https://github.com/observIQ/bindplane-op/releases/download/v0.0.47/bindplane-v0.0.47-darwin-amd64.zip
-  url="https://github.com/observiq/bindplane-op/releases/download/v$version/${package_name}-v${version}-darwin-${arch}.zip"
+  url="https://github.com/observiq/bindplane-op/releases/download/v$version/${package_artifact}-v${version}-darwin-${arch}.zip"
   printf "%s" "$url"
 }
 
@@ -277,7 +281,11 @@ main() {
     while [ -n "$1" ]; do
       case "$1" in
         -v|--version)
-          version=$2 ; shift 2 ;;
+          version=$2 ; shift 2
+          ;;
+        -e|--enterprise)
+          package_artifact="bindplane-ee" ; shift 1
+          ;;
         -h|--help)
           usage
           force_exit
