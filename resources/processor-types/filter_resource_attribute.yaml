@@ -25,8 +25,8 @@ spec:
         - regexp
       default: strict
 
-    - name: attributes
-      label: Attributes
+    - name: attributes # Do not renaming to 'resources' to avoid breaking change
+      label: Resources
       description: Resource or Record key value pairs to filter on. All pairs must match for filtering to take effect.
       type: map
       required: true

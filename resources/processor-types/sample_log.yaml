@@ -9,7 +9,7 @@ spec:
   parameters:
     - name: drop_ratio
       label: Drop Ratio
-      description: The probability a matching entry is dropped (used for sampling). A value of 1.0 will drop 100% of matching entries, while a value of 0.0 will drop 0%.
+      description: The probability an entry is dropped (used for sampling). A value of 1.0 will drop 100% of matching entries, while a value of 0.0 will drop 0%.
       type: enum
       default: "0.50"
       validValues:
