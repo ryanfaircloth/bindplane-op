@@ -1,15 +1,19 @@
 # Configuration
 
-- [Options](#options)
-- [Initialization](#initialization)
-  - [Server](#server)
-  - [Client](#client)
-- [Client Profiles](#client-profiles)
-- [Example Configurations](#example-configurations)
-  - [Basic](#basic)
-  - [TLS](#tls)
-    - [Server Side TLS](#server-side-tls)
-    - [Mutual TLS](#mutual-tls)
+- [Configuration](#configuration)
+  - [Options](#options)
+  - [Initialization](#initialization)
+    - [Server](#server)
+    - [Client](#client)
+  - [Client Profiles](#client-profiles)
+  - [Example Configurations](#example-configurations)
+    - [Basic](#basic)
+    - [TLS](#tls)
+      - [Server Side TLS](#server-side-tls)
+      - [Mutual TLS](#mutual-tls)
+    - [Authentication (Enterprise)](#authentication-enterprise)
+      - [Active Directory Example](#active-directory-example)
+      - [LDAP Example](#ldap-example)
 
 ## Options
 
@@ -412,3 +416,165 @@ tls_config:
 
 If the server's certificate authority is already imported into the client's operating system trust
 store, it is not required to be set in the configuration.
+
+### Authentication (Enterprise)
+
+Enterprise users have access to several authentication options.
+- Basic Auth
+- Active Directory
+- LDAP
+
+**Authentication Configuration Options**
+
+The configuration's `server` section contains the following authentication options.
+
+| Option              | Description |
+| ------------------- | ----------- |
+| `authType`   | Authentication type to use (`ldap` / `active-directory` ). |
+| `ldapConfig` | Contains configuration for ldap and active directory. |
+
+**LDAP / Active Directory Configuration**
+
+The configuration's `server.ldapConfig` secttion contains the following options for
+configuration  LDAP and Active Directory.
+
+| Option              | Description |
+| ------------------- | ----------- |
+| `server` | Hostname or IP address of the LDAP or Active Directory server. |
+| `port`   | The TCP port to use when connecting to the authentication server. |
+| `protocol` | The protocol used for communication with the LDAP server. Valid options include `ldap` and `ldaps` (TLS) |
+| `searchFilter` | LDAP Query for searching users based on mapping of username to a particular LDAP attribute as well as any applicable additional filters, (ex: groups in Active Directory). |
+| `baseDN` | The starting point an LDAP server uses when searching for users. |
+| `bindUser` | The username used to connect to the authentication server. For active directory, this is a username. For LDAP, this is the full DN to the user. |
+| `bindPassword` | The password used to connect to the authentication server. |
+| `tls.ca` | Path to the TLS certificate authority. |
+| `tls.insecure` | Whether or not to skip TLS verification. |
+| `tls.certificate` | Path to TLS certificate when mutual TLS is required. |
+| `tls.key` | Path to TLS private key when mutual TLS is required. |
+
+#### Active Directory Example
+
+Active Directory authentication is enabled by setting `server.authType` to `active-directory`.
+
+In this example, the domain controller's hostname is `dc.corp.net`. The username `bindplane` is used to bind to Active Directory. The `searchFilter` is inserted by default when running `bindplane init server --config <path to bindplane config.yaml`.
+
+User login is restricted to the DN `CN=Users,DC=corp,DC=net`.
+
+```yaml
+host: 0.0.0.0
+port: "3001"
+serverURL: http://bindplane.corp.net:3001
+username: admin
+password: admin
+logFilePath: /var/log/bindplane/bindplane.log
+server:
+    storageFilePath: /var/lib/bindplane/storage/bindplane.db
+    secretKey: e8bfcfe0-bbe6-4ee6-bf35-72ff182d2dc5
+    remoteURL: ws://bindplane.corp.net:3001
+    sessionsSecret: b84746f6-aca1-4b91-9ccd-d4da8d75fe4d
+    authType: active-directory
+    ldapConfig:
+        protocol: ldap
+        server: dc.corp.net
+        port: "389"
+        baseDN: CN=Users,DC=corp,DC=net
+        bindUser: bindplane
+        bindPassword: complexpassword
+        searchFilter: (|(sAMAccountName=%[1]v)(userPrincipalName=%[1]v))
+```
+
+#### LDAP Example
+
+LDAP authentication is enabled by setting `server.authType` to `ldap`.
+
+**Basic Configuration**
+
+In this example, the domain controller's hostname is `ldap.corp.net`. The username `bindplane` is used to bind to LDAP. The `searchFilter` is inserted by default when running `bindplane init server --config <path to bindplane config.yaml`.
+
+User login is restricted to the DN `CN=Users,DC=corp,DC=net`.
+
+```yaml
+host: 0.0.0.0
+port: "3001"
+serverURL: http://bindplane.corp.net:3001
+username: admin
+password: admin
+logFilePath: /var/log/bindplane/bindplane.log
+server:
+    storageFilePath: /var/lib/bindplane/storage/bindplane.db
+    secretKey: e8bfcfe0-bbe6-4ee6-bf35-72ff182d2dc5
+    remoteURL: ws://bindplane.corp.net:3001
+    sessionsSecret: b84746f6-aca1-4b91-9ccd-d4da8d75fe4d
+    authType: ldap
+    ldapConfig:
+        protocol: ldap
+        server: ldap.corp.net
+        port: "389"
+        baseDN: CN=Users,DC=corp,DC=net
+        bindUser: bindplane
+        bindPassword: complexpassword
+        searchFilter: (uid=%s)
+```
+
+**TLS**
+
+This example is the same as the "basic" example, with TLS. The protocol has been set to `ldaps`, port to `636`, and a ca certificate is optionally* configured.
+
+```yaml
+host: 0.0.0.0
+port: "3001"
+serverURL: http://bindplane.corp.net:3001
+username: admin
+password: admin
+logFilePath: /var/log/bindplane/bindplane.log
+server:
+    storageFilePath: /var/lib/bindplane/storage/bindplane.db
+    secretKey: e8bfcfe0-bbe6-4ee6-bf35-72ff182d2dc5
+    remoteURL: ws://bindplane.corp.net:3001
+    sessionsSecret: b84746f6-aca1-4b91-9ccd-d4da8d75fe4d
+    authType: ldap
+    ldapConfig:
+        protocol: ldaps
+        server: ldap.corp.net
+        port: "636"
+        baseDN: CN=Users,DC=corp,DC=net
+        bindUser: bindplane
+        bindPassword: complexpassword
+        searchFilter: (uid=%s)
+        tls:
+          ca: /etc/bindplane/tls/ca.crt
+```
+
+*CA certificate is not required if the ca is already trusted by the underlying operatiing system. Alternatively, `tls.insecure: true` could be set to skip TLS verification.
+
+**Mutual TLS**
+
+This example is the same as the "TLS" example, with client TLS authentication. The `tls.certificate` and `tls.key` fields have been set.
+
+```yaml
+host: 0.0.0.0
+port: "3001"
+serverURL: http://bindplane.corp.net:3001
+username: admin
+password: admin
+logFilePath: /var/log/bindplane/bindplane.log
+server:
+    storageFilePath: /var/lib/bindplane/storage/bindplane.db
+    secretKey: e8bfcfe0-bbe6-4ee6-bf35-72ff182d2dc5
+    remoteURL: ws://bindplane.corp.net:3001
+    sessionsSecret: b84746f6-aca1-4b91-9ccd-d4da8d75fe4d
+    authType: ldap
+    ldapConfig:
+        protocol: ldaps
+        server: ldap.corp.net
+        port: "636"
+        baseDN: CN=Users,DC=corp,DC=net
+        bindUser: bindplane
+        bindPassword: complexpassword
+        searchFilter: (uid=%s)
+        tls:
+          ca: /etc/bindplane/tls/ca.crt
+          certificate: /etc/bindplane/tls/bindplane.crt
+          key: /etc/bindplane/tls/bindplane.key
+```
+

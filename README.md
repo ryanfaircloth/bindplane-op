@@ -53,9 +53,22 @@ The following are our recommended installation options. For more details on inst
 To install BindPlane Server, we recommend using our single-line installer. Alternatively, packages are available for download on our [releases](https://github.com/observIQ/bindplane-op/releases) page.
 
 ### Linux
+
+**BindPlane OP Open Source**
+
 ```bash
 curl -fsSlL https://github.com/observiq/bindplane-op/releases/latest/download/install-linux.sh | bash -s --
 ```
+
+**BindPlane OP Enterprise**
+
+If you have an enterprise license, install with the `--enterprise` flag.
+
+```bash
+curl -fsSlL https://github.com/observiq/bindplane-op/releases/latest/download/install-linux.sh | bash -s -- --enterprise
+```
+
+**Initialization**
 
 After the installer finishes, initialize the server using the `init` command. The specific command for your system is found in the installer output under the `Server Initialization` section. By default it is the following command for Linux:
 
