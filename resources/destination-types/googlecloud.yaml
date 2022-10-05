@@ -36,7 +36,8 @@ spec:
       default: ""
       options:
         gridColumns: 12
-        multiline: true
+        # TODO(bug): Resolve issue with multiline JSON in config
+        # multiline: true
       relevantIf:
         - name: auth_type
           operator: equals
