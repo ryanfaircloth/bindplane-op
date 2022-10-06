@@ -11,9 +11,9 @@ export function metadataSatisfiesSubstring(
   rt: ResourceWithMetadata,
   substring: string
 ) {
+  substring = substring.toLowerCase()
   return isEmpty(substring)
     ? true
-    : rt.metadata.name.includes(substring) ||
-        rt.metadata.displayName?.includes(substring) ||
+    : rt.metadata.name.toLowerCase().includes(substring) ||
         rt.metadata.displayName?.toLowerCase().includes(substring);
 }
