@@ -540,11 +540,16 @@ func TestIndexSelect(t *testing.T) {
 
 	doc5 := emptyDocument("5")
 
+	doc6 := emptyDocument("6")
+	doc6.labels["APP"] = "BINDPLANE"
+	doc6.labels["env"] = "Development"
+
 	index.Upsert(doc1)
 	index.Upsert(doc2)
 	index.Upsert(doc3)
 	index.Upsert(doc4)
 	index.Upsert(doc5)
+	index.Upsert(doc6)
 
 	tests := []struct {
 		name     string
@@ -554,7 +559,7 @@ func TestIndexSelect(t *testing.T) {
 		{
 			name:     "empty selector matches everything",
 			selector: nil,
-			expect:   []string{"1", "2", "3", "4", "5"},
+			expect:   []string{"1", "2", "3", "4", "5", "6"},
 		},
 		{
 			name: "cabin matches 3,4",
@@ -564,11 +569,11 @@ func TestIndexSelect(t *testing.T) {
 			expect: []string{"3", "4"},
 		},
 		{
-			name: "bindplane matches 1,2",
+			name: "bindplane matches 1,2,6",
 			selector: map[string]string{
 				"app": "bindplane",
 			},
-			expect: []string{"1", "2"},
+			expect: []string{"1", "2", "6"},
 		},
 		{
 			name: "bindplane,production matches 1",
@@ -577,6 +582,14 @@ func TestIndexSelect(t *testing.T) {
 				"env": "production",
 			},
 			expect: []string{"1"},
+		},
+		{
+			name: "bindplane,Development matches 2,6 case-insensitive",
+			selector: map[string]string{
+				"app": "bindplane",
+				"env": "development",
+			},
+			expect: []string{"2", "6"},
 		},
 	}
 

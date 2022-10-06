@@ -202,8 +202,10 @@ func (i *index) Select(selector map[string]string) []string {
 
 // selectorMatchesDocument returns true if all of the labels in the selector match the document
 func (i *index) selectorMatchesDocument(selector map[string]string, doc *document) bool {
-	for k, v := range selector {
-		if doc.labels[k] != v {
+	for name, value := range selector {
+		name = strings.ToLower(name)
+		value = strings.ToLower(value)
+		if doc.labels[name] != value {
 			return false
 		}
 	}
