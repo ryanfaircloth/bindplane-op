@@ -398,6 +398,10 @@ definitions:
         items:
           $ref: '#/definitions/model.MetricCategory'
         type: array
+      multiline:
+        description: Multiline indicates that a multiline textarea should be used
+          for editing a "string" parameter.
+        type: boolean
       sectionHeader:
         description: |-
           SectionHeader is used to indicate that the bool parameter input is

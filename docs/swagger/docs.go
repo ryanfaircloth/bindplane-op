@@ -1941,6 +1941,10 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.MetricCategory"
                     }
                 },
+                "multiline": {
+                    "description": "Multiline indicates that a multiline textarea should be used for editing a \"string\" parameter.",
+                    "type": "boolean"
+                },
                 "sectionHeader": {
                     "description": "SectionHeader is used to indicate that the bool parameter input is\na switch for further configuration for UI styling.",
                     "type": "boolean"
