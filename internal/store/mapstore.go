@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -91,6 +92,7 @@ func newResourceStore[T model.Resource]() resourceStore[T] {
 func (r *resourceStore[T]) get(name string) T {
 	r.mtx.RLock()
 	defer r.mtx.RUnlock()
+	name = strings.ToLower(name)
 	return r.store[name]
 }
 
@@ -102,12 +104,13 @@ func (r *resourceStore[T]) add(resource T) *model.ResourceStatus {
 	if resource.ID() == "" {
 		resource.SetID(uuid.NewString())
 	}
-	existing, ok := r.store[resource.Name()]
+	name := strings.ToLower(resource.Name())
+	existing, ok := r.store[name]
 	if ok && existing.ID() != "" {
 		resource.SetID(existing.ID())
 	}
 
-	r.store[resource.Name()] = resource
+	r.store[name] = resource
 
 	var status model.UpdateStatus
 	switch {
@@ -125,6 +128,7 @@ func (r *resourceStore[T]) add(resource T) *model.ResourceStatus {
 func (r *resourceStore[T]) remove(name string) (item T, exists bool) {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
+	name = strings.ToLower(name)
 	existing, ok := r.store[name]
 	if ok {
 		delete(r.store, name)
@@ -134,6 +138,7 @@ func (r *resourceStore[T]) remove(name string) (item T, exists bool) {
 
 func (r *resourceStore[T]) removeAndNotify(ctx context.Context, name string, store *mapStore) (item T, exists bool, err error) {
 	r.mtx.Lock()
+	name = strings.ToLower(name)
 	existing, ok := r.store[name]
 
 	if ok {

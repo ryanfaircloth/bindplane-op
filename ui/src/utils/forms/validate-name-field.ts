@@ -40,7 +40,9 @@ export function validateNameField(
 
     // Verify name does not exist already.
     if (existingNames != null) {
-      const r = existingNames.find((existingName) => existingName === name);
+      const r = existingNames.find(
+        (existingName) => existingName === name.toLowerCase()
+      );
       if (r != null) {
         return `A ${kind} named ${name} already exists.`;
       }

@@ -23,6 +23,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -128,12 +129,12 @@ func TestKeyFromResource(t *testing.T) {
 		{
 			"source",
 			model.NewSourceType("test", []model.ParameterDefinition{}),
-			"SourceType|test",
+			"sourcetype|test",
 		},
 		{
 			"destination",
 			model.NewDestinationType("test", []model.ParameterDefinition{}),
-			"DestinationType|test",
+			"destinationtype|test",
 		},
 		{
 			"nil",
@@ -316,6 +317,17 @@ func TestBoltstoreApplyResourceReturn(t *testing.T) {
 	runApplyResourceReturnTests(t, store)
 }
 
+func TestBoltstoreCaseInsensitiveCasePreservingTests(t *testing.T) {
+	db, err := initTestDB(t)
+	require.NoError(t, err)
+	defer cleanupTestDB(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	store := NewBoltStore(ctx, db, testOptions, zap.NewNop())
+	runCaseInsensitiveCasePreservingTests(t, store)
+}
+
 func TestBoltstoreDeleteResourcesReturn(t *testing.T) {
 	db, err := initTestDB(t)
 	require.NoError(t, err)
@@ -489,6 +501,60 @@ func TestBoltstoreUpsertAgents(t *testing.T) {
 	defer cancel()
 	store := NewBoltStore(ctx, db, testOptions, zap.NewNop())
 	runTestUpsertAgents(t, store)
+}
+
+func TestBoltstoreMigrateKeys(t *testing.T) {
+	db, err := initTestDB(t)
+	require.NoError(t, err)
+	defer cleanupTestDB(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	store := NewBoltStore(ctx, db, testOptions, zap.NewNop())
+	s := store.(*boltstore)
+
+	oldKeys := []string{
+		"A",
+		"b",
+		"C",
+		"D",
+		"e",
+		"f",
+	}
+
+	// manually add some things with mixed keys
+	err = s.db.Update(func(tx *bbolt.Tx) error {
+		bucket := resourcesBucket(tx)
+		for _, k := range oldKeys {
+			err := bucket.Put([]byte(k), []byte(k))
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	require.NoError(t, err)
+
+	// run migration
+	err = s.migrateToLowercaseKeys(ctx)
+	require.NoError(t, err)
+
+	// verify that we no longer have uppercase keys
+	err = s.db.View(func(tx *bbolt.Tx) error {
+		bucket := resourcesBucket(tx)
+		cursor := bucket.Cursor()
+
+		i := 0
+		for k, v := cursor.Seek(nil); k != nil; k, v = cursor.Next() {
+			require.Equal(t, strings.ToLower(oldKeys[i]), string(k))
+			require.Equal(t, oldKeys[i], string(v))
+			i++
+		}
+		require.Equal(t, len(oldKeys), i)
+
+		return nil
+	})
+	require.NoError(t, err)
 }
 
 /* ------------------------ SETUP + HELPER FUNCTIONS ------------------------ */

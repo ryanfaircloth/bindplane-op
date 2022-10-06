@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -66,6 +67,11 @@ func NewBoltStore(ctx context.Context, db *bbolt.DB, options Options, logger *za
 
 	// boltstore is not used for clusters, disconnect all agents
 	store.disconnectAllAgents(context.Background())
+
+	err := store.migrateToLowercaseKeys(ctx)
+	if err != nil {
+		logger.Error("error while migrating resource keys", zap.Error(err))
+	}
 
 	return store
 }
@@ -726,13 +732,37 @@ func (s *boltstore) disconnectAllAgents(ctx context.Context) {
 	}
 }
 
+func (s *boltstore) migrateToLowercaseKeys(ctx context.Context) error {
+	return s.db.Update(func(tx *bbolt.Tx) error {
+		bucket := resourcesBucket(tx)
+		cursor := bucket.Cursor()
+
+		for k, v := cursor.Seek(nil); k != nil; k, v = cursor.Next() {
+			oldKey := string(k)
+			newKey := strings.ToLower(oldKey)
+			if newKey != oldKey {
+				err := cursor.Delete()
+				if err != nil {
+					return err
+				}
+				err = bucket.Put([]byte(newKey), v)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+}
+
 /* ---------------------------- helper functions ---------------------------- */
 func resourcesPrefix(kind model.Kind) []byte {
-	return []byte(fmt.Sprintf("%s|", kind))
+	return []byte(fmt.Sprintf("%s|", strings.ToLower(string(kind))))
 }
 
 func resourceKey(kind model.Kind, name string) []byte {
-	return []byte(fmt.Sprintf("%s|%s", kind, name))
+	return []byte(fmt.Sprintf("%s|%s", strings.ToLower(string(kind)), strings.ToLower(name)))
 }
 
 func agentKey(id string) []byte {
