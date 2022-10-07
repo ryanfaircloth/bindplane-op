@@ -25,6 +25,9 @@ type document struct {
 	fields map[string]fieldValue
 	labels map[string]string
 
+	// originalLabels contains the labels without ToLower and is used to exact match in Index.Select
+	originalLabels map[string]string
+
 	// values is a collection of the lowercase form of all field values, label names, and label values, separated by
 	// newlines for use with general text search
 	values string
@@ -32,10 +35,11 @@ type document struct {
 
 func emptyDocument(id string) *document {
 	return &document{
-		id:     id,
-		fields: map[string]fieldValue{},
-		labels: map[string]string{},
-		values: "",
+		id:             id,
+		fields:         map[string]fieldValue{},
+		labels:         map[string]string{},
+		originalLabels: map[string]string{},
+		values:         "",
 	}
 }
 
@@ -48,6 +52,7 @@ func newDocument(indexed Indexed) *document {
 		doc.addField(name, value)
 	})
 	indexed.IndexLabels(func(name, value string) {
+		doc.originalLabels[name] = value
 		name = strings.ToLower(name)
 		value = strings.ToLower(value)
 		doc.labels[name] = value

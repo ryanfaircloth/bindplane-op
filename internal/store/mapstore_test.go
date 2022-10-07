@@ -56,14 +56,6 @@ func TestMapstoreApplyResourcesReturn(t *testing.T) {
 	runApplyResourceReturnTests(t, store)
 }
 
-func TestMapstoreCaseInsensitiveCasePreservingTests(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	store := NewMapStore(ctx, testOptions, zap.NewNop())
-
-	runCaseInsensitiveCasePreservingTests(t, store)
-}
-
 func TestMapstoreDeleteResourcesReturn(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

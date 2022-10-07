@@ -68,9 +68,9 @@ func NewBoltStore(ctx context.Context, db *bbolt.DB, options Options, logger *za
 	// boltstore is not used for clusters, disconnect all agents
 	store.disconnectAllAgents(context.Background())
 
-	err := store.migrateToLowercaseKeys(ctx)
+	err := store.migrateBackToCaseSensitive(context.Background())
 	if err != nil {
-		logger.Error("error while migrating resource keys", zap.Error(err))
+		logger.Error("failed to migrateBackToCaseSensitive", zap.Error(err))
 	}
 
 	return store
@@ -732,37 +732,13 @@ func (s *boltstore) disconnectAllAgents(ctx context.Context) {
 	}
 }
 
-func (s *boltstore) migrateToLowercaseKeys(ctx context.Context) error {
-	return s.db.Update(func(tx *bbolt.Tx) error {
-		bucket := resourcesBucket(tx)
-		cursor := bucket.Cursor()
-
-		for k, v := cursor.Seek(nil); k != nil; k, v = cursor.Next() {
-			oldKey := string(k)
-			newKey := strings.ToLower(oldKey)
-			if newKey != oldKey {
-				err := cursor.Delete()
-				if err != nil {
-					return err
-				}
-				err = bucket.Put([]byte(newKey), v)
-				if err != nil {
-					return err
-				}
-			}
-		}
-
-		return nil
-	})
-}
-
 /* ---------------------------- helper functions ---------------------------- */
 func resourcesPrefix(kind model.Kind) []byte {
-	return []byte(fmt.Sprintf("%s|", strings.ToLower(string(kind))))
+	return []byte(fmt.Sprintf("%s|", kind))
 }
 
 func resourceKey(kind model.Kind, name string) []byte {
-	return []byte(fmt.Sprintf("%s|%s", strings.ToLower(string(kind)), strings.ToLower(name)))
+	return []byte(fmt.Sprintf("%s|%s", kind, name))
 }
 
 func agentKey(id string) []byte {
@@ -992,4 +968,70 @@ func deleteResource[R model.Resource](ctx context.Context, s *boltstore, kind mo
 	}
 
 	return emptyResource, exists, nil
+}
+
+func getNameFromResource[R model.Resource](ctx context.Context, v []byte) (string, error) {
+	var resource R
+	if err := json.Unmarshal(v, &resource); err != nil {
+		return "", err
+	}
+	return resource.Name(), nil
+}
+
+func (s *boltstore) migrateBackToCaseSensitive(ctx context.Context) error {
+	return s.db.Update(func(tx *bbolt.Tx) error {
+		bucket := resourcesBucket(tx)
+		cursor := bucket.Cursor()
+
+		for k, v := cursor.Seek(nil); k != nil; k, v = cursor.Next() {
+			oldKey := string(k)
+			kind, _, found := strings.Cut(oldKey, "|")
+			if !found {
+				continue
+			}
+			foundKind := model.ParseKind(string(kind))
+			if foundKind == model.KindUnknown {
+				continue
+			}
+
+			var foundName string
+			var err error
+			switch foundKind {
+			case model.KindAgentVersion:
+				foundName, err = getNameFromResource[*model.AgentVersion](ctx, v)
+			case model.KindConfiguration:
+				foundName, err = getNameFromResource[*model.Configuration](ctx, v)
+			case model.KindSource:
+				foundName, err = getNameFromResource[*model.Source](ctx, v)
+			case model.KindSourceType:
+				foundName, err = getNameFromResource[*model.SourceType](ctx, v)
+			case model.KindProcessor:
+				foundName, err = getNameFromResource[*model.Processor](ctx, v)
+			case model.KindProcessorType:
+				foundName, err = getNameFromResource[*model.ProcessorType](ctx, v)
+			case model.KindDestination:
+				foundName, err = getNameFromResource[*model.Destination](ctx, v)
+			case model.KindDestinationType:
+				foundName, err = getNameFromResource[*model.DestinationType](ctx, v)
+			}
+
+			if err != nil {
+				continue
+			}
+
+			newKey := fmt.Sprintf("%s|%s", foundKind, foundName)
+			if newKey != oldKey {
+				err := cursor.Delete()
+				if err != nil {
+					return err
+				}
+				err = bucket.Put([]byte(newKey), v)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
 }

@@ -569,11 +569,11 @@ func TestIndexSelect(t *testing.T) {
 			expect: []string{"3", "4"},
 		},
 		{
-			name: "bindplane matches 1,2,6",
+			name: "bindplane matches 1,2",
 			selector: map[string]string{
 				"app": "bindplane",
 			},
-			expect: []string{"1", "2", "6"},
+			expect: []string{"1", "2"},
 		},
 		{
 			name: "bindplane,production matches 1",
@@ -584,12 +584,26 @@ func TestIndexSelect(t *testing.T) {
 			expect: []string{"1"},
 		},
 		{
-			name: "bindplane,Development matches 2,6 case-insensitive",
+			name: "bindplane,Development matches 2,6 case-sensitive",
 			selector: map[string]string{
 				"app": "bindplane",
 				"env": "development",
 			},
-			expect: []string{"2", "6"},
+			expect: []string{"2"},
+		},
+		{
+			name: "APP,BINDPLANE matches 6 case-sensitive",
+			selector: map[string]string{
+				"APP": "BINDPLANE",
+			},
+			expect: []string{"6"},
+		},
+		{
+			name: "env,Development matches 6 case-sensitive",
+			selector: map[string]string{
+				"env": "Development",
+			},
+			expect: []string{"6"},
 		},
 	}
 
