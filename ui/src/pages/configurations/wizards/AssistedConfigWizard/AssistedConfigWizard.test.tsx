@@ -52,6 +52,7 @@ const dummySourceType: SourceTypesQuery["sourceTypes"][0] = {
           sectionHeader: null,
           gridColumns: null,
           metricCategories: null,
+          multiline: null,
         },
       },
       {
@@ -72,6 +73,7 @@ const dummySourceType: SourceTypesQuery["sourceTypes"][0] = {
           sectionHeader: null,
           gridColumns: null,
           metricCategories: null,
+          multiline: null,
         },
       },
     ],
@@ -114,6 +116,7 @@ const dummyDestinationType: DestinationsAndTypesQuery["destinationTypes"][0] = {
           sectionHeader: null,
           gridColumns: null,
           metricCategories: null,
+          multiline: null,
         },
       },
       {
@@ -134,6 +137,7 @@ const dummyDestinationType: DestinationsAndTypesQuery["destinationTypes"][0] = {
           sectionHeader: null,
           gridColumns: null,
           metricCategories: null,
+          multiline: null,
         },
       },
     ],

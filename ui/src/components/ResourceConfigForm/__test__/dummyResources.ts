@@ -92,6 +92,7 @@ export const boolDefaultFalseDef: ParameterDefinition = {
     sectionHeader: null,
     gridColumns: null,
     metricCategories: null,
+    multiline: null,
   },
 
   type: ParameterType.Bool,
@@ -114,6 +115,7 @@ export const intDef: ParameterDefinition = {
     sectionHeader: null,
     gridColumns: null,
     metricCategories: null,
+    multiline: null,
   },
 
   type: ParameterType.Int,
@@ -133,6 +135,7 @@ export const relevantIfDef: ParameterDefinition = {
     sectionHeader: null,
     gridColumns: null,
     metricCategories: null,
+    multiline: null,
   },
 
   type: ParameterType.String,
