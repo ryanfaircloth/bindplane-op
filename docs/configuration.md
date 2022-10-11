@@ -435,7 +435,7 @@ The configuration's `server` section contains the following authentication optio
 
 **LDAP / Active Directory Configuration**
 
-The configuration's `server.ldapConfig` secttion contains the following options for
+The configuration's `server.ldapConfig` section contains the following options for
 configuration  LDAP and Active Directory.
 
 | Option              | Description |
@@ -545,7 +545,7 @@ server:
           ca: /etc/bindplane/tls/ca.crt
 ```
 
-*CA certificate is not required if the ca is already trusted by the underlying operatiing system. Alternatively, `tls.insecure: true` could be set to skip TLS verification.
+*CA certificate is not required if the ca is already trusted by the underlying operating system. Alternatively, `tls.insecure: true` could be set to skip TLS verification.
 
 **Mutual TLS**
 
