@@ -238,8 +238,12 @@ func TestFeatures(t *testing.T) {
 			expectFeatures: AgentSupportsUpgrade | AgentSupportsSnapshots,
 		},
 		{
+			version:        "1.9.2",
+			expectFeatures: AgentSupportsUpgrade | AgentSupportsSnapshots | AgentSupportsMeasurements,
+		},
+		{
 			version:        "2.0.0",
-			expectFeatures: AgentSupportsUpgrade | AgentSupportsSnapshots,
+			expectFeatures: AgentSupportsUpgrade | AgentSupportsSnapshots | AgentSupportsMeasurements,
 		},
 	}
 	for _, test := range tests {

@@ -10,6 +10,7 @@ import (
 	"github.com/observiq/bindplane-op/internal/otlp/record"
 	"github.com/observiq/bindplane-op/internal/store/search"
 	"github.com/observiq/bindplane-op/model"
+	"github.com/observiq/bindplane-op/model/graph"
 )
 
 type AgentChange struct {
@@ -49,6 +50,23 @@ type Configurations struct {
 type DestinationWithType struct {
 	Destination     *model.Destination     `json:"destination"`
 	DestinationType *model.DestinationType `json:"destinationType"`
+}
+
+type GraphMetric struct {
+	Name         string  `json:"name"`
+	NodeID       string  `json:"nodeID"`
+	PipelineType string  `json:"pipelineType"`
+	Value        float64 `json:"value"`
+	Unit         string  `json:"unit"`
+	AgentID      *string `json:"agentID"`
+}
+
+type GraphMetrics struct {
+	Metrics []*GraphMetric `json:"metrics"`
+}
+
+type OverviewPage struct {
+	Graph *graph.Graph `json:"graph"`
 }
 
 type Snapshot struct {

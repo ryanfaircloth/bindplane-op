@@ -74,7 +74,7 @@ interface CreateProcessorSelectViewProps {
   // The supported telemetry types of the source that the processor will be added to
   telemetryTypes?: string[];
 
-  onBack: () => void;
+  onBack?: () => void;
   onSelect: (pt: ProcessorType) => void;
 }
 
@@ -149,7 +149,7 @@ export const CreateProcessorSelectView: React.FC<CreateProcessorSelectViewProps>
               ))}
           </ResourceTypeButtonContainer>
         </ContentSection>
-        <ActionsSection>{backButton}</ActionsSection>
+        {onBack && <ActionsSection>{backButton} </ActionsSection>}
       </>
     );
   };

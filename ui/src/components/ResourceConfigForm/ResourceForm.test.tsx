@@ -245,7 +245,6 @@ describe("ResourceForm component", () => {
       />
     );
 
-    // TODO dsvanlani
     screen.getByText("Save").click();
     screen.getByText("Required.");
 

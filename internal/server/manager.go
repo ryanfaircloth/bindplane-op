@@ -59,6 +59,8 @@ type Manager interface {
 	VerifySecretKey(ctx context.Context, secretKey string) bool
 	// ResourceStore provides access to the store to render configurations
 	ResourceStore() model.ResourceStore
+	// BindPlaneConfiguration provides access to the config to render configurations
+	BindPlaneConfiguration() model.BindPlaneConfiguration
 	// RequestReport sends report configuration to the specified agent
 	RequestReport(ctx context.Context, agentID string, configuration report.Configuration) error
 	// AgentVersion returns information about a version of an agent
@@ -70,6 +72,7 @@ type Manager interface {
 type manager struct {
 	// agentCleanupTicker   *time.Ticker
 	// agentHeartbeatTicker *time.Ticker
+	config    *common.Server
 	store     store.Store
 	versions  agent.Versions
 	logger    *zap.Logger
@@ -84,6 +87,7 @@ func NewManager(config *common.Server, store store.Store, versions agent.Version
 	return &manager{
 		// agentCleanupTicker:   time.NewTicker(AgentCleanupInterval),
 		// agentHeartbeatTicker: time.NewTicker(AgentHeartbeatInterval),
+		config:    config,
 		store:     store,
 		versions:  versions,
 		logger:    logger,
@@ -317,6 +321,11 @@ func (m *manager) VerifySecretKey(ctx context.Context, secretKey string) bool {
 // ResourceStore provides access to the store to render configurations
 func (m *manager) ResourceStore() model.ResourceStore {
 	return m.store
+}
+
+// BindPlaneConfiguration provides access to the config to render configurations
+func (m *manager) BindPlaneConfiguration() model.BindPlaneConfiguration {
+	return m.config
 }
 
 // RequestReport sends report configuration to the specified agent

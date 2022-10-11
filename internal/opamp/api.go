@@ -296,7 +296,7 @@ func (s *opampServer) UpdateAgent(ctx context.Context, agent *model.Agent, updat
 		agentConfiguration = &observiq.AgentConfiguration{}
 	}
 
-	newConfiguration, err := s.updatedConfiguration(ctx, agent.Features(), agentConfiguration, updates)
+	newConfiguration, err := s.updatedConfiguration(ctx, agent, agentConfiguration, updates)
 	if err != nil {
 		return fmt.Errorf("unable to get the new configuration for agent [%s]: %w", agent.ID, err)
 	}
@@ -478,7 +478,7 @@ func (s *opampServer) updateAgentConfig(ctx context.Context, agent *model.Agent,
 		return fmt.Errorf("unable to get agent updates [%s]: %w", agent.ID, err)
 	}
 
-	serverConfiguration, err := s.updatedConfiguration(ctx, agent.Features(), agentConfiguration, updates)
+	serverConfiguration, err := s.updatedConfiguration(ctx, agent, agentConfiguration, updates)
 	if err != nil {
 		return fmt.Errorf("unable to compute the updated agent configuration [%s]: %w", agent.ID, err)
 	}
@@ -511,10 +511,10 @@ func (s *opampServer) updateAgentConfig(ctx context.Context, agent *model.Agent,
 	return nil
 }
 
-func (s *opampServer) updatedConfiguration(ctx context.Context, agentFeatures model.AgentFeatures, agentConfiguration *observiq.AgentConfiguration, updates *server.AgentUpdates) (diff observiq.AgentConfiguration, err error) {
+func (s *opampServer) updatedConfiguration(ctx context.Context, agent *model.Agent, agentConfiguration *observiq.AgentConfiguration, updates *server.AgentUpdates) (diff observiq.AgentConfiguration, err error) {
 	// Configuration => collector.yaml
 	if updates.Configuration != nil {
-		newCollectorYAML, err := updates.Configuration.Render(ctx, agentFeatures, s.manager.ResourceStore())
+		newCollectorYAML, err := updates.Configuration.Render(ctx, agent, s.manager.BindPlaneConfiguration(), s.manager.ResourceStore())
 		if err != nil {
 			return diff, err
 		}

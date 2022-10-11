@@ -76,7 +76,7 @@ interface ResourceConfigurationViewProps {
   onDelete?: () => void;
 
   // The callback when the resource is saved.
-  onSave?: (formValues: { [key: string]: any }) => void;
+  onSave?: (formValues: FormValues) => void;
   // The copy on the primary button, defaults to "Save"
   saveButtonLabel?: string;
 
@@ -211,7 +211,6 @@ const ResourceConfigurationViewComponent: React.FC<ComponentProps> = ({
           onBack={handleReturnToMain}
           onSave={handleNewProcessorSave!}
           processorType={newProcessorType!}
-          parameterDefinitions={parameterDefinitions}
         />
       );
     case Page.EDIT_PROCESSOR:

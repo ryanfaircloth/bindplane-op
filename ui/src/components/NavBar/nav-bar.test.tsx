@@ -11,6 +11,10 @@ describe("NavBar", () => {
       </MemoryRouter>
     );
 
+    const overviewButton = screen.getByText("Overview");
+    expect(overviewButton).toBeInTheDocument();
+    expect(overviewButton).toHaveAttribute("href", "/overview");
+
     const agentsButton = screen.getByText("Agents");
     expect(agentsButton).toBeInTheDocument();
     expect(agentsButton).toHaveAttribute("href", "/agents");

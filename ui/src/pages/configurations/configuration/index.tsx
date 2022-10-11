@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 import { IconButton, Typography } from "@mui/material";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CardContainer } from "../../../components/CardContainer";
 import {
@@ -20,6 +20,8 @@ import { DestinationsSection } from "./DestinationsSection";
 import { useSnackbar } from "notistack";
 import { withRequireLogin } from "../../../contexts/RequireLogin";
 import { withNavBar } from "../../../components/NavBar";
+import { PipelineGraph } from "../../../components/PipelineGraph/PipelineGraph";
+import { ConfigurationPageContextProvider } from "./ConfigurationPageContext";
 
 import styles from "./configuration-page.module.scss";
 
@@ -56,9 +58,41 @@ gql`
             name
             value
           }
+          processors {
+            type
+            parameters {
+              name
+              value
+            }
+          }
         }
         selector {
           matchLabels
+        }
+      }
+      graph {
+        sources {
+          id
+          type
+          label
+          attributes
+        }
+        intermediates {
+          id
+          type
+          label
+          attributes
+        }
+        targets {
+          id
+          type
+          label
+          attributes
+        }
+        edges {
+          id
+          source
+          target
         }
       }
     }
@@ -81,11 +115,28 @@ const ConfigPageContent: React.FC = () => {
   }
 
   const [showApplyDialog, setShowApply] = useState(false);
+  const [addSourceDialogOpen, setAddSourceDialogOpen] = useState(false);
+  const [addDestDialogOpen, setAddDestDialogOpen] = useState(false);
 
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
   const isRaw = (data?.configuration?.spec?.raw?.length || 0) > 0;
+  const hasPipeline = useMemo(() => {
+    if (
+      data?.configuration?.spec == null ||
+      data?.configuration.spec.sources == null ||
+      data?.configuration.spec.destinations == null
+    ) {
+      return false;
+    }
+
+    return (
+      data.configuration.spec.sources.length > 0 &&
+      data.configuration.spec.destinations.length > 0
+    );
+  }, [data?.configuration?.spec]);
+
   function openApplyDialog() {
     setShowApply(true);
   }
@@ -112,7 +163,12 @@ const ConfigPageContent: React.FC = () => {
   }
 
   return (
-    <>
+    <ConfigurationPageContextProvider
+      configuration={data.configuration!}
+      setAddDestDialogOpen={setAddDestDialogOpen}
+      setAddSourceDialogOpen={setAddSourceDialogOpen}
+      refetchConfiguration={refetch}
+    >
       <section>
         <DetailsSection
           configuration={data.configuration}
@@ -137,11 +193,19 @@ const ConfigPageContent: React.FC = () => {
         </section>
       )}
 
+      {!isRaw && hasPipeline && (
+        <section>
+          <PipelineGraph />
+        </section>
+      )}
+
       {!isRaw && (
         <section>
           <SourcesSection
             configuration={data.configuration}
             refetch={refetch}
+            setAddDialogOpen={setAddSourceDialogOpen}
+            addDialogOpen={addSourceDialogOpen}
           />
         </section>
       )}
@@ -152,6 +216,8 @@ const ConfigPageContent: React.FC = () => {
             configuration={data.configuration}
             destinations={data.configuration.spec.destinations ?? []}
             refetch={refetch}
+            setAddDialogOpen={setAddDestDialogOpen}
+            addDialogOpen={addDestDialogOpen}
           />
         </section>
       )}
@@ -190,7 +256,7 @@ const ConfigPageContent: React.FC = () => {
           onCancel={closeApplyDialog}
         />
       )}
-    </>
+    </ConfigurationPageContextProvider>
   );
 };
 

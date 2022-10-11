@@ -382,14 +382,14 @@ func TestInitDB(t *testing.T) {
 			require.False(t, db.IsReadOnly(), "expected the boltstore to be read write")
 			require.NoError(t, db.Close())
 
-			// cursor count increases by 2 for every empty bucket created
-			// a count of 6 means we have three buckets.
-			bucketCount := 3
+			// cursor count increases by 2 for every empty bucket accessed, including sub-buckets
+			// a count of 16 means we accessed 8 buckets.
+			bucketCount := 8
 			require.Equal(t, bucketCount*2, db.Stats().TxStats.CursorCount)
 
-			// InitDB creates three buckets: Resources, Tasks, Agents
+			// InitDB creates buckets: Resources, Tasks, Agents, Measurements, and sub-buckets in measurements for each metric
 			_ = db.Update(func(tx *bbolt.Tx) error {
-				for _, bucket := range []string{bucketResources, bucketTasks, bucketAgents} {
+				for _, bucket := range []string{bucketResources, bucketTasks, bucketAgents, bucketMeasurements} {
 					// Deleting the bucket
 					err := tx.DeleteBucket([]byte(bucket))
 					require.NoError(t, err, "expected bucket %s to exist", bucket)
@@ -489,6 +489,17 @@ func TestBoltstoreUpsertAgents(t *testing.T) {
 	defer cancel()
 	store := NewBoltStore(ctx, db, testOptions, zap.NewNop())
 	runTestUpsertAgents(t, store)
+}
+
+func TestBoltstoreMeasurements(t *testing.T) {
+	db, err := initTestDB(t)
+	require.NoError(t, err)
+	defer cleanupTestDB(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	store := NewBoltStore(ctx, db, testOptions, zap.NewNop())
+	runTestMeasurements(t, store)
 }
 
 /* ------------------------ SETUP + HELPER FUNCTIONS ------------------------ */

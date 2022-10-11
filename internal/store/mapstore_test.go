@@ -172,3 +172,10 @@ func TestMapstoreUpsertAgents(t *testing.T) {
 	store := NewMapStore(ctx, testOptions, zap.NewNop())
 	runTestUpsertAgents(t, store)
 }
+
+// func TestMapstoreMeasurements(t *testing.T) {
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	defer cancel()
+// 	store := NewMapStore(ctx, testOptions, zap.NewNop())
+// 	runTestMeasurements(t, store)
+// }

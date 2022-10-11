@@ -50,7 +50,7 @@ spec:
         - Logs
 ```
 
-**Configuration with Embeded Processor**
+**Configuration with Embedded Processor**
 
 ```yaml
 apiVersion: bindplane.observiq.com/v1

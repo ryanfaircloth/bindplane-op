@@ -289,3 +289,14 @@ func ConvertTraces(traces ptrace.Traces) []*Trace {
 	}
 	return records
 }
+
+// AttributeString returns an Attribute as a string or the defaultValue if either an attribute with that name does not
+// exist or an attribute with that name does exist but is not a string.
+func (m *Metric) AttributeString(name string, defaultValue string) string {
+	if id, ok := m.Attributes[name]; ok {
+		if str, ok := id.(string); ok {
+			return str
+		}
+	}
+	return defaultValue
+}

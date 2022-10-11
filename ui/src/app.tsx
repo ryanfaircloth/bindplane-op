@@ -17,6 +17,7 @@ import { SnackbarProvider } from "notistack";
 import { ComponentsPage } from "./pages/components";
 import { Version } from "./components/Version";
 import { LoginPage } from "./pages/login";
+import { OverviewPage } from "./pages/overview/OverviewPage";
 
 export const App: React.FC = () => {
   return (
@@ -26,6 +27,7 @@ export const App: React.FC = () => {
           <SnackbarProvider>
             <BrowserRouter>
               <Routes>
+                <Route path="/overview" element={<OverviewPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 {/* --------------- The following routes require authentication -------------- */}
                 {/* No path at "/", reroute to agents */}

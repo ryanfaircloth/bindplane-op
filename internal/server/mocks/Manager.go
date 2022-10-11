@@ -127,6 +127,22 @@ func (_m *Manager) ResourceStore() model.ResourceStore {
 	return r0
 }
 
+// BindPlaneConfiguration provides a mock function with given fields:
+func (_m *Manager) BindPlaneConfiguration() model.BindPlaneConfiguration {
+	ret := _m.Called()
+
+	var r0 model.BindPlaneConfiguration
+	if rf, ok := ret.Get(0).(func() model.BindPlaneConfiguration); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(model.BindPlaneConfiguration)
+		}
+	}
+
+	return r0
+}
+
 // Start provides a mock function with given fields: ctx
 func (_m *Manager) Start(ctx context.Context) {
 	_m.Called(ctx)

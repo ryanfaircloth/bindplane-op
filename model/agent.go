@@ -98,7 +98,13 @@ const (
 
 	// AgentSupportsSnapshots will be set if this Agent can send snapshots of recent telemetry signals.
 	AgentSupportsSnapshots
+
+	// AgentSupportsMeasurements will be set if this Agent supports the throughputmeasurement processor for measuring throughput.
+	AgentSupportsMeasurements
 )
+
+// AgentFeaturesDefault is the default bitmask of features supported by Agents
+const AgentFeaturesDefault = AgentSupportsUpgrade
 
 // Agent TODO(doc)
 type Agent struct {
@@ -224,6 +230,7 @@ func durationDisplay(t *time.Time) string {
 
 var v1_6_0 = semver.Parse("1.6.0")
 var v1_8_0 = semver.Parse("1.8.0")
+var v1_9_2 = semver.Parse("1.9.2")
 
 // Features returns a bitmask of the features supported by this Agent
 func (a *Agent) Features() AgentFeatures {
@@ -231,6 +238,9 @@ func (a *Agent) Features() AgentFeatures {
 
 	// arrange version checks newest first
 	switch {
+	// 1.9.2 introduced the throughputmeasurement processor
+	case !agentVersion.IsOlder(v1_9_2):
+		return AgentSupportsUpgrade | AgentSupportsSnapshots | AgentSupportsMeasurements
 
 	// 1.8.0 introduced snapshots
 	case !agentVersion.IsOlder(v1_8_0):

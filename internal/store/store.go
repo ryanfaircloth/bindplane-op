@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/observiq/bindplane-op/internal/eventbus"
 	"github.com/observiq/bindplane-op/internal/store/search"
+	"github.com/observiq/bindplane-op/internal/store/stats"
 	"github.com/observiq/bindplane-op/model"
 	embedded "github.com/observiq/bindplane-op/resources"
 	"go.uber.org/zap"
@@ -111,6 +112,9 @@ type Store interface {
 
 	// UserSessions must implement the gorilla sessions.Store interface
 	UserSessions() sessions.Store
+
+	// Measurements stores stats for agents and configurations
+	Measurements() stats.Measurements
 }
 
 // AgentUpdater is given the current Agent model (possibly empty except for ID) and should update the Agent directly. We

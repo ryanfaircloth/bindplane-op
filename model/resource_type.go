@@ -103,21 +103,21 @@ func (rt *ResourceType) eval(resource parameterizedResource, errorHandler Templa
 
 	// add multi-pipelines components
 	logsMetrics := rt.evalOutput(&rt.Spec.LogsMetrics, resource, errorHandler)
-	result[otel.Logs].Add(logsMetrics)
-	result[otel.Metrics].Add(logsMetrics)
+	result[otel.Logs].Append(logsMetrics)
+	result[otel.Metrics].Append(logsMetrics)
 
 	logsTraces := rt.evalOutput(&rt.Spec.LogsTraces, resource, errorHandler)
-	result[otel.Logs].Add(logsTraces)
-	result[otel.Traces].Add(logsTraces)
+	result[otel.Logs].Append(logsTraces)
+	result[otel.Traces].Append(logsTraces)
 
 	metricsTraces := rt.evalOutput(&rt.Spec.MetricsTraces, resource, errorHandler)
-	result[otel.Metrics].Add(metricsTraces)
-	result[otel.Traces].Add(metricsTraces)
+	result[otel.Metrics].Append(metricsTraces)
+	result[otel.Traces].Append(metricsTraces)
 
 	logsMetricsTraces := rt.evalOutput(&rt.Spec.LogsMetricsTraces, resource, errorHandler)
-	result[otel.Logs].Add(logsMetricsTraces)
-	result[otel.Metrics].Add(logsMetricsTraces)
-	result[otel.Traces].Add(logsMetricsTraces)
+	result[otel.Logs].Append(logsMetricsTraces)
+	result[otel.Metrics].Append(logsMetricsTraces)
+	result[otel.Traces].Append(logsMetricsTraces)
 
 	return result
 }

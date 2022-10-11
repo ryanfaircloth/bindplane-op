@@ -6,14 +6,23 @@ import {
   GridDensityTypes,
   GridRowParams,
   GridSelectionModel,
+  GridValueFormatterParams,
   GridValueGetterParams,
 } from "@mui/x-data-grid";
 import React, { memo, useEffect, useState } from "react";
 import { renderAgentLabels, renderAgentStatus } from "../utils";
 import { Link } from "react-router-dom";
+import { AgentsTableMetricsQuery } from "../../../graphql/generated";
+
 import { AgentStatus } from "../../../types/agents";
 import { isFunction } from "lodash";
-import { AgentsTableAgent } from '.';
+import { AgentsTableAgent } from ".";
+import { formatMetric } from "../../../utils/graph/utils";
+import {
+  DEFAULT_AGENTS_TABLE_PERIOD,
+  TELEMETRY_SIZE_METRICS,
+  TELEMETRY_TYPES,
+} from "../../MeasurementControlBar/MeasurementControlBar";
 
 export enum AgentsTableField {
   NAME = "name",
@@ -22,6 +31,9 @@ export enum AgentsTableField {
   CONFIGURATION = "configuration",
   OPERATING_SYSTEM = "operatingSystem",
   LABELS = "labels",
+  LOGS = "logs",
+  METRICS = "metrics",
+  TRACES = "traces",
 }
 
 interface AgentsDataGridProps {
@@ -32,6 +44,7 @@ interface AgentsDataGridProps {
   loading: boolean;
   minHeight?: string;
   agents?: AgentsTableAgent[];
+  agentMetrics?: AgentsTableMetricsQuery;
   columnFields?: AgentsTableField[];
 }
 
@@ -42,6 +55,7 @@ const AgentsDataGridComponent: React.FC<AgentsDataGridProps> = ({
   minHeight,
   loading,
   agents,
+  agentMetrics,
   columnFields,
   density,
 }) => {
@@ -93,12 +107,18 @@ const AgentsDataGridComponent: React.FC<AgentsDataGridProps> = ({
           sortable: false,
           field: AgentsTableField.LABELS,
           headerName: "Labels",
-          width: 300,
+          width: 200,
           renderCell: renderLabelDataCell,
           valueGetter: (params: GridValueGetterParams<AgentsTableAgent>) => {
             return params.row.labels;
           },
         };
+      case AgentsTableField.LOGS:
+        return createMetricRateColumn(field, "logs", 100, agentMetrics);
+      case AgentsTableField.METRICS:
+        return createMetricRateColumn(field, "metrics", 100, agentMetrics);
+      case AgentsTableField.TRACES:
+        return createMetricRateColumn(field, "traces", 100, agentMetrics);
       default:
         return {
           field: AgentsTableField.NAME,
@@ -167,6 +187,56 @@ function renderStatusDataCell(
   return renderAgentStatus(cellParams.value);
 }
 
+function createMetricRateColumn(
+  field: string,
+  telemetryType: string,
+  width: number,
+  agentMetrics?: AgentsTableMetricsQuery
+): GridColumns[0] {
+  return {
+    field,
+    width: width,
+    headerName: TELEMETRY_TYPES[telemetryType],
+    valueGetter: (params: GridValueGetterParams) => {
+      if (agentMetrics == null) {
+        return "";
+      }
+      // should probably have a lookup table here rather than interpolate in two places
+      const metricName =  TELEMETRY_SIZE_METRICS[telemetryType];
+      const agentName = params.id;
+
+      // need to get all the metrics for this agent?!?
+      const metrics = agentMetrics.agentMetrics.metrics.filter(
+        (m) =>
+          m.name === metricName &&
+          m.agentID! === agentName &&
+          m.nodeID.startsWith("destination")
+      );
+      if (metrics == null) {
+        return 0;
+      }
+      // to make this sortable, we use the raw value and provide a valueFormatter implementation to show units
+      return metrics.reduce((a, b) => a + b.value, 0);
+    },
+    valueFormatter: (params: GridValueFormatterParams<number>): string => {
+      if (params.value === 0) {
+        return "";
+      }
+
+      const metricName =  TELEMETRY_SIZE_METRICS[telemetryType];
+      const agentName = params.id;
+
+      const metrics = agentMetrics?.agentMetrics.metrics.find(
+        (m) => m.name === metricName && m.agentID! === agentName
+      );
+      return formatMetric(
+        { value: params.value, unit: metrics?.unit || "B/s" },
+        DEFAULT_AGENTS_TABLE_PERIOD
+      );
+    },
+  };
+}
+
 AgentsDataGridComponent.defaultProps = {
   minHeight: "calc(100vh - 300px)",
   columnFields: [
@@ -174,6 +244,9 @@ AgentsDataGridComponent.defaultProps = {
     AgentsTableField.STATUS,
     AgentsTableField.VERSION,
     AgentsTableField.CONFIGURATION,
+    AgentsTableField.LOGS,
+    AgentsTableField.METRICS,
+    AgentsTableField.TRACES,
     AgentsTableField.OPERATING_SYSTEM,
     AgentsTableField.LABELS,
   ],

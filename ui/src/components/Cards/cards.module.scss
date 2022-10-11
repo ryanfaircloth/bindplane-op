@@ -1,0 +1,106 @@
+@use '../../styles/colors';
+
+.ui-control-card {
+  cursor: pointer;
+
+  background-color: colors.$summer-sky;
+  border-radius: 2ch;
+}
+
+.ui-control-text {
+  color: #fff;
+  font-weight: 700;
+
+  transition: background-color 0.2s ease-in-out;
+}
+
+.ui-control-icon {
+  stroke: #fff;
+}
+
+.ui-control-card:hover {
+  box-shadow: 0px 2px 4px -1px rgba(0, 0, 0, 0.2),
+    0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12);
+}
+
+.icon {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 30px;
+
+  width: 40px;
+  height: 40px;
+}
+
+.resource-card {
+  width: 150px;
+  height: 100px;
+  cursor: pointer;
+
+  border-radius: 4px;
+
+  background-color: #fff;
+
+  transition: background-color 0.2s ease-in-out;
+}
+
+.resource-card:hover {
+  background-color: colors.$gray;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.processor-card {
+  height: 50px;
+  width: 100px;
+  background-color: #fff;
+  transition: background-color 0.2s ease-in-out;
+
+  padding: 13px;
+}
+
+.button {
+  width: 150px;
+  height: 120px;
+  cursor: pointer;
+
+  background-color: #fff;
+
+  transition: background-color 0.2s ease-in-out;
+}
+
+.count-chip {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  background-color: colors.$white;
+  border: 1px solid colors.$summer-sky;
+
+  height: 26px;
+  width: 26px;
+}
+
+.count-chip-label {
+  font-size: 16px;
+  color: colors.$summer-sky;
+  padding-left: unset;
+  padding-right: unset;
+}
+
+.overview-count-chip {
+  position: absolute;
+  top: -12px;
+  left: -8px;
+  background-color: colors.$white;
+  border: 1px solid colors.$summer-sky;
+
+  height: 26px;
+}
+
+.overview-count-chip-label {
+  font-size: 16px;
+  color: colors.$summer-sky;
+}
+
+.disabled {
+  opacity: 0.4;
+}

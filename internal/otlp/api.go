@@ -18,6 +18,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/observiq/bindplane-op/internal/otlp/record"
@@ -68,12 +69,37 @@ func metrics(c *gin.Context, bindplane server.BindPlane) {
 	}
 
 	metrics := record.ConvertMetrics(otlpMetrics.Metrics())
-	if err := relay(c, bindplane.Relayers().Metrics, metrics); err != nil {
-		c.Error(err)
-		return
+
+	// could be snapshot metrics or agent metrics
+	if isSnapshotMetrics(c, metrics) {
+		if err := relay(c, bindplane.Relayers().Metrics, metrics); err != nil {
+			c.Error(err)
+			return
+		}
+	} else if metrics := getAgentMetrics(c, metrics); len(metrics) > 0 {
+		measurements := bindplane.Store().Measurements()
+		if measurements != nil {
+			if err := measurements.SaveAgentMetrics(c, metrics); err != nil {
+				c.Error(err)
+				return
+			}
+		}
+
 	}
 
 	c.Status(200)
+}
+
+func getAgentMetrics(c *gin.Context, metrics []*record.Metric) []*record.Metric {
+	result := []*record.Metric{}
+
+	for _, metric := range metrics {
+		if strings.HasPrefix(metric.Name, "otelcol_processor_throughputmeasurement_") {
+			result = append(result, metric)
+		}
+	}
+
+	return result
 }
 
 func traces(c *gin.Context, bindplane server.BindPlane) {
@@ -99,6 +125,11 @@ type unmarshalProto interface {
 	UnmarshalProto(data []byte) error
 }
 
+func isSnapshotMetrics(c *gin.Context, metrics []*record.Metric) bool {
+	sessionID := c.Request.Header.Get("X-Bindplane-Session-Id")
+	return sessionID != ""
+}
+
 func otlpParse[T unmarshalProto](c *gin.Context, bindplane server.BindPlane, result T) error {
 	reader := c.Request.Body
 
@@ -112,7 +143,7 @@ func otlpParse[T unmarshalProto](c *gin.Context, bindplane server.BindPlane, res
 	// X-Bindplane-Secret-Key
 	// X-Bindplane-Session-Id
 
-	if c.ContentType() != "application/protobuf" {
+	if c.ContentType() != "application/protobuf" && c.ContentType() != "application/x-protobuf" {
 		return fmt.Errorf("otlp endpoints do not support content-type %s", c.ContentType())
 	}
 

@@ -83,6 +83,48 @@ exports[`NavBar renders correctly 1`] = `
     >
       <a
         className="nav-link"
+        href="/overview"
+        onClick={[Function]}
+      >
+        <svg
+          className="icon"
+          fill="none"
+          height="20"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+          width="20"
+        >
+          <rect
+            height="7"
+            width="7"
+            x="3"
+            y="3"
+          />
+          <rect
+            height="7"
+            width="7"
+            x="14"
+            y="3"
+          />
+          <rect
+            height="7"
+            width="7"
+            x="14"
+            y="14"
+          />
+          <rect
+            height="7"
+            width="7"
+            x="3"
+            y="14"
+          />
+        </svg>
+        Overview
+      </a>
+      <a
+        className="nav-link"
         href="/agents"
         onClick={[Function]}
       >

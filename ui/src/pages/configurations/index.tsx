@@ -4,10 +4,10 @@ import { Link } from "react-router-dom";
 import { CardContainer } from "../../components/CardContainer";
 import { ConfigurationsTable } from "../../components/Tables/ConfigurationTable";
 import { PlusCircleIcon } from "../../components/Icons";
-
-import mixins from "../../styles/mixins.module.scss";
 import { withRequireLogin } from "../../contexts/RequireLogin";
 import { withNavBar } from "../../components/NavBar";
+
+import mixins from "../../styles/mixins.module.scss";
 
 const ConfigurationsPageContent: React.FC = () => {
   return (

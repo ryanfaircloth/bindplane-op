@@ -33,6 +33,7 @@ import (
 	"github.com/observiq/bindplane-op/internal/store"
 	"github.com/observiq/bindplane-op/internal/util/semver"
 	"github.com/observiq/bindplane-op/model"
+	"github.com/observiq/bindplane-op/model/graph"
 	"github.com/observiq/bindplane-op/model/otel"
 	"go.uber.org/zap"
 )
@@ -118,6 +119,11 @@ func (r *configurationResolver) AgentCount(ctx context.Context, obj *model.Confi
 	return &count, nil
 }
 
+// Graph is the resolver for the graph field.
+func (r *configurationResolver) Graph(ctx context.Context, obj *model.Configuration) (*graph.Graph, error) {
+	return obj.Graph(ctx, r.bindplane.Store())
+}
+
 // Kind is the resolver for the kind field.
 func (r *destinationResolver) Kind(ctx context.Context, obj *model.Destination) (string, error) {
 	return string(obj.GetKind()), nil
@@ -185,12 +191,29 @@ func (r *processorTypeResolver) Kind(ctx context.Context, obj *model.ProcessorTy
 	return string(obj.GetKind()), nil
 }
 
+// OverviewPage is the resolver for the overviewPage field.
+func (r *queryResolver) OverviewPage(ctx context.Context) (*model1.OverviewPage, error) {
+	graph, err := overviewGraph(ctx, r.bindplane.Store())
+	if err != nil {
+		return nil, err
+	}
+
+	return &model1.OverviewPage{
+		Graph: graph,
+	}, nil
+}
+
 // Agents is the resolver for the agents field.
 func (r *queryResolver) Agents(ctx context.Context, selector *string, query *string) (*model1.Agents, error) {
 	ctx, span := tracer.Start(ctx, "graphql/Agents")
 	defer span.End()
 
 	options, suggestions, err := r.queryOptionsAndSuggestions(selector, query, r.bindplane.Store().AgentIndex(ctx))
+	if err != nil {
+		r.bindplane.Logger().Error("error getting query options and suggestion", zap.Error(err))
+		return nil, err
+	}
+
 	agents, err := r.bindplane.Store().Agents(ctx, options...)
 	if err != nil {
 		r.bindplane.Logger().Error("error in graphql Agents", zap.Error(err))
@@ -213,6 +236,11 @@ func (r *queryResolver) Agent(ctx context.Context, id string) (*model.Agent, err
 // Configurations is the resolver for the configurations field.
 func (r *queryResolver) Configurations(ctx context.Context, selector *string, query *string) (*model1.Configurations, error) {
 	options, suggestions, err := r.queryOptionsAndSuggestions(selector, query, r.bindplane.Store().ConfigurationIndex(ctx))
+	if err != nil {
+		r.bindplane.Logger().Error("error getting query options and suggestion", zap.Error(err))
+		return nil, err
+	}
+
 	configurations, err := r.bindplane.Store().Configurations(ctx, options...)
 	if err != nil {
 		return nil, err
@@ -315,19 +343,15 @@ func (r *queryResolver) DestinationType(ctx context.Context, name string) (*mode
 
 // Components is the resolver for the components field.
 func (r *queryResolver) Components(ctx context.Context) (*model1.Components, error) {
-	sources := make([]*model.Source, 0)
-	destinations := make([]*model.Destination, 0)
-	var err error
-
-	sources, err = r.bindplane.Store().Sources(ctx)
+	sources, err := r.bindplane.Store().Sources(ctx)
 	if err != nil {
 		return &model1.Components{
-			Destinations: destinations,
+			Destinations: nil,
 			Sources:      sources,
 		}, err
 	}
 
-	destinations, err = r.bindplane.Store().Destinations(ctx)
+	destinations, err := r.bindplane.Store().Destinations(ctx)
 	if err != nil {
 		return &model1.Components{
 			Destinations: destinations,
@@ -424,6 +448,21 @@ func (r *queryResolver) Snapshot(ctx context.Context, agentID string, pipelineTy
 	return signals, nil
 }
 
+// AgentMetrics is the resolver for the agentMetrics field.
+func (r *queryResolver) AgentMetrics(ctx context.Context, period string, ids []string) (*model1.GraphMetrics, error) {
+	return agentMetrics(ctx, r.bindplane, period, ids)
+}
+
+// ConfigurationMetrics is the resolver for the configurationMetrics field.
+func (r *queryResolver) ConfigurationMetrics(ctx context.Context, period string, name *string) (*model1.GraphMetrics, error) {
+	return configurationMetrics(ctx, r.bindplane, period, name)
+}
+
+// OverviewMetrics is the resolver for the overviewMetrics field.
+func (r *queryResolver) OverviewMetrics(ctx context.Context, period string) (*model1.GraphMetrics, error) {
+	return overviewMetrics(ctx, r.bindplane, period)
+}
+
 // Operator is the resolver for the operator field.
 func (r *relevantIfConditionResolver) Operator(ctx context.Context, obj *model.RelevantIfCondition) (model1.RelevantIfOperatorType, error) {
 	return model1.RelevantIfOperatorType(obj.Operator), nil
@@ -494,6 +533,63 @@ func (r *subscriptionResolver) ConfigurationChanges(ctx context.Context, selecto
 
 		return model1.ToConfigurationChanges(events), len(events) > 0
 	})
+
+	return channel, nil
+}
+
+// AgentMetricsSubscription is the resolver for the agentMetricsSubscription field.
+func (r *subscriptionResolver) AgentMetrics(ctx context.Context, period string, ids []string) (<-chan *model1.GraphMetrics, error) {
+	channel := make(chan *model1.GraphMetrics)
+
+	updateTicker := time.NewTicker(agentMetricsUpdateInterval)
+
+	sendMetrics := func() {
+		if metrics, err := agentMetrics(ctx, r.bindplane, period, ids); err != nil {
+			r.bindplane.Logger().Error("failed to get agentMetrics", zap.Error(err))
+		} else {
+			channel <- metrics
+		}
+	}
+
+	go metricSubscriber(ctx, sendMetrics, updateTicker)
+
+	return channel, nil
+}
+
+// ConfigurationMetricsSubscription is the resolver for the configurationMetricsSubscription field.
+func (r *subscriptionResolver) ConfigurationMetrics(ctx context.Context, period string, name *string) (<-chan *model1.GraphMetrics, error) {
+	channel := make(chan *model1.GraphMetrics)
+
+	updateTicker := time.NewTicker(configurationMetricsUpdateInterval)
+
+	sendMetrics := func() {
+		if metrics, err := configurationMetrics(ctx, r.bindplane, period, name); err != nil {
+			r.bindplane.Logger().Error("failed to get configurationMetrics", zap.Error(err))
+		} else {
+			channel <- metrics
+		}
+	}
+
+	go metricSubscriber(ctx, sendMetrics, updateTicker)
+
+	return channel, nil
+}
+
+// OverviewMetricsSubscription is the resolver for the overviewMetricsSubscription field.
+func (r *subscriptionResolver) OverviewMetrics(ctx context.Context, period string) (<-chan *model1.GraphMetrics, error) {
+	channel := make(chan *model1.GraphMetrics)
+
+	updateTicker := time.NewTicker(overviewMetricsUpdateInterval)
+
+	sendMetrics := func() {
+		if metrics, err := overviewMetrics(ctx, r.bindplane, period); err != nil {
+			r.bindplane.Logger().Error("failed to get overviewMetrics", zap.Error(err))
+		} else {
+			channel <- metrics
+		}
+	}
+
+	go metricSubscriber(ctx, sendMetrics, updateTicker)
 
 	return channel, nil
 }

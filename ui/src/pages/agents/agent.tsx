@@ -194,7 +194,7 @@ const AgentPageContent: React.FC = () => {
   return (
     <>
       <CardContainer>
-        <Typography variant="h5" classes={{ root: mixins["mb-5"] }}>
+        <Typography variant="h5" marginRight={3}>
           Agent - {data.agent.name}
         </Typography>
 

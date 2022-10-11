@@ -25,7 +25,7 @@ import (
 type ParameterizedSpec struct {
 	Type       string                  `yaml:"type" json:"type" mapstructure:"type"`
 	Parameters []Parameter             `yaml:"parameters" json:"parameters" mapstructure:"parameters"`
-	Processors []ResourceConfiguration `yaml:"processors" json:"processors" mapstructure:"processors"`
+	Processors []ResourceConfiguration `yaml:"processors,omitempty" json:"processors,omitempty" mapstructure:"processors"`
 }
 
 // parameterizedResource is a resource based on a resource type which provides a specific resource value via templated

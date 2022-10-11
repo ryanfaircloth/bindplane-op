@@ -1,19 +1,24 @@
 import { gql } from "@apollo/client";
-import { Card, CardContent, Stack, Typography } from "@mui/material";
+import {
+  Card,
+  CardActionArea,
+  CardContent,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useState } from "react";
-import { ShowPageConfig } from ".";
-import { ConfirmDeleteResourceDialog } from "../../../components/ConfirmDeleteResourceDialog";
-import { EditResourceDialog } from "../../../components/ResourceDialog/EditResourceDialog";
+import { ConfirmDeleteResourceDialog } from "../ConfirmDeleteResourceDialog";
+import { EditResourceDialog } from "../ResourceDialog/EditResourceDialog";
 import {
-  ResourceConfiguration,
   useDestinationTypeQuery,
-} from "../../../graphql/generated";
-import { UpdateStatus } from "../../../types/resources";
-import { BPConfiguration } from "../../../utils/classes/configuration";
-import { BPResourceConfiguration } from "../../../utils/classes/resource-configuration";
+} from "../../graphql/generated";
+import { UpdateStatus } from "../../types/resources";
+import { BPConfiguration } from "../../utils/classes/configuration";
+import { BPResourceConfiguration } from "../../utils/classes/resource-configuration";
 
-import styles from "./configuration-page.module.scss";
+import styles from "./cards.module.scss";
+import { useConfigurationPage } from "../../pages/configurations/configuration/ConfigurationPageContext";
 
 gql`
   query DestinationType($name: String!) {
@@ -67,16 +72,15 @@ gql`
 `;
 
 export const InlineDestinationCard: React.FC<{
-  // called when destination is successfully deleted.
-  refetch: () => void;
-  destination: ResourceConfiguration;
-  destinationIndex: number;
-  configuration: NonNullable<ShowPageConfig>;
-}> = ({ destination, destinationIndex, configuration, refetch }) => {
+  id: string;
+}> = ({ id }) => {
+  const { configuration, refetchConfiguration } = useConfigurationPage();
+  const destinationIndex = getDestinatonIndex(id);
+  const destination = configuration.spec?.destinations![destinationIndex];
+
   // We can count on the type existing for an inline Resource
-  const name = destination.type!;
   const { data } = useDestinationTypeQuery({
-    variables: { name },
+    variables: { name: destination.type! },
   });
   const { enqueueSnackbar } = useSnackbar();
 
@@ -107,7 +111,7 @@ export const InlineDestinationCard: React.FC<{
 
       closeDeleteDialog();
       closeEditDialog();
-      refetch();
+      refetchConfiguration();
     } catch (err) {
       enqueueSnackbar("Failed to update configuration.", { variant: "error" });
       console.error(err);
@@ -132,8 +136,13 @@ export const InlineDestinationCard: React.FC<{
 
       enqueueSnackbar("Saved updated configuration.", { variant: "success" });
       closeEditDialog();
-      refetch();
-    } catch (err) {}
+      refetchConfiguration();
+    } catch (err) {
+      enqueueSnackbar("Failed to save destination.", {
+        variant: "error",
+      });
+      console.error(err);
+    }
   }
 
   function closeEditDialog() {
@@ -150,17 +159,19 @@ export const InlineDestinationCard: React.FC<{
         className={styles["resource-card"]}
         onClick={() => setEditing(true)}
       >
-        <CardContent>
-          <Stack alignItems="center">
-            <span
-              className={styles.icon}
-              style={{ backgroundImage: `url(${icon})` }}
-            />
-            <Typography component="div" fontWeight={600}>
-              {displayName}
-            </Typography>
-          </Stack>
-        </CardContent>
+        <CardActionArea sx={{ root: { padding: 0 } }}>
+          <CardContent>
+            <Stack alignItems="center">
+              <span
+                className={styles.icon}
+                style={{ backgroundImage: `url(${icon})` }}
+              />
+              <Typography component="div" fontWeight={600}>
+                {displayName}
+              </Typography>
+            </Stack>
+          </CardContent>
+        </CardActionArea>
       </Card>
 
       <EditResourceDialog
@@ -192,3 +203,8 @@ export const InlineDestinationCard: React.FC<{
     </>
   );
 };
+
+function getDestinatonIndex(id: string): number {
+  const numberStr = id.split("destination")[1];
+  return Number(numberStr);
+}

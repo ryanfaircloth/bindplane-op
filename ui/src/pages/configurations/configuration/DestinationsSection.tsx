@@ -1,5 +1,5 @@
 import { Button, Stack, Typography } from "@mui/material";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { CardContainer } from "../../../components/CardContainer";
 import {
   DestinationType,
@@ -7,7 +7,6 @@ import {
   SourceType,
   useDestinationsAndTypesQuery,
 } from "../../../graphql/generated";
-import { ResourceDestinationCard } from "./ResourceDestinationCard";
 import { PlusCircleIcon } from "../../../components/Icons";
 import {
   DialogResource,
@@ -17,12 +16,16 @@ import { applyResources } from "../../../utils/rest/apply-resources";
 import { useSnackbar } from "notistack";
 import { ShowPageConfig } from ".";
 import { UpdateStatus } from "../../../types/resources";
-import { BPResourceConfiguration } from "../../../utils/classes/resource-configuration";
-import { InlineDestinationCard } from "./InlineDestinationCard";
-import { BPConfiguration, BPDestination } from "../../../utils/classes";
+import {
+  BPConfiguration,
+  BPDestination,
+  BPResourceConfiguration,
+} from "../../../utils/classes";
+import { ResourceDestinationCard } from "../../../components/Cards/ResourceDestinationCard";
 
 import styles from "./configuration-page.module.scss";
 import mixins from "../../../styles/mixins.module.scss";
+import { InlineDestinationCard } from "../../../components/Cards/InlineDestinationCard";
 
 type ResourceType = SourceType | DestinationType;
 
@@ -30,8 +33,15 @@ const DestinationsSectionComponent: React.FC<{
   configuration: NonNullable<ShowPageConfig>;
   destinations: ResourceConfiguration[];
   refetch: () => {};
-}> = ({ configuration, refetch, destinations }) => {
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  setAddDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  addDialogOpen: boolean;
+}> = ({
+  configuration,
+  refetch,
+  destinations,
+  setAddDialogOpen,
+  addDialogOpen,
+}) => {
   const { data } = useDestinationsAndTypesQuery({
     fetchPolicy: "network-only",
   });
@@ -154,20 +164,11 @@ const DestinationsSectionComponent: React.FC<{
 
             return destinationConfig.isInline() ? (
               <InlineDestinationCard
-                key={ix}
-                destination={d}
-                destinationIndex={ix}
-                configuration={configuration}
-                refetch={refetch}
+                key={`destination${ix}`}
+                id={`destination${ix}`}
               />
             ) : (
-              <ResourceDestinationCard
-                key={ix}
-                destination={d}
-                destinationIndex={ix}
-                configuration={configuration}
-                refetch={refetch}
-              />
+              <ResourceDestinationCard key={d.name!} name={d.name!} />
             );
           })}
         </Stack>

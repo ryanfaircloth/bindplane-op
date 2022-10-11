@@ -21,3 +21,12 @@ a {
 .content {
   padding: 2rem;
 }
+
+.react-flow__handle {
+  visibility: hidden !important;
+  width: 20px;
+}
+
+.react-flow__node {
+  cursor: default;
+}

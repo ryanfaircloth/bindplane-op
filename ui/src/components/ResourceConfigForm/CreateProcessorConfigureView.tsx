@@ -7,7 +7,6 @@ import {
   useValidationContext,
   ValidationContextProvider,
 } from ".";
-import { ParameterDefinition } from "../../graphql/generated";
 import { ActionsSection } from "../ResourceDialog/ActionSection";
 import { ContentSection } from "../ResourceDialog/ContentSection";
 import { useResourceDialog } from "../ResourceDialog/ResourceDialogContext";
@@ -21,7 +20,6 @@ import {
 
 interface CreateProcessorConfigureViewProps {
   processorType: ProcessorType;
-  parameterDefinitions: ParameterDefinition[];
   onBack: () => void;
   onSave: (formValues: FormValues) => void;
 }

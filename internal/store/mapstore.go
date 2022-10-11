@@ -28,7 +28,9 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/observiq/bindplane-op/internal/eventbus"
+	"github.com/observiq/bindplane-op/internal/otlp/record"
 	"github.com/observiq/bindplane-op/internal/store/search"
+	"github.com/observiq/bindplane-op/internal/store/stats"
 	"github.com/observiq/bindplane-op/model"
 )
 
@@ -631,6 +633,11 @@ func (mapstore *mapStore) UserSessions() sessions.Store {
 	return mapstore.sessionStore
 }
 
+// Measurements stores stats for agents and configurations
+func (mapstore *mapStore) Measurements() stats.Measurements {
+	return mapstore
+}
+
 // ----------------------------------------------------------------------
 // these functions require that the mapstore is already locked
 
@@ -694,4 +701,40 @@ func resourcesEqual(r1 model.Resource, r2 model.Resource) bool {
 	r1Any.Metadata.ID = ""
 	r2Any.Metadata.ID = ""
 	return reflect.DeepEqual(r1Any, r2Any)
+}
+
+// ----------------------------------------------------------------------
+// Measurements implementation
+
+// AgentMetrics provides metrics for an individual agents. They are essentially configuration metrics filtered to a
+// list of agents.
+//
+// Note: While the same record.Metric struct is used to return the metrics, these are not the same metrics provided to
+// Store. They will be aggregated and counter metrics will be converted into rates.
+func (mapstore *mapStore) AgentMetrics(ctx context.Context, id []string, options ...stats.QueryOption) (stats.MetricData, error) {
+	return nil, nil
+}
+
+// ConfigurationMetrics provides all metrics associated with a configuration aggregated from all agents using the
+// configuration.
+//
+// Note: While the same record.Metric struct is used to return the metrics, these are not the same metrics provided to
+// Store. They will be aggregated and counter metrics will be converted into rates.
+func (mapstore *mapStore) ConfigurationMetrics(ctx context.Context, name string, options ...stats.QueryOption) (stats.MetricData, error) {
+	return nil, nil
+}
+
+// OverviewMetrics provides all metrics needed for the overview page. This page shows agents and destinations.
+func (mapstore *mapStore) OverviewMetrics(ctx context.Context, options ...stats.QueryOption) (stats.MetricData, error) {
+	return nil, nil
+}
+
+// SaveAgentMetrics saves new metrics. These metrics will be aggregated to determine metrics associated with agents and configurations.
+func (mapstore *mapStore) SaveAgentMetrics(ctx context.Context, metrics []*record.Metric) error {
+	return nil
+}
+
+// ProcessMetrics is called in the background at regular intervals and performs metric roll-up and removes old data
+func (mapstore *mapStore) ProcessMetrics(ctx context.Context) error {
+	return nil
 }

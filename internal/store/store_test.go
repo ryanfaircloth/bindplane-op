@@ -26,7 +26,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/observiq/bindplane-op/internal/eventbus"
+	"github.com/observiq/bindplane-op/internal/otlp/record"
 	"github.com/observiq/bindplane-op/internal/store/search"
+	"github.com/observiq/bindplane-op/internal/store/stats"
 	"github.com/observiq/bindplane-op/model"
 )
 
@@ -131,7 +133,7 @@ var (
 		},
 	})
 
-	testRawConfiguration1 = model.NewRawConfiguration("test-configuration-1", "raw:")
+	testRawConfiguration1 = model.NewRawConfiguration("Test-configuration-1", "raw:")
 	testRawConfiguration2 = model.NewRawConfiguration("test-configuration-2", "raw:")
 )
 
@@ -1347,4 +1349,186 @@ func requireOkStatuses(t *testing.T, statuses []model.ResourceStatus) {
 			model.StatusDeleted,
 		}, status.Status)
 	}
+}
+
+// ----------------------------------------------------------------------
+
+func runTestMeasurements(t *testing.T, store Store) {
+	var ctx context.Context
+	var measurements stats.Measurements
+
+	reset := func() {
+		ctx = context.TODO()
+
+		store.Clear()
+		measurements = store.Measurements()
+	}
+
+	saveMetrics := func(name string, timestamp time.Time, interval time.Duration, configuration, agent, processor string, values []float64) {
+		saveTestMetrics(ctx, t, measurements, name, timestamp, interval, configuration, agent, processor, values)
+	}
+
+	t.Run("returns empty measurements with no data", func(t *testing.T) {
+		reset()
+
+		aMetrics, err := measurements.AgentMetrics(ctx, []string{"a3", "a4"})
+		require.NoError(t, err)
+		require.Len(t, aMetrics, 0)
+
+		for _, configuration := range []string{"c3", "c4"} {
+			metrics, err := measurements.ConfigurationMetrics(ctx, configuration)
+			require.NoError(t, err)
+			require.Len(t, metrics, 0)
+		}
+	})
+
+	t.Run("returns measurements", func(t *testing.T) {
+		reset()
+
+		status, err := store.ApplyResources(context.Background(), []model.Resource{testRawConfiguration1})
+		require.NoError(t, err)
+		requireOkStatuses(t, status)
+
+		now := time.Now().UTC()
+
+		frame := now.Truncate(10 * time.Second)
+		prev := frame.Add(-10 * time.Second)
+		timestamp := frame.Add(-3 * time.Minute)
+
+		saveMetrics(logDataSizeName, timestamp, 10*time.Second, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 100, 100, 100, 100, 100, 100, 110, 110, 110, 110, 110, 110})
+		saveMetrics(logDataSizeName, timestamp, 10*time.Second, c1, a1, p2, []float64{0, 0, 0, 0, 0, 0, 20, 20, 20, 20, 20, 20, 200, 200, 200, 200, 200, 200, 220, 220, 220, 220, 220, 220})
+		saveMetrics(logDataSizeName, timestamp, 10*time.Second, c1, a2, p1, []float64{0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 1000, 1000, 1000, 1000, 1000, 1000, 10000, 10000, 10000, 10000, 10000, 10000})
+		saveMetrics(logDataSizeName, timestamp, 10*time.Second, c1, a2, p2, []float64{0, 0, 0, 0, 0, 0, 200, 200, 200, 200, 200, 200, 2000, 2000, 2000, 2000, 2000, 2000, 20000, 20000, 20000, 20000, 20000, 20000})
+
+		err = measurements.ProcessMetrics(ctx)
+		require.NoError(t, err)
+
+		t.Run("returns a1 measurements", func(t *testing.T) {
+			metrics, err := measurements.AgentMetrics(ctx, []string{a1}, stats.WithPeriod(time.Minute), stats.WithEndTime(now))
+			require.NoError(t, err)
+			requireMetrics(t, []*record.Metric{
+				generateExpectMetric(logDataSizeName, prev, c1, a1, p1, 1.5),
+				generateExpectMetric(logDataSizeName, prev, c1, a1, p2, 3),
+			}, metrics)
+		})
+
+		t.Run("returns a2 measurements", func(t *testing.T) {
+			metrics, err := measurements.AgentMetrics(ctx, []string{a2}, stats.WithPeriod(time.Minute), stats.WithEndTime(now))
+			require.NoError(t, err)
+			requireMetrics(t, []*record.Metric{
+				generateExpectMetric(logDataSizeName, prev, c1, a2, p1, 15),
+				generateExpectMetric(logDataSizeName, prev, c1, a2, p2, 30),
+			}, metrics)
+		})
+
+		t.Run("returns a1,a2 measurements", func(t *testing.T) {
+			metrics, err := measurements.AgentMetrics(ctx, []string{a1, a2}, stats.WithPeriod(time.Minute), stats.WithEndTime(now))
+			require.NoError(t, err)
+			requireMetrics(t, []*record.Metric{
+				generateExpectMetric(logDataSizeName, prev, c1, a1, p1, 1.5),
+				generateExpectMetric(logDataSizeName, prev, c1, a1, p2, 3),
+				generateExpectMetric(logDataSizeName, prev, c1, a2, p1, 15),
+				generateExpectMetric(logDataSizeName, prev, c1, a2, p2, 30),
+			}, metrics)
+		})
+
+		t.Run("returns configuration measurements", func(t *testing.T) {
+			metrics, err := measurements.ConfigurationMetrics(ctx, c1, stats.WithPeriod(time.Minute), stats.WithEndTime(now))
+			require.NoError(t, err)
+			requireMetrics(t, []*record.Metric{
+				generateExpectMetric(logDataSizeName, prev, c1, "", p1, 16.5),
+				generateExpectMetric(logDataSizeName, prev, c1, "", p2, 33),
+			}, metrics)
+		})
+
+		t.Run("returns overview measurements", func(t *testing.T) {
+			metrics, err := measurements.OverviewMetrics(ctx, stats.WithPeriod(time.Minute), stats.WithEndTime(now))
+			require.NoError(t, err)
+			requireMetrics(t, []*record.Metric{
+				generateExpectMetric(logDataSizeName, prev, c1, "", p1, 16.5),
+				generateExpectMetric(logDataSizeName, prev, c1, "", p2, 33),
+			}, metrics)
+		})
+	})
+}
+
+// these are values that i happen to be testing with right now -andy
+const (
+	p1 = "throughputmeasurement/_s0_logs_source0"
+	p2 = "throughputmeasurement/_s1_logs_source0"
+	p3 = "throughputmeasurement/_d1_logs_info-logging"
+	p4 = "throughputmeasurement/_d1_logs_error-logging"
+	a1 = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	a2 = "01GE8Q0TFSFXYJTSHP8WKYYR2H"
+	c1 = "Test-configuration-1"
+	c2 = "localhost"
+)
+
+func generateExpectMetric(name string, timestamp time.Time, configuration, agent, processor string, value float64) *record.Metric {
+	m := &record.Metric{
+		Name:      name,
+		Timestamp: timestamp,
+		Value:     value,
+		Unit:      "B/s",
+		Type:      "Rate",
+		Attributes: map[string]interface{}{
+			"configuration": configuration,
+		},
+	}
+
+	// only add the processor if specified
+	if processor != "" {
+		m.Attributes["processor"] = processor
+	}
+
+	// only add the agent if specified
+	if agent != "" {
+		m.Attributes["agent"] = agent
+	}
+	return m
+}
+
+func requireMetrics(t *testing.T, expected, actual []*record.Metric) {
+	require.ElementsMatch(t, expected, actual)
+}
+
+func saveTestMetrics(ctx context.Context, t *testing.T, m stats.Measurements, name string, timestamp time.Time, interval time.Duration, configuration, agent, processor string, values []float64) {
+	err := m.SaveAgentMetrics(ctx, generateTestMetrics(t, name, timestamp, interval, configuration, agent, processor, values))
+	require.NoError(t, err)
+}
+
+func generateTestMetric(t *testing.T, name string, timestamp time.Time, configuration, agent, processor string, value float64) *record.Metric {
+	m := &record.Metric{
+		Name:      name,
+		Timestamp: timestamp,
+		Value:     value,
+		Unit:      "",
+		Type:      "Sum",
+		Attributes: map[string]interface{}{
+			"configuration": configuration,
+			"processor":     processor,
+		},
+	}
+	// only add the agent if specified
+	if agent != "" {
+		m.Attributes["agent"] = agent
+	}
+	return m
+}
+
+// generateTestMetrics creates test metrics starting at timestamp with the specified interval. To create gaps in metrics, values < 0 are skipped.
+func generateTestMetrics(t *testing.T, name string, timestamp time.Time, interval time.Duration, configuration, agent, processor string, values []float64) []*record.Metric {
+	var results []*record.Metric
+	for i := 0; i < len(values); i++ {
+		results = append(results, generateTestMetric(
+			t,
+			name,
+			timestamp.Add(time.Duration(i)*interval),
+			configuration,
+			agent,
+			processor,
+			values[i],
+		))
+	}
+	return results
 }

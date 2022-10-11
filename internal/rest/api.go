@@ -577,7 +577,7 @@ func configuration(c *gin.Context, bindplane server.BindPlane) {
 		return
 	}
 
-	raw, err := config.Render(ctx, model.AgentSupportsSnapshots, bindplane.Store())
+	raw, err := config.Render(ctx, nil, bindplane.Config(), bindplane.Store())
 	if !okResponse(c, err) {
 		return
 	}

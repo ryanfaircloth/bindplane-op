@@ -1,18 +1,23 @@
 import { gql } from "@apollo/client";
-import { Card, CardContent, Stack, Typography } from "@mui/material";
+import {
+  Card,
+  CardActionArea,
+  CardContent,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { useSnackbar } from "notistack";
 import { memo, useState } from "react";
-import { ShowPageConfig } from ".";
-import { ConfirmDeleteResourceDialog } from "../../../components/ConfirmDeleteResourceDialog";
-import { EditResourceDialog } from "../../../components/ResourceDialog/EditResourceDialog";
-import {
-  ResourceConfiguration,
-  useGetDestinationWithTypeQuery,
-} from "../../../graphql/generated";
-import { UpdateStatus } from "../../../types/resources";
-import { BPConfiguration, BPDestination } from "../../../utils/classes";
+import { ConfirmDeleteResourceDialog } from "../ConfirmDeleteResourceDialog";
+import { EditResourceDialog } from "../ResourceDialog/EditResourceDialog";
+import { useGetDestinationWithTypeQuery } from "../../graphql/generated";
+import { useConfigurationPage } from "../../pages/configurations/configuration/ConfigurationPageContext";
+import { UpdateStatus } from "../../types/resources";
+import { BPConfiguration, BPDestination } from "../../utils/classes";
+import { FormValues } from "../ResourceConfigForm";
+import { classes } from "../../utils/styles";
 
-import styles from "./configuration-page.module.scss";
+import styles from "./cards.module.scss";
 
 gql`
   query getDestinationWithType($name: String!) {
@@ -80,15 +85,22 @@ gql`
 `;
 
 const ResourceDestinationCardComponent: React.FC<{
-  configuration: NonNullable<ShowPageConfig>;
-  destination: ResourceConfiguration;
-  destinationIndex: number;
-  refetch: () => void;
-}> = ({ destination, destinationIndex, configuration, refetch }) => {
+  name: string;
+  disabled?: boolean;
+}> = ({ name, disabled }) => {
   const { data, refetch: refetchDestination } = useGetDestinationWithTypeQuery({
-    variables: { name: destination.name ?? "" },
+    variables: { name },
     fetchPolicy: "cache-and-network",
   });
+
+  const { configuration, refetchConfiguration } = useConfigurationPage();
+  const destinationIndex = configuration.spec.destinations?.findIndex(
+    (d) => d.name === name
+  );
+  const processors =
+    destinationIndex !== -1 && destinationIndex != null
+      ? configuration.spec.destinations?.[destinationIndex].processors
+      : [];
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -99,12 +111,47 @@ const ResourceDestinationCardComponent: React.FC<{
     setEditing(false);
   }
 
-  async function onSave(formValues: Record<string, any>) {
+  async function onSave(formValues: FormValues) {
     const updatedDestination = new BPDestination(
       data!.destinationWithType!.destination!
     );
 
     updatedDestination.setParamsFromMap(formValues);
+
+    const updatedProcessors = formValues.processors;
+    if (updatedProcessors != null) {
+      // assign processors to the configuration
+      if (destinationIndex == null) {
+        enqueueSnackbar("Failed to update destination.", { variant: "error" });
+        console.error(
+          `Could not find index for destination named ${name} in configuration spec.`,
+          configuration
+        );
+        return;
+      }
+      const updatedConfig = new BPConfiguration(configuration);
+      updatedConfig.replaceDestination(
+        {
+          name: updatedDestination.name(),
+          processors: updatedProcessors,
+        },
+        destinationIndex
+      );
+
+      try {
+        const update = await updatedConfig.apply();
+        if (update.status === UpdateStatus.INVALID) {
+          throw new Error(
+            `failed to apply configuration, got status ${update.status}`
+          );
+        }
+      } catch (err) {
+        console.error(err);
+        enqueueSnackbar("Failed to update configuration.", {
+          variant: "error",
+        });
+      }
+    }
 
     try {
       const update = await updatedDestination.apply();
@@ -119,7 +166,7 @@ const ResourceDestinationCardComponent: React.FC<{
         variant: "success",
       });
       setEditing(false);
-      refetch();
+      refetchConfiguration();
       refetchDestination();
     } catch (err) {
       console.error(err);
@@ -128,6 +175,15 @@ const ResourceDestinationCardComponent: React.FC<{
   }
 
   async function onDelete() {
+    if (destinationIndex == null) {
+      enqueueSnackbar("Failed to delete destination.", { variant: "error" });
+      console.error(
+        `Could not find index for destination named ${name} in configuration spec.`,
+        configuration
+      );
+      return;
+    }
+
     const updatedConfig = new BPConfiguration(configuration);
     updatedConfig.removeDestination(destinationIndex);
 
@@ -142,7 +198,7 @@ const ResourceDestinationCardComponent: React.FC<{
 
       closeEditDialog();
       closeDeleteDialog();
-      refetch();
+      refetchConfiguration();
       refetchDestination();
     } catch (err) {
       enqueueSnackbar("Failed to remove destination.", { variant: "error" });
@@ -159,7 +215,7 @@ const ResourceDestinationCardComponent: React.FC<{
   }
 
   if (data.destinationWithType.destination == null) {
-    enqueueSnackbar(`Could not retrieve destination ${destination.name!}.`, {
+    enqueueSnackbar(`Could not retrieve destination ${name}.`, {
       variant: "error",
     });
     return null;
@@ -167,39 +223,46 @@ const ResourceDestinationCardComponent: React.FC<{
 
   if (data.destinationWithType.destinationType == null) {
     enqueueSnackbar(
-      `Could not retrieve destination type for destination ${destination.name!}.`,
+      `Could not retrieve destination type for destination ${name}.`,
       { variant: "error" }
     );
     return null;
   }
 
   return (
-    <>
+    <div className={disabled ? styles.disabled : undefined}>
       <Card
-        className={styles["resource-card"]}
+        className={classes([
+          styles["resource-card"],
+          disabled ? styles.disabled : undefined,
+        ])}
         onClick={() => setEditing(true)}
       >
-        <CardContent>
-          <Stack alignItems="center">
-            <span
-              className={styles.icon}
-              style={{
-                backgroundImage: `url(${data?.destinationWithType?.destinationType?.metadata.icon})`,
-              }}
-            />
-            <Typography component="div" fontWeight={600}>
-              {destination.name}
-            </Typography>
-          </Stack>
-        </CardContent>
+        <CardActionArea>
+          <CardContent>
+            <Stack alignItems="center">
+              <span
+                className={styles.icon}
+                style={{
+                  backgroundImage: `url(${data?.destinationWithType?.destinationType?.metadata.icon})`,
+                }}
+              />
+              <Typography component="div" fontWeight={600}>
+                {name}
+              </Typography>
+            </Stack>
+          </CardContent>
+        </CardActionArea>
       </Card>
 
       <EditResourceDialog
         kind="destination"
-        displayName={destination.name ?? ""}
+        displayName={name}
         description={
           data.destinationWithType.destinationType.metadata.description ?? ""
         }
+        enableProcessors
+        processors={processors}
         fullWidth
         maxWidth="sm"
         parameters={data.destinationWithType.destination.spec.parameters ?? []}
@@ -224,7 +287,7 @@ const ResourceDestinationCardComponent: React.FC<{
           Are you sure you want to remove this destination?
         </Typography>
       </ConfirmDeleteResourceDialog>
-    </>
+    </div>
   );
 };
 

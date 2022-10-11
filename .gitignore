@@ -61,3 +61,6 @@ ui/.env.production.local
 ui/npm-debug.log*
 
 gha-creds-*.json
+
+# debugging
+__debug_bin

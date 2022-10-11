@@ -19,6 +19,7 @@ import (
 	"github.com/observiq/bindplane-op/internal/otlp/record"
 	"github.com/observiq/bindplane-op/internal/store/search"
 	"github.com/observiq/bindplane-op/model"
+	"github.com/observiq/bindplane-op/model/graph"
 	"github.com/observiq/bindplane-op/model/otel"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -123,6 +124,7 @@ type ComplexityRoot struct {
 	Configuration struct {
 		APIVersion func(childComplexity int) int
 		AgentCount func(childComplexity int) int
+		Graph      func(childComplexity int) int
 		Kind       func(childComplexity int) int
 		Metadata   func(childComplexity int) int
 		Spec       func(childComplexity int) int
@@ -171,6 +173,32 @@ type ComplexityRoot struct {
 		URL  func(childComplexity int) int
 	}
 
+	Edge struct {
+		ID     func(childComplexity int) int
+		Source func(childComplexity int) int
+		Target func(childComplexity int) int
+	}
+
+	Graph struct {
+		Edges         func(childComplexity int) int
+		Intermediates func(childComplexity int) int
+		Sources       func(childComplexity int) int
+		Targets       func(childComplexity int) int
+	}
+
+	GraphMetric struct {
+		AgentID      func(childComplexity int) int
+		Name         func(childComplexity int) int
+		NodeID       func(childComplexity int) int
+		PipelineType func(childComplexity int) int
+		Unit         func(childComplexity int) int
+		Value        func(childComplexity int) int
+	}
+
+	GraphMetrics struct {
+		Metrics func(childComplexity int) int
+	}
+
 	Log struct {
 		Attributes func(childComplexity int) int
 		Body       func(childComplexity int) int
@@ -210,6 +238,17 @@ type ComplexityRoot struct {
 		Name        func(childComplexity int) int
 	}
 
+	Node struct {
+		Attributes func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Label      func(childComplexity int) int
+		Type       func(childComplexity int) int
+	}
+
+	OverviewPage struct {
+		Graph func(childComplexity int) int
+	}
+
 	Parameter struct {
 		Name  func(childComplexity int) int
 		Value func(childComplexity int) int
@@ -240,6 +279,7 @@ type ComplexityRoot struct {
 
 	ParameterizedSpec struct {
 		Parameters func(childComplexity int) int
+		Processors func(childComplexity int) int
 		Type       func(childComplexity int) int
 	}
 
@@ -258,25 +298,29 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Agent               func(childComplexity int, id string) int
-		Agents              func(childComplexity int, selector *string, query *string) int
-		Components          func(childComplexity int) int
-		Configuration       func(childComplexity int, name string) int
-		Configurations      func(childComplexity int, selector *string, query *string) int
-		Destination         func(childComplexity int, name string) int
-		DestinationType     func(childComplexity int, name string) int
-		DestinationTypes    func(childComplexity int) int
-		DestinationWithType func(childComplexity int, name string) int
-		Destinations        func(childComplexity int) int
-		Processor           func(childComplexity int, name string) int
-		ProcessorType       func(childComplexity int, name string) int
-		ProcessorTypes      func(childComplexity int) int
-		Processors          func(childComplexity int) int
-		Snapshot            func(childComplexity int, agentID string, pipelineType otel.PipelineType) int
-		Source              func(childComplexity int, name string) int
-		SourceType          func(childComplexity int, name string) int
-		SourceTypes         func(childComplexity int) int
-		Sources             func(childComplexity int) int
+		Agent                func(childComplexity int, id string) int
+		AgentMetrics         func(childComplexity int, period string, ids []string) int
+		Agents               func(childComplexity int, selector *string, query *string) int
+		Components           func(childComplexity int) int
+		Configuration        func(childComplexity int, name string) int
+		ConfigurationMetrics func(childComplexity int, period string, name *string) int
+		Configurations       func(childComplexity int, selector *string, query *string) int
+		Destination          func(childComplexity int, name string) int
+		DestinationType      func(childComplexity int, name string) int
+		DestinationTypes     func(childComplexity int) int
+		DestinationWithType  func(childComplexity int, name string) int
+		Destinations         func(childComplexity int) int
+		OverviewMetrics      func(childComplexity int, period string) int
+		OverviewPage         func(childComplexity int) int
+		Processor            func(childComplexity int, name string) int
+		ProcessorType        func(childComplexity int, name string) int
+		ProcessorTypes       func(childComplexity int) int
+		Processors           func(childComplexity int) int
+		Snapshot             func(childComplexity int, agentID string, pipelineType otel.PipelineType) int
+		Source               func(childComplexity int, name string) int
+		SourceType           func(childComplexity int, name string) int
+		SourceTypes          func(childComplexity int) int
+		Sources              func(childComplexity int) int
 	}
 
 	RelevantIfCondition struct {
@@ -321,7 +365,10 @@ type ComplexityRoot struct {
 
 	Subscription struct {
 		AgentChanges         func(childComplexity int, selector *string, query *string) int
+		AgentMetrics         func(childComplexity int, period string, ids []string) int
 		ConfigurationChanges func(childComplexity int, selector *string, query *string) int
+		ConfigurationMetrics func(childComplexity int, period string, name *string) int
+		OverviewMetrics      func(childComplexity int, period string) int
 	}
 
 	Suggestion struct {
@@ -362,6 +409,7 @@ type ConfigurationResolver interface {
 	Kind(ctx context.Context, obj *model.Configuration) (string, error)
 
 	AgentCount(ctx context.Context, obj *model.Configuration) (*int, error)
+	Graph(ctx context.Context, obj *model.Configuration) (*graph.Graph, error)
 }
 type DestinationResolver interface {
 	Kind(ctx context.Context, obj *model.Destination) (string, error)
@@ -382,6 +430,7 @@ type ProcessorTypeResolver interface {
 	Kind(ctx context.Context, obj *model.ProcessorType) (string, error)
 }
 type QueryResolver interface {
+	OverviewPage(ctx context.Context) (*model1.OverviewPage, error)
 	Agents(ctx context.Context, selector *string, query *string) (*model1.Agents, error)
 	Agent(ctx context.Context, id string) (*model.Agent, error)
 	Configurations(ctx context.Context, selector *string, query *string) (*model1.Configurations, error)
@@ -401,6 +450,9 @@ type QueryResolver interface {
 	DestinationType(ctx context.Context, name string) (*model.DestinationType, error)
 	Components(ctx context.Context) (*model1.Components, error)
 	Snapshot(ctx context.Context, agentID string, pipelineType otel.PipelineType) (*model1.Snapshot, error)
+	AgentMetrics(ctx context.Context, period string, ids []string) (*model1.GraphMetrics, error)
+	ConfigurationMetrics(ctx context.Context, period string, name *string) (*model1.GraphMetrics, error)
+	OverviewMetrics(ctx context.Context, period string) (*model1.GraphMetrics, error)
 }
 type RelevantIfConditionResolver interface {
 	Operator(ctx context.Context, obj *model.RelevantIfCondition) (model1.RelevantIfOperatorType, error)
@@ -414,6 +466,9 @@ type SourceTypeResolver interface {
 type SubscriptionResolver interface {
 	AgentChanges(ctx context.Context, selector *string, query *string) (<-chan []*model1.AgentChange, error)
 	ConfigurationChanges(ctx context.Context, selector *string, query *string) (<-chan []*model1.ConfigurationChange, error)
+	AgentMetrics(ctx context.Context, period string, ids []string) (<-chan *model1.GraphMetrics, error)
+	ConfigurationMetrics(ctx context.Context, period string, name *string) (<-chan *model1.GraphMetrics, error)
+	OverviewMetrics(ctx context.Context, period string) (<-chan *model1.GraphMetrics, error)
 }
 
 type executableSchema struct {
@@ -697,6 +752,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Configuration.AgentCount(childComplexity), true
 
+	case "Configuration.graph":
+		if e.complexity.Configuration.Graph == nil {
+			break
+		}
+
+		return e.complexity.Configuration.Graph(childComplexity), true
+
 	case "Configuration.kind":
 		if e.complexity.Configuration.Kind == nil {
 			break
@@ -872,6 +934,104 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DocumentationLink.URL(childComplexity), true
 
+	case "Edge.id":
+		if e.complexity.Edge.ID == nil {
+			break
+		}
+
+		return e.complexity.Edge.ID(childComplexity), true
+
+	case "Edge.source":
+		if e.complexity.Edge.Source == nil {
+			break
+		}
+
+		return e.complexity.Edge.Source(childComplexity), true
+
+	case "Edge.target":
+		if e.complexity.Edge.Target == nil {
+			break
+		}
+
+		return e.complexity.Edge.Target(childComplexity), true
+
+	case "Graph.edges":
+		if e.complexity.Graph.Edges == nil {
+			break
+		}
+
+		return e.complexity.Graph.Edges(childComplexity), true
+
+	case "Graph.intermediates":
+		if e.complexity.Graph.Intermediates == nil {
+			break
+		}
+
+		return e.complexity.Graph.Intermediates(childComplexity), true
+
+	case "Graph.sources":
+		if e.complexity.Graph.Sources == nil {
+			break
+		}
+
+		return e.complexity.Graph.Sources(childComplexity), true
+
+	case "Graph.targets":
+		if e.complexity.Graph.Targets == nil {
+			break
+		}
+
+		return e.complexity.Graph.Targets(childComplexity), true
+
+	case "GraphMetric.agentID":
+		if e.complexity.GraphMetric.AgentID == nil {
+			break
+		}
+
+		return e.complexity.GraphMetric.AgentID(childComplexity), true
+
+	case "GraphMetric.name":
+		if e.complexity.GraphMetric.Name == nil {
+			break
+		}
+
+		return e.complexity.GraphMetric.Name(childComplexity), true
+
+	case "GraphMetric.nodeID":
+		if e.complexity.GraphMetric.NodeID == nil {
+			break
+		}
+
+		return e.complexity.GraphMetric.NodeID(childComplexity), true
+
+	case "GraphMetric.pipelineType":
+		if e.complexity.GraphMetric.PipelineType == nil {
+			break
+		}
+
+		return e.complexity.GraphMetric.PipelineType(childComplexity), true
+
+	case "GraphMetric.unit":
+		if e.complexity.GraphMetric.Unit == nil {
+			break
+		}
+
+		return e.complexity.GraphMetric.Unit(childComplexity), true
+
+	case "GraphMetric.value":
+		if e.complexity.GraphMetric.Value == nil {
+			break
+		}
+
+		return e.complexity.GraphMetric.Value(childComplexity), true
+
+	case "GraphMetrics.metrics":
+		if e.complexity.GraphMetrics.Metrics == nil {
+			break
+		}
+
+		return e.complexity.GraphMetrics.Metrics(childComplexity), true
+
 	case "Log.attributes":
 		if e.complexity.Log.Attributes == nil {
 			break
@@ -1040,6 +1200,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MetricOption.Name(childComplexity), true
 
+	case "Node.attributes":
+		if e.complexity.Node.Attributes == nil {
+			break
+		}
+
+		return e.complexity.Node.Attributes(childComplexity), true
+
+	case "Node.id":
+		if e.complexity.Node.ID == nil {
+			break
+		}
+
+		return e.complexity.Node.ID(childComplexity), true
+
+	case "Node.label":
+		if e.complexity.Node.Label == nil {
+			break
+		}
+
+		return e.complexity.Node.Label(childComplexity), true
+
+	case "Node.type":
+		if e.complexity.Node.Type == nil {
+			break
+		}
+
+		return e.complexity.Node.Type(childComplexity), true
+
+	case "OverviewPage.graph":
+		if e.complexity.OverviewPage.Graph == nil {
+			break
+		}
+
+		return e.complexity.OverviewPage.Graph(childComplexity), true
+
 	case "Parameter.name":
 		if e.complexity.Parameter.Name == nil {
 			break
@@ -1180,6 +1375,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ParameterizedSpec.Parameters(childComplexity), true
 
+	case "ParameterizedSpec.processors":
+		if e.complexity.ParameterizedSpec.Processors == nil {
+			break
+		}
+
+		return e.complexity.ParameterizedSpec.Processors(childComplexity), true
+
 	case "ParameterizedSpec.type":
 		if e.complexity.ParameterizedSpec.Type == nil {
 			break
@@ -1255,6 +1457,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Agent(childComplexity, args["id"].(string)), true
 
+	case "Query.agentMetrics":
+		if e.complexity.Query.AgentMetrics == nil {
+			break
+		}
+
+		args, err := ec.field_Query_agentMetrics_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AgentMetrics(childComplexity, args["period"].(string), args["ids"].([]string)), true
+
 	case "Query.agents":
 		if e.complexity.Query.Agents == nil {
 			break
@@ -1285,6 +1499,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Configuration(childComplexity, args["name"].(string)), true
+
+	case "Query.configurationMetrics":
+		if e.complexity.Query.ConfigurationMetrics == nil {
+			break
+		}
+
+		args, err := ec.field_Query_configurationMetrics_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ConfigurationMetrics(childComplexity, args["period"].(string), args["name"].(*string)), true
 
 	case "Query.configurations":
 		if e.complexity.Query.Configurations == nil {
@@ -1347,6 +1573,25 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Destinations(childComplexity), true
+
+	case "Query.overviewMetrics":
+		if e.complexity.Query.OverviewMetrics == nil {
+			break
+		}
+
+		args, err := ec.field_Query_overviewMetrics_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.OverviewMetrics(childComplexity, args["period"].(string)), true
+
+	case "Query.overviewPage":
+		if e.complexity.Query.OverviewPage == nil {
+			break
+		}
+
+		return e.complexity.Query.OverviewPage(childComplexity), true
 
 	case "Query.processor":
 		if e.complexity.Query.Processor == nil {
@@ -1602,6 +1847,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Subscription.AgentChanges(childComplexity, args["selector"].(*string), args["query"].(*string)), true
 
+	case "Subscription.agentMetrics":
+		if e.complexity.Subscription.AgentMetrics == nil {
+			break
+		}
+
+		args, err := ec.field_Subscription_agentMetrics_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.AgentMetrics(childComplexity, args["period"].(string), args["ids"].([]string)), true
+
 	case "Subscription.configurationChanges":
 		if e.complexity.Subscription.ConfigurationChanges == nil {
 			break
@@ -1613,6 +1870,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Subscription.ConfigurationChanges(childComplexity, args["selector"].(*string), args["query"].(*string)), true
+
+	case "Subscription.configurationMetrics":
+		if e.complexity.Subscription.ConfigurationMetrics == nil {
+			break
+		}
+
+		args, err := ec.field_Subscription_configurationMetrics_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.ConfigurationMetrics(childComplexity, args["period"].(string), args["name"].(*string)), true
+
+	case "Subscription.overviewMetrics":
+		if e.complexity.Subscription.OverviewMetrics == nil {
+			break
+		}
+
+		args, err := ec.field_Subscription_overviewMetrics_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.OverviewMetrics(childComplexity, args["period"].(string)), true
 
 	case "Suggestion.label":
 		if e.complexity.Suggestion.Label == nil {
@@ -1841,6 +2122,8 @@ type Configuration {
   # number of agents using this configuration. this count is obtained using a separate resolver and may not be efficient
   # to generate. it depends on store.Store.AgentIDsUsingConfiguration.
   agentCount: Int
+
+  graph: Graph
 }
 
 type ConfigurationSpec {
@@ -1861,6 +2144,29 @@ type ResourceConfiguration {
 type Parameter {
   name: String!
   value: Any!
+}
+
+# ----------------------------------------------------------------------
+# graph used for configuration and agent topology
+
+type Graph {
+  sources: [Node!]!
+  intermediates: [Node!]!
+  targets: [Node!]!
+  edges: [Edge!]!
+}
+
+type Node {
+  id: String!
+  type: String!
+  label: String!
+  attributes: Map!
+}
+
+type Edge {
+  id: String!
+  source: String!
+  target: String!
 }
 
 # ----------------------------------------------------------------------
@@ -2054,6 +2360,7 @@ type DestinationWithType {
 type ParameterizedSpec {
   type: String!
   parameters: [Parameter!]
+  processors: [ResourceConfiguration!]
 }
 
 type Components {
@@ -2099,10 +2406,38 @@ type Snapshot {
   traces: [Trace!]!
 }
 
+type OverviewPage {
+  graph: Graph!
+}
+
+# ----------------------------------------------------------------------
+# metrics
+
+type GraphMetric {
+  # name of the metric, e.g. log_data_size
+  name: String!
+  # ID of the graph node for this metric
+  nodeID: String!
+  # logs, metrics, or traces
+  pipelineType: String!
+  # numeric value of the metric
+  value: Float!
+  # unit for the metric, e.g. B/s
+  unit: String!
+  # hack just for Samuel
+  agentID: ID
+}
+
+type GraphMetrics {
+  metrics: [GraphMetric!]!
+}
+
 # ----------------------------------------------------------------------
 # queries
 
 type Query {
+  overviewPage: OverviewPage!
+
   agents(selector: String, query: String): Agents!
   agent(id: ID!): Agent
 
@@ -2131,6 +2466,10 @@ type Query {
   components: Components!
 
   snapshot(agentID: String!, pipelineType: PipelineType!): Snapshot!
+
+  agentMetrics(period: String!, ids: [ID!]): GraphMetrics!
+  configurationMetrics(period: String!, name: String): GraphMetrics!
+  overviewMetrics(period: String!): GraphMetrics!
 }
 
 # ----------------------------------------------------------------------
@@ -2139,6 +2478,10 @@ type Query {
 type Subscription {
   agentChanges(selector: String, query: String): [AgentChange!]!
   configurationChanges(selector: String, query: String): [ConfigurationChange!]!
+
+  agentMetrics(period: String!, ids: [ID!]): GraphMetrics!
+  configurationMetrics(period: String!, name: String): GraphMetrics!
+  overviewMetrics(period: String!): GraphMetrics!
 }
 `, BuiltIn: false},
 }
@@ -2160,6 +2503,30 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_agentMetrics_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["period"] = arg0
+	var arg1 []string
+	if tmp, ok := rawArgs["ids"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+		arg1, err = ec.unmarshalOID2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ids"] = arg1
 	return args, nil
 }
 
@@ -2199,6 +2566,30 @@ func (ec *executionContext) field_Query_agents_args(ctx context.Context, rawArgs
 		}
 	}
 	args["query"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_configurationMetrics_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["period"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg1
 	return args, nil
 }
 
@@ -2283,6 +2674,21 @@ func (ec *executionContext) field_Query_destination_args(ctx context.Context, ra
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_overviewMetrics_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["period"] = arg0
 	return args, nil
 }
 
@@ -2394,6 +2800,30 @@ func (ec *executionContext) field_Subscription_agentChanges_args(ctx context.Con
 	return args, nil
 }
 
+func (ec *executionContext) field_Subscription_agentMetrics_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["period"] = arg0
+	var arg1 []string
+	if tmp, ok := rawArgs["ids"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+		arg1, err = ec.unmarshalOID2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ids"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Subscription_configurationChanges_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2415,6 +2845,45 @@ func (ec *executionContext) field_Subscription_configurationChanges_args(ctx con
 		}
 	}
 	args["query"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Subscription_configurationMetrics_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["period"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Subscription_overviewMetrics_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["period"] = arg0
 	return args, nil
 }
 
@@ -3216,6 +3685,8 @@ func (ec *executionContext) fieldContext_Agent_configurationResource(ctx context
 				return ec.fieldContext_Configuration_spec(ctx, field)
 			case "agentCount":
 				return ec.fieldContext_Configuration_agentCount(ctx, field)
+			case "graph":
+				return ec.fieldContext_Configuration_graph(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Configuration", field.Name)
 		},
@@ -4353,6 +4824,57 @@ func (ec *executionContext) fieldContext_Configuration_agentCount(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Configuration_graph(ctx context.Context, field graphql.CollectedField, obj *model.Configuration) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Configuration_graph(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Configuration().Graph(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*graph.Graph)
+	fc.Result = res
+	return ec.marshalOGraph2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐGraph(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Configuration_graph(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Configuration",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "sources":
+				return ec.fieldContext_Graph_sources(ctx, field)
+			case "intermediates":
+				return ec.fieldContext_Graph_intermediates(ctx, field)
+			case "targets":
+				return ec.fieldContext_Graph_targets(ctx, field)
+			case "edges":
+				return ec.fieldContext_Graph_edges(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Graph", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ConfigurationChange_configuration(ctx context.Context, field graphql.CollectedField, obj *model1.ConfigurationChange) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ConfigurationChange_configuration(ctx, field)
 	if err != nil {
@@ -4402,6 +4924,8 @@ func (ec *executionContext) fieldContext_ConfigurationChange_configuration(ctx c
 				return ec.fieldContext_Configuration_spec(ctx, field)
 			case "agentCount":
 				return ec.fieldContext_Configuration_agentCount(ctx, field)
+			case "graph":
+				return ec.fieldContext_Configuration_graph(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Configuration", field.Name)
 		},
@@ -4772,6 +5296,8 @@ func (ec *executionContext) fieldContext_Configurations_configurations(ctx conte
 				return ec.fieldContext_Configuration_spec(ctx, field)
 			case "agentCount":
 				return ec.fieldContext_Configuration_agentCount(ctx, field)
+			case "graph":
+				return ec.fieldContext_Configuration_graph(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Configuration", field.Name)
 		},
@@ -5015,6 +5541,8 @@ func (ec *executionContext) fieldContext_Destination_spec(ctx context.Context, f
 				return ec.fieldContext_ParameterizedSpec_type(ctx, field)
 			case "parameters":
 				return ec.fieldContext_ParameterizedSpec_parameters(ctx, field)
+			case "processors":
+				return ec.fieldContext_ParameterizedSpec_processors(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParameterizedSpec", field.Name)
 		},
@@ -5407,6 +5935,671 @@ func (ec *executionContext) fieldContext_DocumentationLink_url(ctx context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Edge_id(ctx context.Context, field graphql.CollectedField, obj *graph.Edge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Edge_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Edge_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Edge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Edge_source(ctx context.Context, field graphql.CollectedField, obj *graph.Edge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Edge_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Edge_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Edge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Edge_target(ctx context.Context, field graphql.CollectedField, obj *graph.Edge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Edge_target(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Target, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Edge_target(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Edge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Graph_sources(ctx context.Context, field graphql.CollectedField, obj *graph.Graph) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Graph_sources(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sources, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*graph.Node)
+	fc.Result = res
+	return ec.marshalNNode2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐNodeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Graph_sources(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Graph",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Node_id(ctx, field)
+			case "type":
+				return ec.fieldContext_Node_type(ctx, field)
+			case "label":
+				return ec.fieldContext_Node_label(ctx, field)
+			case "attributes":
+				return ec.fieldContext_Node_attributes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Node", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Graph_intermediates(ctx context.Context, field graphql.CollectedField, obj *graph.Graph) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Graph_intermediates(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Intermediates, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*graph.Node)
+	fc.Result = res
+	return ec.marshalNNode2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐNodeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Graph_intermediates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Graph",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Node_id(ctx, field)
+			case "type":
+				return ec.fieldContext_Node_type(ctx, field)
+			case "label":
+				return ec.fieldContext_Node_label(ctx, field)
+			case "attributes":
+				return ec.fieldContext_Node_attributes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Node", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Graph_targets(ctx context.Context, field graphql.CollectedField, obj *graph.Graph) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Graph_targets(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Targets, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*graph.Node)
+	fc.Result = res
+	return ec.marshalNNode2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐNodeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Graph_targets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Graph",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Node_id(ctx, field)
+			case "type":
+				return ec.fieldContext_Node_type(ctx, field)
+			case "label":
+				return ec.fieldContext_Node_label(ctx, field)
+			case "attributes":
+				return ec.fieldContext_Node_attributes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Node", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Graph_edges(ctx context.Context, field graphql.CollectedField, obj *graph.Graph) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Graph_edges(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*graph.Edge)
+	fc.Result = res
+	return ec.marshalNEdge2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐEdgeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Graph_edges(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Graph",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Edge_id(ctx, field)
+			case "source":
+				return ec.fieldContext_Edge_source(ctx, field)
+			case "target":
+				return ec.fieldContext_Edge_target(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Edge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GraphMetric_name(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetric) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GraphMetric_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GraphMetric_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GraphMetric",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GraphMetric_nodeID(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetric) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GraphMetric_nodeID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NodeID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GraphMetric_nodeID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GraphMetric",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GraphMetric_pipelineType(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetric) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GraphMetric_pipelineType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PipelineType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GraphMetric_pipelineType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GraphMetric",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GraphMetric_value(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetric) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GraphMetric_value(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GraphMetric_value(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GraphMetric",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GraphMetric_unit(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetric) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GraphMetric_unit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Unit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GraphMetric_unit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GraphMetric",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GraphMetric_agentID(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetric) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GraphMetric_agentID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AgentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GraphMetric_agentID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GraphMetric",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GraphMetrics_metrics(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetrics) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GraphMetrics_metrics(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metrics, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model1.GraphMetric)
+	fc.Result = res
+	return ec.marshalNGraphMetric2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetricᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GraphMetrics_metrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GraphMetrics",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "name":
+				return ec.fieldContext_GraphMetric_name(ctx, field)
+			case "nodeID":
+				return ec.fieldContext_GraphMetric_nodeID(ctx, field)
+			case "pipelineType":
+				return ec.fieldContext_GraphMetric_pipelineType(ctx, field)
+			case "value":
+				return ec.fieldContext_GraphMetric_value(ctx, field)
+			case "unit":
+				return ec.fieldContext_GraphMetric_unit(ctx, field)
+			case "agentID":
+				return ec.fieldContext_GraphMetric_agentID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GraphMetric", field.Name)
 		},
 	}
 	return fc, nil
@@ -6422,6 +7615,236 @@ func (ec *executionContext) fieldContext_MetricOption_kpi(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Node_id(ctx context.Context, field graphql.CollectedField, obj *graph.Node) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Node_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Node_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Node",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Node_type(ctx context.Context, field graphql.CollectedField, obj *graph.Node) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Node_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Node_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Node",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Node_label(ctx context.Context, field graphql.CollectedField, obj *graph.Node) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Node_label(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Label, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Node_label(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Node",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Node_attributes(ctx context.Context, field graphql.CollectedField, obj *graph.Node) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Node_attributes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Attributes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(map[string]any)
+	fc.Result = res
+	return ec.marshalNMap2map(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Node_attributes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Node",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Map does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OverviewPage_graph(ctx context.Context, field graphql.CollectedField, obj *model1.OverviewPage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OverviewPage_graph(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Graph, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*graph.Graph)
+	fc.Result = res
+	return ec.marshalNGraph2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐGraph(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OverviewPage_graph(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OverviewPage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "sources":
+				return ec.fieldContext_Graph_sources(ctx, field)
+			case "intermediates":
+				return ec.fieldContext_Graph_intermediates(ctx, field)
+			case "targets":
+				return ec.fieldContext_Graph_targets(ctx, field)
+			case "edges":
+				return ec.fieldContext_Graph_edges(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Graph", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Parameter_name(ctx context.Context, field graphql.CollectedField, obj *model.Parameter) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Parameter_name(ctx, field)
 	if err != nil {
@@ -7352,6 +8775,57 @@ func (ec *executionContext) fieldContext_ParameterizedSpec_parameters(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _ParameterizedSpec_processors(ctx context.Context, field graphql.CollectedField, obj *model.ParameterizedSpec) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParameterizedSpec_processors(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Processors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.ResourceConfiguration)
+	fc.Result = res
+	return ec.marshalOResourceConfiguration2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfigurationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParameterizedSpec_processors(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParameterizedSpec",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "name":
+				return ec.fieldContext_ResourceConfiguration_name(ctx, field)
+			case "type":
+				return ec.fieldContext_ResourceConfiguration_type(ctx, field)
+			case "parameters":
+				return ec.fieldContext_ResourceConfiguration_parameters(ctx, field)
+			case "processors":
+				return ec.fieldContext_ResourceConfiguration_processors(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ResourceConfiguration", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Processor_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model.Processor) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Processor_apiVersion(ctx, field)
 	if err != nil {
@@ -7541,6 +9015,8 @@ func (ec *executionContext) fieldContext_Processor_spec(ctx context.Context, fie
 				return ec.fieldContext_ParameterizedSpec_type(ctx, field)
 			case "parameters":
 				return ec.fieldContext_ParameterizedSpec_parameters(ctx, field)
+			case "processors":
+				return ec.fieldContext_ParameterizedSpec_processors(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParameterizedSpec", field.Name)
 		},
@@ -7743,6 +9219,54 @@ func (ec *executionContext) fieldContext_ProcessorType_spec(ctx context.Context,
 				return ec.fieldContext_ResourceTypeSpec_telemetryTypes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ResourceTypeSpec", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_overviewPage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_overviewPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().OverviewPage(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model1.OverviewPage)
+	fc.Result = res
+	return ec.marshalNOverviewPage2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐOverviewPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_overviewPage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "graph":
+				return ec.fieldContext_OverviewPage_graph(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OverviewPage", field.Name)
 		},
 	}
 	return fc, nil
@@ -8018,6 +9542,8 @@ func (ec *executionContext) fieldContext_Query_configuration(ctx context.Context
 				return ec.fieldContext_Configuration_spec(ctx, field)
 			case "agentCount":
 				return ec.fieldContext_Configuration_agentCount(ctx, field)
+			case "graph":
+				return ec.fieldContext_Configuration_graph(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Configuration", field.Name)
 		},
@@ -8900,6 +10426,183 @@ func (ec *executionContext) fieldContext_Query_snapshot(ctx context.Context, fie
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_snapshot_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_agentMetrics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_agentMetrics(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AgentMetrics(rctx, fc.Args["period"].(string), fc.Args["ids"].([]string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model1.GraphMetrics)
+	fc.Result = res
+	return ec.marshalNGraphMetrics2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_agentMetrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metrics":
+				return ec.fieldContext_GraphMetrics_metrics(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GraphMetrics", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_agentMetrics_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_configurationMetrics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_configurationMetrics(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ConfigurationMetrics(rctx, fc.Args["period"].(string), fc.Args["name"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model1.GraphMetrics)
+	fc.Result = res
+	return ec.marshalNGraphMetrics2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_configurationMetrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metrics":
+				return ec.fieldContext_GraphMetrics_metrics(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GraphMetrics", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_configurationMetrics_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_overviewMetrics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_overviewMetrics(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().OverviewMetrics(rctx, fc.Args["period"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model1.GraphMetrics)
+	fc.Result = res
+	return ec.marshalNGraphMetrics2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_overviewMetrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metrics":
+				return ec.fieldContext_GraphMetrics_metrics(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GraphMetrics", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_overviewMetrics_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -9914,6 +11617,8 @@ func (ec *executionContext) fieldContext_Source_spec(ctx context.Context, field 
 				return ec.fieldContext_ParameterizedSpec_type(ctx, field)
 			case "parameters":
 				return ec.fieldContext_ParameterizedSpec_parameters(ctx, field)
+			case "processors":
+				return ec.fieldContext_ParameterizedSpec_processors(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParameterizedSpec", field.Name)
 		},
@@ -10265,6 +11970,225 @@ func (ec *executionContext) fieldContext_Subscription_configurationChanges(ctx c
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Subscription_configurationChanges_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_agentMetrics(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_agentMetrics(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().AgentMetrics(rctx, fc.Args["period"].(string), fc.Args["ids"].([]string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan *model1.GraphMetrics):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNGraphMetrics2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_agentMetrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metrics":
+				return ec.fieldContext_GraphMetrics_metrics(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GraphMetrics", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_agentMetrics_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_configurationMetrics(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_configurationMetrics(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().ConfigurationMetrics(rctx, fc.Args["period"].(string), fc.Args["name"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan *model1.GraphMetrics):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNGraphMetrics2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_configurationMetrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metrics":
+				return ec.fieldContext_GraphMetrics_metrics(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GraphMetrics", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_configurationMetrics_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_overviewMetrics(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_overviewMetrics(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().OverviewMetrics(rctx, fc.Args["period"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan *model1.GraphMetrics):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNGraphMetrics2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_overviewMetrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metrics":
+				return ec.fieldContext_GraphMetrics_metrics(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GraphMetrics", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_overviewMetrics_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -12967,6 +14891,23 @@ func (ec *executionContext) _Configuration(ctx context.Context, sel ast.Selectio
 				return innerFunc(ctx)
 
 			})
+		case "graph":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Configuration_graph(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13278,6 +15219,185 @@ func (ec *executionContext) _DocumentationLink(ctx context.Context, sel ast.Sele
 	return out
 }
 
+var edgeImplementors = []string{"Edge"}
+
+func (ec *executionContext) _Edge(ctx context.Context, sel ast.SelectionSet, obj *graph.Edge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, edgeImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Edge")
+		case "id":
+
+			out.Values[i] = ec._Edge_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "source":
+
+			out.Values[i] = ec._Edge_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "target":
+
+			out.Values[i] = ec._Edge_target(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var graphImplementors = []string{"Graph"}
+
+func (ec *executionContext) _Graph(ctx context.Context, sel ast.SelectionSet, obj *graph.Graph) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, graphImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Graph")
+		case "sources":
+
+			out.Values[i] = ec._Graph_sources(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "intermediates":
+
+			out.Values[i] = ec._Graph_intermediates(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "targets":
+
+			out.Values[i] = ec._Graph_targets(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "edges":
+
+			out.Values[i] = ec._Graph_edges(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var graphMetricImplementors = []string{"GraphMetric"}
+
+func (ec *executionContext) _GraphMetric(ctx context.Context, sel ast.SelectionSet, obj *model1.GraphMetric) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, graphMetricImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GraphMetric")
+		case "name":
+
+			out.Values[i] = ec._GraphMetric_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "nodeID":
+
+			out.Values[i] = ec._GraphMetric_nodeID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pipelineType":
+
+			out.Values[i] = ec._GraphMetric_pipelineType(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "value":
+
+			out.Values[i] = ec._GraphMetric_value(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "unit":
+
+			out.Values[i] = ec._GraphMetric_unit(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "agentID":
+
+			out.Values[i] = ec._GraphMetric_agentID(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var graphMetricsImplementors = []string{"GraphMetrics"}
+
+func (ec *executionContext) _GraphMetrics(ctx context.Context, sel ast.SelectionSet, obj *model1.GraphMetrics) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, graphMetricsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GraphMetrics")
+		case "metrics":
+
+			out.Values[i] = ec._GraphMetrics_metrics(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var logImplementors = []string{"Log"}
 
 func (ec *executionContext) _Log(ctx context.Context, sel ast.SelectionSet, obj *record.Log) graphql.Marshaler {
@@ -13510,6 +15630,83 @@ func (ec *executionContext) _MetricOption(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var nodeImplementors = []string{"Node"}
+
+func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj *graph.Node) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, nodeImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Node")
+		case "id":
+
+			out.Values[i] = ec._Node_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "type":
+
+			out.Values[i] = ec._Node_type(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "label":
+
+			out.Values[i] = ec._Node_label(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "attributes":
+
+			out.Values[i] = ec._Node_attributes(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var overviewPageImplementors = []string{"OverviewPage"}
+
+func (ec *executionContext) _OverviewPage(ctx context.Context, sel ast.SelectionSet, obj *model1.OverviewPage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, overviewPageImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OverviewPage")
+		case "graph":
+
+			out.Values[i] = ec._OverviewPage_graph(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var parameterImplementors = []string{"Parameter"}
 
 func (ec *executionContext) _Parameter(ctx context.Context, sel ast.SelectionSet, obj *model.Parameter) graphql.Marshaler {
@@ -13707,6 +15904,10 @@ func (ec *executionContext) _ParameterizedSpec(ctx context.Context, sel ast.Sele
 
 			out.Values[i] = ec._ParameterizedSpec_parameters(ctx, field, obj)
 
+		case "processors":
+
+			out.Values[i] = ec._ParameterizedSpec_processors(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13861,6 +16062,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "overviewPage":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_overviewPage(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "agents":
 			field := field
 
@@ -14274,6 +16498,75 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "agentMetrics":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_agentMetrics(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "configurationMetrics":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_configurationMetrics(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "overviewMetrics":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_overviewMetrics(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "__type":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -14621,6 +16914,12 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 		return ec._Subscription_agentChanges(ctx, fields[0])
 	case "configurationChanges":
 		return ec._Subscription_configurationChanges(ctx, fields[0])
+	case "agentMetrics":
+		return ec._Subscription_agentMetrics(ctx, fields[0])
+	case "configurationMetrics":
+		return ec._Subscription_configurationMetrics(ctx, fields[0])
+	case "overviewMetrics":
+		return ec._Subscription_overviewMetrics(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -15164,12 +17463,12 @@ func (ec *executionContext) marshalNAgents2ᚖgithubᚗcomᚋobserviqᚋbindplan
 	return ec._Agents(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNAny2interface(ctx context.Context, v interface{}) (interface{}, error) {
+func (ec *executionContext) unmarshalNAny2interface(ctx context.Context, v interface{}) (any, error) {
 	res, err := graphql.UnmarshalAny(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNAny2interface(ctx context.Context, sel ast.SelectionSet, v interface{}) graphql.Marshaler {
+func (ec *executionContext) marshalNAny2interface(ctx context.Context, sel ast.SelectionSet, v any) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -15466,6 +17765,60 @@ func (ec *executionContext) marshalNDocumentationLink2githubᚗcomᚋobserviqᚋ
 	return ec._DocumentationLink(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNEdge2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*graph.Edge) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNEdge2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNEdge2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐEdge(ctx context.Context, sel ast.SelectionSet, v *graph.Edge) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Edge(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNEventType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐEventType(ctx context.Context, v interface{}) (model1.EventType, error) {
 	var res model1.EventType
 	err := res.UnmarshalGQL(v)
@@ -15474,6 +17827,99 @@ func (ec *executionContext) unmarshalNEventType2githubᚗcomᚋobserviqᚋbindpl
 
 func (ec *executionContext) marshalNEventType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐEventType(ctx context.Context, sel ast.SelectionSet, v model1.EventType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	res := graphql.MarshalFloatContext(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return graphql.WrapContextMarshaler(ctx, res)
+}
+
+func (ec *executionContext) marshalNGraph2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐGraph(ctx context.Context, sel ast.SelectionSet, v *graph.Graph) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Graph(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNGraphMetric2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetricᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.GraphMetric) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNGraphMetric2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetric(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNGraphMetric2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetric(ctx context.Context, sel ast.SelectionSet, v *model1.GraphMetric) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._GraphMetric(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNGraphMetrics2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx context.Context, sel ast.SelectionSet, v model1.GraphMetrics) graphql.Marshaler {
+	return ec._GraphMetrics(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGraphMetrics2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx context.Context, sel ast.SelectionSet, v *model1.GraphMetrics) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._GraphMetrics(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
@@ -15558,6 +18004,27 @@ func (ec *executionContext) marshalNLog2ᚖgithubᚗcomᚋobserviqᚋbindplane�
 		return graphql.Null
 	}
 	return ec._Log(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMap2map(ctx context.Context, v interface{}) (map[string]any, error) {
+	res, err := graphql.UnmarshalMap(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMap2map(ctx context.Context, sel ast.SelectionSet, v map[string]any) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalMap(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNMetadata2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetadata(ctx context.Context, sel ast.SelectionSet, v model.Metadata) graphql.Marshaler {
@@ -15668,6 +18135,74 @@ func (ec *executionContext) marshalNMetricOption2ᚕgithubᚗcomᚋobserviqᚋbi
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNNode2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐNodeᚄ(ctx context.Context, sel ast.SelectionSet, v []*graph.Node) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNNode2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐNode(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNNode2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐNode(ctx context.Context, sel ast.SelectionSet, v *graph.Node) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Node(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNOverviewPage2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐOverviewPage(ctx context.Context, sel ast.SelectionSet, v model1.OverviewPage) graphql.Marshaler {
+	return ec._OverviewPage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNOverviewPage2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐOverviewPage(ctx context.Context, sel ast.SelectionSet, v *model1.OverviewPage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._OverviewPage(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNParameter2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameter(ctx context.Context, sel ast.SelectionSet, v model.Parameter) graphql.Marshaler {
@@ -16566,6 +19101,67 @@ func (ec *executionContext) marshalODocumentationLink2ᚕgithubᚗcomᚋobserviq
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalOGraph2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚋgraphᚐGraph(ctx context.Context, sel ast.SelectionSet, v *graph.Graph) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Graph(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalID(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalID(*v)
+	return res
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {

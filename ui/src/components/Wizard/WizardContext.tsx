@@ -35,7 +35,7 @@ const defaultValue: WizardContextValue<any> = {
 
 const WizardContext = createContext(defaultValue);
 
-export function useWizard<T>(): WizardContextValue<T> {
+export function useWizard<T extends {}>(): WizardContextValue<T> {
   return useContext(WizardContext);
 }
 
@@ -98,7 +98,9 @@ function initializeErrors<T extends {}>(
   return errors;
 }
 
-function initializeTouched<T>(initialValues: FormValues<T>): FormTouched<T> {
+function initializeTouched<T extends {}>(
+  initialValues: FormValues<T>
+): FormTouched<T> {
   const touched: any = {};
   for (const key of Object.keys(initialValues)) {
     touched[key] = false;

@@ -1,0 +1,14 @@
+@use '../../styles/colors';
+
+.content {
+  background: colors.$gray;
+  padding: 0;
+  padding-bottom: 0 !important;
+  margin-top: -4px; // pull up over border-radius of the card
+  border-radius: 0 0 3px 3px;
+}
+
+.metric {
+  font-size: 12px;
+  padding: 2px;
+}

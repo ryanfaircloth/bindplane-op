@@ -1,0 +1,44 @@
+apiVersion: bindplane.observiq.com/v1
+kind: Configuration
+metadata:
+  name: macos-xy
+spec:
+  contentType: text/yaml
+  sources:
+  # name is optional and this will become MacOS_1 if none is specified or MacOS_name if a name is specified
+  - type: MacOS
+    parameters:
+      # using default parameter values for anything missing
+      - name: enable_system_log
+        value: false
+    processors:
+      - type: resource-attribute-transposer
+        parameters:
+          - name: from
+            value: from.attribute
+          - name: to
+            value: to.attribute
+      - type: resource-attribute-transposer
+        parameters:
+          - name: from
+            value: from.attribute2
+          - name: to
+            value: to.attribute2
+  destinations:
+  - name: googlecloud
+    processors:
+      - type: resource-attribute-transposer
+        parameters:
+          - name: from
+            value: from.attribute3
+          - name: to
+            value: to.attribute3
+      - type: resource-attribute-transposer
+        parameters:
+          - name: from
+            value: from.attribute4
+          - name: to
+            value: to.attribute4
+  selector:
+    matchLabels:
+      "configuration": macos

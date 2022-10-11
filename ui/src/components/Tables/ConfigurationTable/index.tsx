@@ -8,6 +8,7 @@ import {
   ConfigurationChangesSubscription,
   EventType,
   GetConfigurationTableQuery,
+  useConfigurationTableMetricsQuery,
   useGetConfigurationTableQuery,
 } from "../../../graphql/generated";
 import mixins from "../../../styles/mixins.module.scss";
@@ -33,9 +34,7 @@ gql`
       }
     }
   }
-`;
 
-gql`
   subscription ConfigurationChanges($selector: String, $query: String) {
     configurationChanges(selector: $selector, query: $query) {
       configuration {
@@ -47,6 +46,18 @@ gql`
         agentCount
       }
       eventType
+    }
+  }
+
+  query ConfigurationTableMetrics($period: String!) {
+    overviewMetrics(period: $period) {
+      metrics {
+        name
+        nodeID
+        pipelineType
+        value
+        unit
+      }
     }
   }
 `;
@@ -96,6 +107,10 @@ export const ConfigurationsTable: React.FC<ConfigurationTableProps> = ({
       fetchPolicy: "network-only",
       nextFetchPolicy: "cache-only",
     });
+
+  const { data: configurationMetrics } = useConfigurationTableMetricsQuery({
+    variables: { period: "1m" },
+  });
 
   // Selected is an array of names of configurations.
   const [selected, setSelected] = useState<GridSelectionModel>([]);
@@ -178,6 +193,7 @@ export const ConfigurationsTable: React.FC<ConfigurationTableProps> = ({
         }}
         loading={loading}
         configurations={data?.configurations.configurations ?? []}
+        configurationMetrics={configurationMetrics}
       />
 
       <DeleteDialog

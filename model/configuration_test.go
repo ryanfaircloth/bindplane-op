@@ -44,6 +44,20 @@ func fileResource[T Resource](t *testing.T, path string) T {
 	return resource
 }
 
+type testConfiguration struct {
+	bindplaneURL string
+}
+
+func newTestConfiguration() BindPlaneConfiguration {
+	return &testConfiguration{}
+}
+
+func (c *testConfiguration) BindPlaneURL() string {
+	return c.bindplaneURL
+}
+
+var _ BindPlaneConfiguration = (*testConfiguration)(nil)
+
 type testResourceStore struct {
 	sources          map[string]*Source
 	sourceTypes      map[string]*SourceType
@@ -98,6 +112,7 @@ func TestParseConfiguration(t *testing.T) {
 
 func TestEvalConfiguration(t *testing.T) {
 	store := newTestResourceStore()
+	config := newTestConfiguration()
 
 	macos := testResource[*SourceType](t, "sourcetype-macos.yaml")
 	store.sourceTypes[macos.Name()] = macos
@@ -109,15 +124,15 @@ func TestEvalConfiguration(t *testing.T) {
 	store.destinationTypes[cabinType.Name()] = cabinType
 
 	configuration := testResource[*Configuration](t, "configuration-macos-sources.yaml")
-	result, err := configuration.Render(context.TODO(), 0, store)
+	result, err := configuration.Render(context.TODO(), nil, config, store)
 	require.NoError(t, err)
 
 	expect := strings.TrimLeft(`
 receivers:
-    plugin/MacOS__source0__journald:
+    plugin/source0__journald:
         plugin:
             name: journald
-    plugin/MacOS__source0__macos:
+    plugin/source0__macos:
         parameters:
             - name: enable_system_log
               value: false
@@ -131,10 +146,10 @@ receivers:
               value: end
         plugin:
             name: macos
-    plugin/MacOS__source1__journald:
+    plugin/source1__journald:
         plugin:
             name: journald
-    plugin/MacOS__source1__macos:
+    plugin/source1__macos:
         parameters:
             - name: enable_system_log
               value: true
@@ -149,30 +164,30 @@ receivers:
         plugin:
             name: macos
 processors:
-    batch/observiq-cloud__cabin-production-logs: null
+    batch/cabin-production-logs: null
 exporters:
-    observiq/observiq-cloud__cabin-production-logs:
+    observiq/cabin-production-logs:
         endpoint: https://nozzle.app.observiq.com
         secret_key: 2c088c5e-2afc-483b-be52-e2b657fcff08
         timeout: 10s
 service:
     pipelines:
-        logs/MacOS__source0__cabin-production-logs:
+        logs/source0__cabin-production-logs:
             receivers:
-                - plugin/MacOS__source0__macos
-                - plugin/MacOS__source0__journald
+                - plugin/source0__macos
+                - plugin/source0__journald
             processors:
-                - batch/observiq-cloud__cabin-production-logs
+                - batch/cabin-production-logs
             exporters:
-                - observiq/observiq-cloud__cabin-production-logs
-        logs/MacOS__source1__cabin-production-logs:
+                - observiq/cabin-production-logs
+        logs/source1__cabin-production-logs:
             receivers:
-                - plugin/MacOS__source1__macos
-                - plugin/MacOS__source1__journald
+                - plugin/source1__macos
+                - plugin/source1__journald
             processors:
-                - batch/observiq-cloud__cabin-production-logs
+                - batch/cabin-production-logs
             exporters:
-                - observiq/observiq-cloud__cabin-production-logs
+                - observiq/cabin-production-logs
 `, "\n")
 
 	require.Equal(t, expect, result)
@@ -180,6 +195,7 @@ service:
 
 func TestEvalConfiguration2(t *testing.T) {
 	store := newTestResourceStore()
+	config := newTestConfiguration()
 
 	macos := testResource[*SourceType](t, "sourcetype-macos.yaml")
 	store.sourceTypes[macos.Name()] = macos
@@ -188,23 +204,23 @@ func TestEvalConfiguration2(t *testing.T) {
 	store.destinationTypes[googleCloudType.Name()] = googleCloudType
 
 	configuration := testResource[*Configuration](t, "configuration-macos-googlecloud.yaml")
-	result, err := configuration.Render(context.TODO(), 0, store)
+	result, err := configuration.Render(context.TODO(), nil, config, store)
 	require.NoError(t, err)
 
 	expect := strings.TrimLeft(`
 receivers:
-    hostmetrics/MacOS__source0:
+    hostmetrics/source0:
         collection_interval: 1m
         scrapers:
             load: null
-    hostmetrics/MacOS__source1:
+    hostmetrics/source1:
         collection_interval: 1m
         scrapers:
             load: null
-    plugin/MacOS__source0__journald:
+    plugin/source0__journald:
         plugin:
             name: journald
-    plugin/MacOS__source0__macos:
+    plugin/source0__macos:
         parameters:
             - name: enable_system_log
               value: false
@@ -218,10 +234,10 @@ receivers:
               value: end
         plugin:
             name: macos
-    plugin/MacOS__source1__journald:
+    plugin/source1__journald:
         plugin:
             name: journald
-    plugin/MacOS__source1__macos:
+    plugin/source1__macos:
         parameters:
             - name: enable_system_log
               value: true
@@ -236,44 +252,44 @@ receivers:
         plugin:
             name: macos
 processors:
-    batch/googlecloud__destination0: null
-    normalizesums/googlecloud__destination0: null
+    batch/destination0: null
+    normalizesums/destination0: null
 exporters:
-    googlecloud/googlecloud__destination0: null
+    googlecloud/destination0: null
 service:
     pipelines:
-        logs/MacOS__source0__destination0:
+        logs/source0__destination0:
             receivers:
-                - plugin/MacOS__source0__macos
-                - plugin/MacOS__source0__journald
+                - plugin/source0__macos
+                - plugin/source0__journald
             processors:
-                - batch/googlecloud__destination0
+                - batch/destination0
             exporters:
-                - googlecloud/googlecloud__destination0
-        logs/MacOS__source1__destination0:
+                - googlecloud/destination0
+        logs/source1__destination0:
             receivers:
-                - plugin/MacOS__source1__macos
-                - plugin/MacOS__source1__journald
+                - plugin/source1__macos
+                - plugin/source1__journald
             processors:
-                - batch/googlecloud__destination0
+                - batch/destination0
             exporters:
-                - googlecloud/googlecloud__destination0
-        metrics/MacOS__source0__destination0:
+                - googlecloud/destination0
+        metrics/source0__destination0:
             receivers:
-                - hostmetrics/MacOS__source0
+                - hostmetrics/source0
             processors:
-                - normalizesums/googlecloud__destination0
-                - batch/googlecloud__destination0
+                - normalizesums/destination0
+                - batch/destination0
             exporters:
-                - googlecloud/googlecloud__destination0
-        metrics/MacOS__source1__destination0:
+                - googlecloud/destination0
+        metrics/source1__destination0:
             receivers:
-                - hostmetrics/MacOS__source1
+                - hostmetrics/source1
             processors:
-                - normalizesums/googlecloud__destination0
-                - batch/googlecloud__destination0
+                - normalizesums/destination0
+                - batch/destination0
             exporters:
-                - googlecloud/googlecloud__destination0
+                - googlecloud/destination0
 `, "\n")
 
 	require.Equal(t, expect, result)
@@ -281,6 +297,7 @@ service:
 
 func TestEvalConfiguration3(t *testing.T) {
 	store := newTestResourceStore()
+	config := newTestConfiguration()
 
 	otlp := testResource[*SourceType](t, "sourcetype-otlp.yaml")
 	store.sourceTypes[otlp.Name()] = otlp
@@ -289,43 +306,43 @@ func TestEvalConfiguration3(t *testing.T) {
 	store.destinationTypes[googleCloudType.Name()] = googleCloudType
 
 	configuration := testResource[*Configuration](t, "configuration-otlp.yaml")
-	result, err := configuration.Render(context.TODO(), 0, store)
+	result, err := configuration.Render(context.TODO(), nil, config, store)
 	require.NoError(t, err)
 
 	expect := strings.TrimLeft(`
 receivers:
-    otlp/otlp__source0:
+    otlp/source0:
         protocols:
             grpc: null
             http: null
 processors:
-    batch/otlp__destination0: null
+    batch/destination0: null
 exporters:
-    otlp/otlp__destination0:
+    otlp/destination0:
         endpoint: otelcol:4317
 service:
     pipelines:
-        logs/otlp__source0__destination0:
+        logs/source0__destination0:
             receivers:
-                - otlp/otlp__source0
+                - otlp/source0
             processors:
-                - batch/otlp__destination0
+                - batch/destination0
             exporters:
-                - otlp/otlp__destination0
-        metrics/otlp__source0__destination0:
+                - otlp/destination0
+        metrics/source0__destination0:
             receivers:
-                - otlp/otlp__source0
+                - otlp/source0
             processors:
-                - batch/otlp__destination0
+                - batch/destination0
             exporters:
-                - otlp/otlp__destination0
-        traces/otlp__source0__destination0:
+                - otlp/destination0
+        traces/source0__destination0:
             receivers:
-                - otlp/otlp__source0
+                - otlp/source0
             processors:
-                - batch/otlp__destination0
+                - batch/destination0
             exporters:
-                - otlp/otlp__destination0
+                - otlp/destination0
 `, "\n")
 
 	require.Equal(t, expect, result)
@@ -333,6 +350,7 @@ service:
 
 func TestEvalConfiguration4(t *testing.T) {
 	store := newTestResourceStore()
+	config := newTestConfiguration()
 
 	postgresql := testResource[*SourceType](t, "sourcetype-postgresql.yaml")
 	store.sourceTypes[postgresql.Name()] = postgresql
@@ -341,12 +359,12 @@ func TestEvalConfiguration4(t *testing.T) {
 	store.destinationTypes[googleCloudType.Name()] = googleCloudType
 
 	configuration := testResource[*Configuration](t, "configuration-postgresql-googlecloud.yaml")
-	result, err := configuration.Render(context.TODO(), 0, store)
+	result, err := configuration.Render(context.TODO(), nil, config, store)
 	require.NoError(t, err)
 
 	expect := strings.TrimLeft(`
 receivers:
-    plugin/postgresql__source0__postgresql:
+    plugin/source0__postgresql:
         parameters:
             postgresql_log_path:
                 - /var/log/postgresql/postgresql*.log
@@ -355,29 +373,18 @@ receivers:
             start_at: end
         path: $OIQ_OTEL_COLLECTOR_HOME/plugins/postgresql_logs.yaml
 processors:
-    batch/googlecloud__destination0: null
-    normalizesums/googlecloud__destination0: null
-    resourceattributetransposer/postgresql__source0:
-        operations:
-            - from: host.name
-              to: agent
-    resourcedetection/postgresql__source0:
-        detectors:
-            - system
-        system:
-            hostname_sources:
-                - os
+    batch/destination0: null
 exporters:
-    googlecloud/googlecloud__destination0: null
+    googlecloud/destination0: null
 service:
     pipelines:
-        logs/postgresql__source0__destination0:
+        logs/source0__destination0:
             receivers:
-                - plugin/postgresql__source0__postgresql
+                - plugin/source0__postgresql
             processors:
-                - batch/googlecloud__destination0
+                - batch/destination0
             exporters:
-                - googlecloud/googlecloud__destination0
+                - googlecloud/destination0
 `, "\n")
 
 	require.Equal(t, expect, result)
@@ -385,6 +392,7 @@ service:
 
 func TestEvalConfiguration5(t *testing.T) {
 	store := newTestResourceStore()
+	config := newTestConfiguration()
 
 	postgresql := testResource[*SourceType](t, "sourcetype-macos.yaml")
 	store.sourceTypes[postgresql.Name()] = postgresql
@@ -399,19 +407,19 @@ func TestEvalConfiguration5(t *testing.T) {
 	store.processorTypes[resourceAttributeTransposerType.Name()] = resourceAttributeTransposerType
 
 	configuration := testResource[*Configuration](t, "configuration-macos-processors.yaml")
-	result, err := configuration.Render(context.TODO(), 0, store)
+	result, err := configuration.Render(context.TODO(), nil, config, store)
 	require.NoError(t, err)
 
 	expect := strings.TrimLeft(`
 receivers:
-    hostmetrics/MacOS__source0:
+    hostmetrics/source0:
         collection_interval: 1m
         scrapers:
             load: null
-    plugin/MacOS__source0__journald:
+    plugin/source0__journald:
         plugin:
             name: journald
-    plugin/MacOS__source0__macos:
+    plugin/source0__macos:
         parameters:
             - name: enable_system_log
               value: false
@@ -426,40 +434,462 @@ receivers:
         plugin:
             name: macos
 processors:
-    batch/googlecloud__googlecloud: null
-    normalizesums/googlecloud__googlecloud: null
-    resourceattributetransposer/resource-attribute-transposer__MacOS__source0__processor0:
+    batch/googlecloud: null
+    normalizesums/googlecloud: null
+    resourceattributetransposer/source0__processor0:
         operations:
             - from: from.attribute
               to: to.attribute
-    resourceattributetransposer/resource-attribute-transposer__MacOS__source0__processor1:
+    resourceattributetransposer/source0__processor1:
         operations:
             - from: from.attribute2
               to: to.attribute2
 exporters:
-    googlecloud/googlecloud__googlecloud: null
+    googlecloud/googlecloud: null
 service:
     pipelines:
-        logs/MacOS__source0__googlecloud:
+        logs/source0__googlecloud:
             receivers:
-                - plugin/MacOS__source0__macos
-                - plugin/MacOS__source0__journald
+                - plugin/source0__macos
+                - plugin/source0__journald
             processors:
-                - resourceattributetransposer/resource-attribute-transposer__MacOS__source0__processor0
-                - resourceattributetransposer/resource-attribute-transposer__MacOS__source0__processor1
-                - batch/googlecloud__googlecloud
+                - resourceattributetransposer/source0__processor0
+                - resourceattributetransposer/source0__processor1
+                - batch/googlecloud
             exporters:
-                - googlecloud/googlecloud__googlecloud
-        metrics/MacOS__source0__googlecloud:
+                - googlecloud/googlecloud
+        metrics/source0__googlecloud:
             receivers:
-                - hostmetrics/MacOS__source0
+                - hostmetrics/source0
             processors:
-                - resourceattributetransposer/resource-attribute-transposer__MacOS__source0__processor0
-                - resourceattributetransposer/resource-attribute-transposer__MacOS__source0__processor1
-                - normalizesums/googlecloud__googlecloud
-                - batch/googlecloud__googlecloud
+                - resourceattributetransposer/source0__processor0
+                - resourceattributetransposer/source0__processor1
+                - normalizesums/googlecloud
+                - batch/googlecloud
             exporters:
-                - googlecloud/googlecloud__googlecloud
+                - googlecloud/googlecloud
+`, "\n")
+
+	require.Equal(t, expect, result)
+}
+
+func TestEvalConfigurationDestinationProcessors(t *testing.T) {
+	store := newTestResourceStore()
+	config := newTestConfiguration()
+
+	postgresql := testResource[*SourceType](t, "sourcetype-macos.yaml")
+	store.sourceTypes[postgresql.Name()] = postgresql
+
+	googleCloudType := testResource[*DestinationType](t, "destinationtype-googlecloud.yaml")
+	store.destinationTypes[googleCloudType.Name()] = googleCloudType
+
+	googleCloud := testResource[*Destination](t, "destination-googlecloud.yaml")
+	store.destinations[googleCloud.Name()] = googleCloud
+
+	resourceAttributeTransposerType := testResource[*ProcessorType](t, "processortype-resourceattributetransposer.yaml")
+	store.processorTypes[resourceAttributeTransposerType.Name()] = resourceAttributeTransposerType
+
+	configuration := testResource[*Configuration](t, "configuration-macos-destination-processors.yaml")
+	result, err := configuration.Render(context.TODO(), nil, config, store)
+	require.NoError(t, err)
+
+	expect := strings.TrimLeft(`
+receivers:
+    hostmetrics/source0:
+        collection_interval: 1m
+        scrapers:
+            load: null
+    plugin/source0__journald:
+        plugin:
+            name: journald
+    plugin/source0__macos:
+        parameters:
+            - name: enable_system_log
+              value: false
+            - name: system_log_path
+              value: /var/log/system.log
+            - name: enable_install_log
+              value: true
+            - name: install_log_path
+              value: /var/log/install.log
+            - name: start_at
+              value: end
+        plugin:
+            name: macos
+processors:
+    batch/googlecloud: null
+    normalizesums/googlecloud: null
+    resourceattributetransposer/googlecloud__processor0:
+        operations:
+            - from: from.attribute3
+              to: to.attribute3
+    resourceattributetransposer/googlecloud__processor1:
+        operations:
+            - from: from.attribute4
+              to: to.attribute4
+    resourceattributetransposer/source0__processor0:
+        operations:
+            - from: from.attribute
+              to: to.attribute
+    resourceattributetransposer/source0__processor1:
+        operations:
+            - from: from.attribute2
+              to: to.attribute2
+exporters:
+    googlecloud/googlecloud: null
+service:
+    pipelines:
+        logs/source0__googlecloud:
+            receivers:
+                - plugin/source0__macos
+                - plugin/source0__journald
+            processors:
+                - resourceattributetransposer/source0__processor0
+                - resourceattributetransposer/source0__processor1
+                - resourceattributetransposer/googlecloud__processor0
+                - resourceattributetransposer/googlecloud__processor1
+                - batch/googlecloud
+            exporters:
+                - googlecloud/googlecloud
+        metrics/source0__googlecloud:
+            receivers:
+                - hostmetrics/source0
+            processors:
+                - resourceattributetransposer/source0__processor0
+                - resourceattributetransposer/source0__processor1
+                - resourceattributetransposer/googlecloud__processor0
+                - resourceattributetransposer/googlecloud__processor1
+                - normalizesums/googlecloud
+                - batch/googlecloud
+            exporters:
+                - googlecloud/googlecloud
+`, "\n")
+
+	require.Equal(t, expect, result)
+}
+
+func TestEvalConfigurationDestinationProcessorsWithMeasurements(t *testing.T) {
+	store := newTestResourceStore()
+	config := newTestConfiguration()
+
+	postgresql := testResource[*SourceType](t, "sourcetype-macos.yaml")
+	store.sourceTypes[postgresql.Name()] = postgresql
+
+	googleCloudType := testResource[*DestinationType](t, "destinationtype-googlecloud.yaml")
+	store.destinationTypes[googleCloudType.Name()] = googleCloudType
+
+	googleCloud := testResource[*Destination](t, "destination-googlecloud.yaml")
+	store.destinations[googleCloud.Name()] = googleCloud
+
+	resourceAttributeTransposerType := testResource[*ProcessorType](t, "processortype-resourceattributetransposer.yaml")
+	store.processorTypes[resourceAttributeTransposerType.Name()] = resourceAttributeTransposerType
+
+	agent := &Agent{
+		ID:      "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+		Version: v1_9_2.String(),
+	}
+
+	configuration := testResource[*Configuration](t, "configuration-macos-destination-processors.yaml")
+	result, err := configuration.Render(context.TODO(), agent, config, store)
+	require.NoError(t, err)
+
+	expect := strings.TrimLeft(`
+receivers:
+    hostmetrics/source0:
+        collection_interval: 1m
+        scrapers:
+            load: null
+    plugin/source0__journald:
+        plugin:
+            name: journald
+    plugin/source0__macos:
+        parameters:
+            - name: enable_system_log
+              value: false
+            - name: system_log_path
+              value: /var/log/system.log
+            - name: enable_install_log
+              value: true
+            - name: install_log_path
+              value: /var/log/install.log
+            - name: start_at
+              value: end
+        plugin:
+            name: macos
+    prometheus/_agent_metrics:
+        config:
+            scrape_configs:
+                - job_name: observiq-otel-collector
+                  metric_relabel_configs:
+                    - action: keep
+                      regex: otelcol_processor_throughputmeasurement_.*
+                      source_labels:
+                        - __name__
+                  scrape_interval: 10s
+                  static_configs:
+                    - labels:
+                        agent: 01ARZ3NDEKTSV4RRFFQ69G5FAV
+                        configuration: macos-xy
+                      targets:
+                        - 0.0.0.0:8888
+processors:
+    batch/_agent_metrics: null
+    batch/googlecloud: null
+    normalizesums/googlecloud: null
+    resourceattributetransposer/googlecloud__processor0:
+        operations:
+            - from: from.attribute3
+              to: to.attribute3
+    resourceattributetransposer/googlecloud__processor1:
+        operations:
+            - from: from.attribute4
+              to: to.attribute4
+    resourceattributetransposer/source0__processor0:
+        operations:
+            - from: from.attribute
+              to: to.attribute
+    resourceattributetransposer/source0__processor1:
+        operations:
+            - from: from.attribute2
+              to: to.attribute2
+    snapshotprocessor: null
+    throughputmeasurement/_d0_logs_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_d0_metrics_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_d1_logs_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_d1_metrics_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_s0_logs_source0:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_s0_metrics_source0:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_s1_logs_source0:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_s1_metrics_source0:
+        enabled: true
+        sampling_ratio: 1
+exporters:
+    googlecloud/googlecloud: null
+    otlphttp/_agent_metrics:
+        endpoint: /v1/otlphttp
+service:
+    pipelines:
+        logs/source0__googlecloud:
+            receivers:
+                - plugin/source0__macos
+                - plugin/source0__journald
+            processors:
+                - throughputmeasurement/_s0_logs_source0
+                - resourceattributetransposer/source0__processor0
+                - resourceattributetransposer/source0__processor1
+                - throughputmeasurement/_s1_logs_source0
+                - throughputmeasurement/_d0_logs_googlecloud
+                - resourceattributetransposer/googlecloud__processor0
+                - resourceattributetransposer/googlecloud__processor1
+                - throughputmeasurement/_d1_logs_googlecloud
+                - batch/googlecloud
+                - snapshotprocessor
+            exporters:
+                - googlecloud/googlecloud
+        metrics/_agent_metrics:
+            receivers:
+                - prometheus/_agent_metrics
+            processors:
+                - batch/_agent_metrics
+            exporters:
+                - otlphttp/_agent_metrics
+        metrics/source0__googlecloud:
+            receivers:
+                - hostmetrics/source0
+            processors:
+                - throughputmeasurement/_s0_metrics_source0
+                - resourceattributetransposer/source0__processor0
+                - resourceattributetransposer/source0__processor1
+                - throughputmeasurement/_s1_metrics_source0
+                - throughputmeasurement/_d0_metrics_googlecloud
+                - resourceattributetransposer/googlecloud__processor0
+                - resourceattributetransposer/googlecloud__processor1
+                - throughputmeasurement/_d1_metrics_googlecloud
+                - normalizesums/googlecloud
+                - batch/googlecloud
+                - snapshotprocessor
+            exporters:
+                - googlecloud/googlecloud
+`, "\n")
+
+	require.Equal(t, expect, result)
+}
+
+func TestEvalConfigurationMultiDestination(t *testing.T) {
+	store := newTestResourceStore()
+	config := newTestConfiguration()
+
+	postgresql := testResource[*SourceType](t, "sourcetype-macos.yaml")
+	store.sourceTypes[postgresql.Name()] = postgresql
+
+	googleCloudType := testResource[*DestinationType](t, "destinationtype-googlecloud.yaml")
+	store.destinationTypes[googleCloudType.Name()] = googleCloudType
+
+	cabinType := testResource[*DestinationType](t, "destinationtype-cabin.yaml")
+	store.destinationTypes[cabinType.Name()] = cabinType
+
+	googleCloud := testResource[*Destination](t, "destination-googlecloud.yaml")
+	store.destinations[googleCloud.Name()] = googleCloud
+
+	cabin := testResource[*Destination](t, "destination-cabin.yaml")
+	store.destinations[cabin.Name()] = cabin
+
+	resourceAttributeTransposerType := testResource[*ProcessorType](t, "processortype-resourceattributetransposer.yaml")
+	store.processorTypes[resourceAttributeTransposerType.Name()] = resourceAttributeTransposerType
+	agent := &Agent{
+		ID:      "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+		Version: v1_9_2.String(),
+	}
+
+	configuration := testResource[*Configuration](t, "configuration-macos-multi-destination.yaml")
+	result, err := configuration.Render(context.TODO(), agent, config, store)
+	require.NoError(t, err)
+
+	expect := strings.TrimLeft(`
+receivers:
+    hostmetrics/source0:
+        collection_interval: 1m
+        scrapers:
+            load: null
+    plugin/source0__journald:
+        plugin:
+            name: journald
+    plugin/source0__macos:
+        parameters:
+            - name: enable_system_log
+              value: false
+            - name: system_log_path
+              value: /var/log/system.log
+            - name: enable_install_log
+              value: true
+            - name: install_log_path
+              value: /var/log/install.log
+            - name: start_at
+              value: end
+        plugin:
+            name: macos
+    prometheus/_agent_metrics:
+        config:
+            scrape_configs:
+                - job_name: observiq-otel-collector
+                  metric_relabel_configs:
+                    - action: keep
+                      regex: otelcol_processor_throughputmeasurement_.*
+                      source_labels:
+                        - __name__
+                  scrape_interval: 10s
+                  static_configs:
+                    - labels:
+                        agent: 01ARZ3NDEKTSV4RRFFQ69G5FAV
+                        configuration: macos-xy
+                      targets:
+                        - 0.0.0.0:8888
+processors:
+    batch/_agent_metrics: null
+    batch/cabin-production-logs: null
+    batch/googlecloud: null
+    normalizesums/googlecloud: null
+    resourceattributetransposer/source0__processor0:
+        operations:
+            - from: from.attribute
+              to: to.attribute
+    resourceattributetransposer/source0__processor1:
+        operations:
+            - from: from.attribute2
+              to: to.attribute2
+    snapshotprocessor: null
+    throughputmeasurement/_d1_logs_cabin-production-logs:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_d1_logs_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_d1_metrics_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_s0_logs_source0:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_s0_metrics_source0:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_s1_logs_source0:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_s1_metrics_source0:
+        enabled: true
+        sampling_ratio: 1
+exporters:
+    googlecloud/googlecloud: null
+    observiq/cabin-production-logs:
+        endpoint: https://nozzle.app.observiq.com
+        secret_key: 2c088c5e-2afc-483b-be52-e2b657fcff08
+        timeout: 10s
+    otlphttp/_agent_metrics:
+        endpoint: /v1/otlphttp
+service:
+    pipelines:
+        logs/source0__cabin-production-logs:
+            receivers:
+                - plugin/source0__macos
+                - plugin/source0__journald
+            processors:
+                - resourceattributetransposer/source0__processor0
+                - resourceattributetransposer/source0__processor1
+                - throughputmeasurement/_d1_logs_cabin-production-logs
+                - batch/cabin-production-logs
+                - snapshotprocessor
+            exporters:
+                - observiq/cabin-production-logs
+        logs/source0__googlecloud:
+            receivers:
+                - plugin/source0__macos
+                - plugin/source0__journald
+            processors:
+                - throughputmeasurement/_s0_logs_source0
+                - resourceattributetransposer/source0__processor0
+                - resourceattributetransposer/source0__processor1
+                - throughputmeasurement/_s1_logs_source0
+                - throughputmeasurement/_d1_logs_googlecloud
+                - batch/googlecloud
+                - snapshotprocessor
+            exporters:
+                - googlecloud/googlecloud
+        metrics/_agent_metrics:
+            receivers:
+                - prometheus/_agent_metrics
+            processors:
+                - batch/_agent_metrics
+            exporters:
+                - otlphttp/_agent_metrics
+        metrics/source0__googlecloud:
+            receivers:
+                - hostmetrics/source0
+            processors:
+                - throughputmeasurement/_s0_metrics_source0
+                - resourceattributetransposer/source0__processor0
+                - resourceattributetransposer/source0__processor1
+                - throughputmeasurement/_s1_metrics_source0
+                - throughputmeasurement/_d1_metrics_googlecloud
+                - normalizesums/googlecloud
+                - batch/googlecloud
+                - snapshotprocessor
+            exporters:
+                - googlecloud/googlecloud
 `, "\n")
 
 	require.Equal(t, expect, result)
@@ -467,6 +897,7 @@ service:
 
 func TestEvalConfigurationFailsMissingResource(t *testing.T) {
 	store := newTestResourceStore()
+	config := newTestConfiguration()
 
 	postgresql := testResource[*SourceType](t, "sourcetype-macos.yaml")
 	store.sourceTypes[postgresql.Name()] = postgresql
@@ -515,7 +946,7 @@ func TestEvalConfigurationFailsMissingResource(t *testing.T) {
 			// before rendering, delete resources that we reference
 			test.deleteResources()
 
-			_, err := configuration.Render(context.TODO(), 0, store)
+			_, err := configuration.Render(context.TODO(), nil, config, store)
 			require.Error(t, err)
 			require.Equal(t, test.expectError, err.Error())
 

@@ -30,6 +30,7 @@ import (
 	"github.com/observiq/bindplane-op/common"
 	"github.com/observiq/bindplane-op/internal/eventbus"
 	"github.com/observiq/bindplane-op/internal/store/search"
+	"github.com/observiq/bindplane-op/internal/store/stats"
 	"github.com/observiq/bindplane-op/model"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -523,6 +524,11 @@ func (s *googleCloudStore) AgentIndex(ctx context.Context) search.Index {
 // ConfigurationIndex provides access to the search Index for Configurations
 func (s *googleCloudStore) ConfigurationIndex(ctx context.Context) search.Index {
 	return s.configurationIndex
+}
+
+// Measurements stores stats for agents and configurations
+func (s *googleCloudStore) Measurements() stats.Measurements {
+	return nil
 }
 
 // TODO (auth) we need to implement this interface in google cloudstore to allow a

@@ -15,7 +15,12 @@
 package model
 
 import (
+	"fmt"
+	"strings"
+
+	"github.com/observiq/bindplane-op/internal/otlp/record"
 	"github.com/observiq/bindplane-op/internal/store"
+	"github.com/observiq/bindplane-op/internal/store/stats"
 	"github.com/observiq/bindplane-op/model"
 )
 
@@ -77,4 +82,18 @@ func ToEventType(eventType store.EventType) EventType {
 		return EventTypeUpdate
 	}
 	return EventTypeUpdate
+}
+
+// ToGraphMetric converts a Metric to a GraphMetric
+func ToGraphMetric(m *record.Metric) (*GraphMetric, error) {
+	// make sure this is a float64 value
+	value, ok := stats.Value(m)
+	if !ok {
+		return nil, fmt.Errorf("bad value for metric %s", m.Name)
+	}
+	return &GraphMetric{
+		Name:  strings.TrimPrefix(m.Name, "otelcol_processor_throughputmeasurement_"),
+		Value: value,
+		Unit:  m.Unit,
+	}, nil
 }

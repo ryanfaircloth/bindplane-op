@@ -32,11 +32,16 @@ export class BPDestination implements Destination {
   setParamsFromMap(values: Record<string, any>) {
     const params: ParameterizedSpec["parameters"] = [];
     for (const [k, v] of Object.entries(values)) {
-      if (k !== "name") {
-        params.push({
-          name: k,
-          value: v,
-        });
+      switch (k) {
+        case "name": // read-only
+          break;
+        case "processors": // saved in configuration
+          break;
+        default:
+          params.push({
+            name: k,
+            value: v,
+          });
       }
     }
 

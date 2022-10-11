@@ -7,6 +7,7 @@ import {
   AgentsTableQueryResult,
   Suggestion,
   useAgentsTableQuery,
+  useAgentsTableMetricsQuery,
 } from "../../../graphql/generated";
 import { SearchBar } from "../../SearchBar";
 import { AgentsDataGrid, AgentsTableField } from "./AgentsDataGrid";
@@ -17,9 +18,13 @@ import {
 } from "@mui/x-data-grid";
 import { mergeAgents } from "./merge-agents";
 import { AgentStatus } from "../../../types/agents";
+import { DEFAULT_AGENTS_TABLE_PERIOD } from "../../MeasurementControlBar/MeasurementControlBar";
 
-export type AgentsTableAgent = NonNullable<AgentsTableQueryResult["data"]>["agents"]["agents"][0];
-export type AgentsTableConfiguration = NonNullable<AgentsTableAgent>["configurationResource"]
+export type AgentsTableAgent = NonNullable<
+  AgentsTableQueryResult["data"]
+>["agents"]["agents"][0];
+export type AgentsTableConfiguration =
+  NonNullable<AgentsTableAgent>["configurationResource"];
 
 gql`
   query AgentsTable($selector: String, $query: String) {
@@ -59,6 +64,18 @@ gql`
       latestVersion
     }
   }
+  query AgentsTableMetrics($period: String!, $ids: [ID!]) {
+    agentMetrics(period: $period, ids: $ids) {
+      metrics {
+        name
+        nodeID
+        pipelineType
+        value
+        unit
+        agentID
+      }
+    }
+  }
 `;
 
 interface Props {
@@ -96,6 +113,9 @@ const AgentsTableComponent: React.FC<Props> = ({
     variables: { selector, query: initQuery },
     fetchPolicy: "network-only",
     nextFetchPolicy: "cache-only",
+  });
+  const { data: agentMetrics } = useAgentsTableMetricsQuery({
+    variables: { period: DEFAULT_AGENTS_TABLE_PERIOD },
   });
 
   const [agents, setAgents] = useState<AgentsTableAgent[]>([]);
@@ -199,6 +219,7 @@ const AgentsTableComponent: React.FC<Props> = ({
         minHeight={minHeight}
         loading={loading}
         agents={agents}
+        agentMetrics={agentMetrics}
         columnFields={columnFields}
       />
     </>

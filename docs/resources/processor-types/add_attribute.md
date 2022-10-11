@@ -45,7 +45,7 @@ spec:
         location: us-east1-b
 ```
 
-**Configuration with Embeded Processor**
+**Configuration with Embedded Processor**
 
 ```yaml
 apiVersion: bindplane.observiq.com/v1

@@ -31,26 +31,26 @@ func TestUniqueComponentID(t *testing.T) {
 			original:     "plugin",
 			typeName:     "macos",
 			resourceName: "1",
-			expect:       "plugin/macos__1",
+			expect:       "plugin/1",
 		},
 		{
 			original:     "plugin",
 			typeName:     "macos",
 			resourceName: "name",
-			expect:       "plugin/macos__name",
+			expect:       "plugin/name",
 		},
 		{
 			original:     "plugin/foo",
 			typeName:     "macos",
 			resourceName: "name",
-			expect:       "plugin/macos__name__foo",
+			expect:       "plugin/name__foo",
 		},
 		{
 			// This is malformed, but uniqueName isn't responsible
 			original:     "plugin/foo/bar",
 			typeName:     "macos",
 			resourceName: "name",
-			expect:       "plugin/macos__name__foo/bar",
+			expect:       "plugin/name__foo/bar",
 		},
 	}
 	for _, test := range tests {
@@ -82,4 +82,44 @@ func TestNilConfiguration(t *testing.T) {
 	yaml, err := c.YAML()
 	require.NoError(t, err)
 	require.Equal(t, NoopConfig, yaml)
+}
+
+func TestPipelineTypeFlags_Set(t *testing.T) {
+	tests := []struct {
+		name   string
+		flags  PipelineTypeFlags
+		add    PipelineTypeFlags
+		expect PipelineTypeFlags
+	}{
+		{
+			name:   "zeros",
+			flags:  0,
+			add:    0,
+			expect: 0,
+		},
+		{
+			name:   "metrics",
+			flags:  0,
+			add:    MetricsFlag,
+			expect: MetricsFlag,
+		},
+		{
+			name:   "logs|metrics",
+			flags:  LogsFlag,
+			add:    MetricsFlag,
+			expect: LogsFlag | MetricsFlag,
+		},
+		{
+			name:   "logs|metrics + metrics",
+			flags:  LogsFlag | MetricsFlag,
+			add:    MetricsFlag,
+			expect: LogsFlag | MetricsFlag,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.flags.Set(test.add)
+			require.Equal(t, test.expect, test.flags)
+		})
+	}
 }

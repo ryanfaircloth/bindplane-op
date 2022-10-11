@@ -63,6 +63,17 @@ export const NavBar: React.FC = () => {
                   ? classes([styles["nav-link"], styles["active"]])
                   : styles["nav-link"]
               }
+              to="/overview"
+            >
+              <GridIcon className={styles.icon} />
+              Overview
+            </NavLink>
+            <NavLink
+              className={({ isActive }) =>
+                isActive
+                  ? classes([styles["nav-link"], styles["active"]])
+                  : styles["nav-link"]
+              }
               to="/agents"
             >
               <GridIcon className={styles.icon} />

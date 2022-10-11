@@ -5,18 +5,31 @@ import {
   GridColumns,
   GridDensityTypes,
   GridSelectionModel,
+  GridValueFormatterParams,
   GridValueGetterParams,
 } from "@mui/x-data-grid";
 import { isFunction } from "lodash";
 import React, { memo } from "react";
 import { Link } from "react-router-dom";
-import { GetConfigurationTableQuery } from "../../../graphql/generated";
+import {
+  ConfigurationTableMetricsQuery,
+  GetConfigurationTableQuery,
+} from "../../../graphql/generated";
+import { formatMetric } from "../../../utils/graph/utils";
+import {
+  DEFAULT_CONFIGURATION_TABLE_PERIOD,
+  TELEMETRY_SIZE_METRICS,
+  TELEMETRY_TYPES,
+} from "../../MeasurementControlBar/MeasurementControlBar";
 
 export enum ConfigurationsTableField {
   NAME = "name",
   LABELS = "labels",
   DESCRIPTION = "description",
   AGENT_COUNT = "agentCount",
+  LOGS = "logs",
+  METRICS = "metrics",
+  TRACES = "traces",
 }
 
 type Configurations =
@@ -26,6 +39,7 @@ interface ConfigurationsDataGridProps {
   density?: GridDensityTypes;
   loading: boolean;
   configurations?: Configurations;
+  configurationMetrics?: ConfigurationTableMetricsQuery;
   columnFields?: ConfigurationsTableField[];
 }
 
@@ -34,6 +48,7 @@ const ConfigurationsDataGridComponent: React.FC<ConfigurationsDataGridProps> =
     onConfigurationsSelected,
     loading,
     configurations,
+    configurationMetrics,
     columnFields,
     density = GridDensityTypes.Standard,
   }) => {
@@ -66,6 +81,12 @@ const ConfigurationsDataGridComponent: React.FC<ConfigurationsDataGridProps> =
               params.row.metadata.labels,
             renderCell: renderLabels,
           };
+        case ConfigurationsTableField.LOGS:
+          return createMetricRateColumn(field, "logs", configurationMetrics);
+        case ConfigurationsTableField.METRICS:
+          return createMetricRateColumn(field, "metrics", configurationMetrics);
+        case ConfigurationsTableField.TRACES:
+          return createMetricRateColumn(field, "traces", configurationMetrics);
         default:
           return {
             field: ConfigurationsTableField.NAME,
@@ -133,12 +154,54 @@ function renderAgentCountCell(
   return <span style={{ margin: "auto" }}>{cellParams.value}</span>;
 }
 
+function createMetricRateColumn(
+  field: string,
+  telemetryType: string,
+  configurationMetrics?: ConfigurationTableMetricsQuery
+): GridColumns[0] {
+  return {
+    field,
+    width: 100,
+    headerName: TELEMETRY_TYPES[telemetryType],
+    valueGetter: (params: GridValueGetterParams) => {
+      if (configurationMetrics == null) {
+        return "";
+      }
+      // should probably have a lookup table here rather than interpolate in two places
+      const metricName =  TELEMETRY_SIZE_METRICS[telemetryType];
+      const configurationName = params.row.metadata.name;
+      const metric = configurationMetrics.overviewMetrics.metrics.find(
+        (m) =>
+          m.name === metricName &&
+          m.nodeID === `configuration/${configurationName}`
+      );
+      if (metric == null) {
+        return 0;
+      }
+      // to make this sortable, we use the raw value and provide a valueFormatter implementation to show units
+      return metric.value;
+    },
+    valueFormatter: (params: GridValueFormatterParams<number>): string => {
+      if (params.value === 0) {
+        return "";
+      }
+      return formatMetric(
+        { value: params.value, unit: "B/s" },
+        DEFAULT_CONFIGURATION_TABLE_PERIOD
+      );
+    },
+  };
+}
+
 ConfigurationsDataGridComponent.defaultProps = {
   density: undefined,
   columnFields: [
     ConfigurationsTableField.NAME,
     ConfigurationsTableField.LABELS,
     ConfigurationsTableField.AGENT_COUNT,
+    ConfigurationsTableField.LOGS,
+    ConfigurationsTableField.METRICS,
+    ConfigurationsTableField.TRACES,
     ConfigurationsTableField.DESCRIPTION,
   ],
 };

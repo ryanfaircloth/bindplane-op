@@ -36,14 +36,14 @@ func TestEvalCabinDestination(t *testing.T) {
 	require.Len(t, values.Extensions, 0)
 
 	// we expect observiq-cloud to be rendered
-	_, ok := values.Exporters[0][otel.NewComponentID("observiq", "observiq-cloud__cabin-production-logs")]
+	_, ok := values.Exporters[0][otel.NewComponentID("observiq", "cabin-production-logs")]
 	require.True(t, ok)
 
 	exportersYaml, err := yaml.Marshal(values.Exporters)
 	require.NoError(t, err)
 
 	expectYaml := strings.TrimLeft(`
-- observiq/observiq-cloud__cabin-production-logs:
+- observiq/cabin-production-logs:
     endpoint: https://nozzle.app.observiq.com
     secret_key: 2c088c5e-2afc-483b-be52-e2b657fcff08
     timeout: 10s

@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"sync"
 	"time"
@@ -30,15 +31,18 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/observiq/bindplane-op/internal/eventbus"
+	"github.com/observiq/bindplane-op/internal/otlp/record"
 	"github.com/observiq/bindplane-op/internal/store/search"
+	"github.com/observiq/bindplane-op/internal/store/stats"
 	"github.com/observiq/bindplane-op/model"
 )
 
 // bucket names
 const (
-	bucketResources = "Resources"
-	bucketTasks     = "Tasks"
-	bucketAgents    = "Agents"
+	bucketResources    = "Resources"
+	bucketTasks        = "Tasks"
+	bucketAgents       = "Agents"
+	bucketMeasurements = "Measurements"
 )
 
 type boltstore struct {
@@ -68,6 +72,10 @@ func NewBoltStore(ctx context.Context, db *bbolt.DB, options Options, logger *za
 	// boltstore is not used for clusters, disconnect all agents
 	store.disconnectAllAgents(context.Background())
 
+	// start the timer that runs cleanup on measurements
+	store.startMeasurements(ctx)
+
+	// run the migration that fixes keys that were forcefully lowercased
 	err := store.migrateBackToCaseSensitive(context.Background())
 	if err != nil {
 		logger.Error("failed to migrateBackToCaseSensitive", zap.Error(err))
@@ -88,16 +96,29 @@ func InitDB(storageFilePath string) (*bbolt.DB, error) {
 		bucketResources,
 		bucketTasks,
 		bucketAgents,
+		bucketMeasurements,
 	}
 
-	// make sure buckets exists, errors are ignored here because bucket names are
-	// all valid, non-empty strings.
-	_ = db.Update(func(tx *bbolt.Tx) error {
+	err = db.Update(func(tx *bbolt.Tx) error {
 		for _, bucket := range buckets {
 			_, _ = tx.CreateBucketIfNotExists([]byte(bucket))
 		}
 		return nil
 	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to create bbolt storage bucket: %w", err)
+	}
+
+	err = db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(bucketMeasurements))
+		for _, metric := range supportedMetricNames {
+			_, _ = b.CreateBucketIfNotExists([]byte(metric))
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to create bbolt metrics bucket: %w", err)
+	}
 
 	return db, nil
 }
@@ -284,12 +305,18 @@ func (s *boltstore) Clear() {
 		_ = tx.DeleteBucket([]byte(bucketResources))
 		_ = tx.DeleteBucket([]byte(bucketTasks))
 		_ = tx.DeleteBucket([]byte(bucketAgents))
+		_ = tx.DeleteBucket([]byte(bucketMeasurements))
 
 		// create them again
 		// Disregarding errors because bucket names are valid.
 		_, _ = tx.CreateBucketIfNotExists([]byte(bucketResources))
 		_, _ = tx.CreateBucketIfNotExists([]byte(bucketTasks))
 		_, _ = tx.CreateBucketIfNotExists([]byte(bucketAgents))
+		b, _ := tx.CreateBucketIfNotExists([]byte(bucketMeasurements))
+
+		for _, metric := range supportedMetricNames {
+			_, _ = b.CreateBucketIfNotExists([]byte(metric))
+		}
 		return nil
 	})
 }
@@ -714,6 +741,11 @@ func (s *boltstore) UserSessions() sessions.Store {
 	return s.sessionStorage
 }
 
+// Measurements stores stats for agents and configurations
+func (s *boltstore) Measurements() stats.Measurements {
+	return s
+}
+
 // ----------------------------------------------------------------------
 
 func (s *boltstore) disconnectAllAgents(ctx context.Context) {
@@ -745,10 +777,6 @@ func agentKey(id string) []byte {
 	return []byte(fmt.Sprintf("%s|%s", "Agent", id))
 }
 
-func agentBucket(tx *bbolt.Tx) *bbolt.Bucket {
-	return tx.Bucket([]byte(bucketAgents))
-}
-
 func keyFromResource(r model.Resource) []byte {
 	if r == nil || r.GetKind() == model.KindUnknown {
 		return make([]byte, 0)
@@ -758,9 +786,20 @@ func keyFromResource(r model.Resource) []byte {
 
 /* --------------------------- transaction helpers -------------------------- */
 /* ------- These helper functions happen inside of a bbolt transaction ------ */
+func agentBucket(tx *bbolt.Tx) *bbolt.Bucket {
+	return tx.Bucket([]byte(bucketAgents))
+}
 
 func resourcesBucket(tx *bbolt.Tx) *bbolt.Bucket {
 	return tx.Bucket([]byte(bucketResources))
+}
+
+func measurementsBucket(tx *bbolt.Tx, metric string) *bbolt.Bucket {
+	b := tx.Bucket([]byte(bucketMeasurements))
+	if b != nil {
+		return b.Bucket([]byte(metric))
+	}
+	return nil
 }
 
 func upsertResource(tx *bbolt.Tx, r model.Resource, kind model.Kind) (model.UpdateStatus, error) {
@@ -969,6 +1008,436 @@ func deleteResource[R model.Resource](ctx context.Context, s *boltstore, kind mo
 
 	return emptyResource, exists, nil
 }
+
+// getObjectIds will retrieve identifiers for all objects in a bucket where the keys are formatted KIND|IDENTIFIER
+func (s *boltstore) getObjectIds(bucketFunc func(*bbolt.Tx) *bbolt.Bucket, kind model.Kind) ([]string, error) {
+	ids := []string{}
+	prefix := []byte(fmt.Sprintf("%s|", kind))
+	err := s.db.View(func(tx *bbolt.Tx) error {
+		cursor := bucketFunc(tx).Cursor()
+		for k, _ := cursor.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, _ = cursor.Next() {
+			if _, id, found := strings.Cut(string(k), "|"); found {
+				ids = append(ids, id)
+			}
+		}
+		return nil
+	})
+	return ids, err
+}
+
+// ----------------------------------------------------------------------
+// Measurements implementation
+
+const logDataSizeName = "otelcol_processor_throughputmeasurement_log_data_size"
+const metricDataSizeName = "otelcol_processor_throughputmeasurement_metric_data_size"
+const traceDataSizeName = "otelcol_processor_throughputmeasurement_trace_data_size"
+const measurementsDateFormat = "2006-01-02T15:04:05"
+
+var supportedMetricNames = []string{
+	logDataSizeName,
+	metricDataSizeName,
+	traceDataSizeName,
+}
+
+// AgentMetrics provides metrics for an individual agents. They are essentially configuration metrics filtered to a
+// list of agents.
+//
+// Note: While the same record.Metric struct is used to return the metrics, these are not the same metrics provided to
+// Store. They will be aggregated and counter metrics will be converted into rates.
+func (s *boltstore) AgentMetrics(ctx context.Context, ids []string, options ...stats.QueryOption) (stats.MetricData, error) {
+	// Empty string single key or empty array of ids is a request for all Agents
+	if len(ids) == 0 || (len(ids) == 1 && ids[0] == "") {
+		var err error
+		ids, err = s.getObjectIds(agentBucket, model.KindAgent)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return s.retrieveMetrics(ctx, supportedMetricNames, string(model.KindAgent), ids, options...)
+}
+
+// ConfigurationMetrics provides all metrics associated with a configuration aggregated from all agents using the
+// configuration.
+//
+// Note: While the same record.Metric struct is used to return the metrics, these are not the same metrics provided to
+// Store. They will be aggregated and counter metrics will be converted into rates.
+func (s *boltstore) ConfigurationMetrics(ctx context.Context, name string, options ...stats.QueryOption) (stats.MetricData, error) {
+	names := []string{name}
+	var err error
+	// Empty name is a request for all configurations
+	if name == "" {
+		names, err = s.getObjectIds(resourcesBucket, model.KindConfiguration)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	baseMetrics, err := s.retrieveMetrics(ctx, supportedMetricNames, string(model.KindConfiguration), names, options...)
+	if err != nil {
+		return nil, err
+	}
+
+	groupedMetrics := map[string]stats.MetricData{}
+	for _, m := range baseMetrics {
+		// since multiple configurations may be returned for the overview page, group by configuration and processor
+		key := fmt.Sprintf("%s|%s", stats.Configuration(m), stats.Processor(m))
+		groupedMetrics[key] = append(groupedMetrics[key], m)
+	}
+
+	finalMetrics := stats.MetricData{}
+	for _, metrics := range groupedMetrics {
+		sum := 0.0
+		for _, m := range metrics {
+			val, _ := stats.Value(m)
+			sum += val
+		}
+
+		attributes := map[string]interface{}{
+			stats.ConfigurationAttributeName: metrics[0].Attributes[stats.ConfigurationAttributeName],
+			stats.ProcessorAttributeName:     metrics[0].Attributes[stats.ProcessorAttributeName],
+		}
+
+		m := generateRecord(metrics[0], sum, attributes)
+
+		finalMetrics = append(finalMetrics, m)
+	}
+
+	return finalMetrics, nil
+}
+
+// OverviewMetrics provides all metrics needed for the overview page. This page shows configs and destinations.
+func (s *boltstore) OverviewMetrics(ctx context.Context, options ...stats.QueryOption) (stats.MetricData, error) {
+	return s.ConfigurationMetrics(ctx, "", options...)
+}
+
+func (s *boltstore) retrieveMetrics(ctx context.Context, metricNames []string, objectType string, ids []string, options ...stats.QueryOption) (stats.MetricData, error) {
+	result := stats.MetricData{}
+	err := s.db.View(func(tx *bbolt.Tx) error {
+		var errs error
+		opts := stats.MakeQueryOptions(options)
+		for _, metricName := range metricNames {
+			cursor := measurementsBucket(tx, metricName).Cursor()
+
+			// Always start looking at a recent non-current chunk data point, as current
+			// bucket is not going to have all data for all resources if the frame is Now()
+			frame := opts.EndTime.Add(-10 * time.Second).UTC()
+			startDate := frame.Add(-1 * opts.Period).Truncate(getRollupFromPeriod(opts)).Format(measurementsDateFormat)
+			endDate := frame.Truncate(getRollupFromPeriod(opts))
+			endDateString := endDate.Format(measurementsDateFormat)
+
+			for _, id := range ids {
+				endMetrics, err := findEndMetrics(cursor, endDateString, objectType, id)
+				if err != nil {
+					errs = multierror.Append(errs, err)
+					continue
+				}
+
+				if len(endMetrics) == 0 {
+					continue
+				}
+
+				// List the keys for which we want to find matching start points.
+				desiredKeys := map[string]interface{}{}
+				for k := range endMetrics {
+					desiredKeys[k] = true
+				}
+
+				startMetrics, err := findStartMetrics(cursor, startDate, endDate, objectType, id, desiredKeys)
+				if err != nil {
+					errs = multierror.Append(errs, err)
+					continue
+				}
+
+				// Only calculate rates if we found a start point to match the end points desired
+				for key, first := range startMetrics {
+					if last, ok := endMetrics[key]; ok {
+						if metric := calculateRateMetric(first, last); metric != nil {
+							result = append(result, metric)
+						}
+					}
+				}
+			}
+		}
+
+		return errs
+	})
+	return result, err
+}
+
+func findEndMetrics(c *bbolt.Cursor, time, objectType, id string) (map[string]*record.Metric, error) {
+	identifier := fmt.Sprintf("%s|%s", objectType, sanitizeKey(id))
+	prefix := []byte(fmt.Sprintf("%s|%s|", identifier, time))
+	metrics := map[string]*record.Metric{}
+
+	var k, v []byte
+	for k, v = c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
+		var m *record.Metric
+		m = &record.Metric{}
+		if err := json.Unmarshal(v, m); err != nil {
+			return nil, err
+		}
+		metrics[removeTimestampFromKey(k)] = m
+	}
+
+	return metrics, nil
+}
+
+func findStartMetrics(c *bbolt.Cursor, time string, endTime time.Time, objectType, id string, desiredKeys map[string]interface{}) (map[string]*record.Metric, error) {
+	identifier := fmt.Sprintf("%s|%s", objectType, sanitizeKey(id))
+	startingPrefix := []byte(fmt.Sprintf("%s|%s|", identifier, time))
+	metrics := map[string]*record.Metric{}
+
+	continueToSeek := func(k []byte) bool {
+		// Stop searching if we've satisfied all of the keys we were looking for
+		if len(desiredKeys) == 0 {
+			return false
+		}
+		// Stop searching if we've hit the end of the data
+		if k == nil {
+			return false
+		}
+
+		// Stop searching if we're no longer looking at data for the right object
+		if !bytes.HasPrefix(k, []byte(identifier)) {
+			return false
+		}
+
+		return true
+	}
+
+	var k, v []byte
+	for k, v = c.Seek(startingPrefix); continueToSeek(k); k, v = c.Next() {
+		// If we've been passed a desiredKeys list, only unmarshal & process
+		// data points on the requested list
+		keyWithoutTimestamp := removeTimestampFromKey(k)
+		if _, ok := desiredKeys[keyWithoutTimestamp]; !ok {
+			continue
+		}
+		var m *record.Metric
+		m = &record.Metric{}
+		if err := json.Unmarshal(v, m); err != nil {
+			return nil, err
+		}
+
+		// If we've reached or passed the endTime for this query, stop searching
+		if m.Timestamp.Sub(endTime) >= 0 {
+			break
+		}
+
+		metrics[keyWithoutTimestamp] = m
+		delete(desiredKeys, keyWithoutTimestamp)
+	}
+
+	return metrics, nil
+}
+
+func removeTimestampFromKey(k []byte) string {
+	keyParts := strings.Split(string(k), "|")
+	keyParts = append(keyParts[:2], keyParts[3:]...)
+	return strings.Join(keyParts, "|")
+}
+
+func getRollupFromPeriod(opts stats.QueryOptions) time.Duration {
+	switch opts.Period {
+	case 1 * time.Minute:
+		return 10 * time.Second
+	case 5 * time.Minute:
+		return 1 * time.Minute
+	case 1 * time.Hour:
+		return 5 * time.Minute
+	case 24 * time.Hour:
+		return 1 * time.Hour
+	default:
+		return 1 * time.Hour
+	}
+}
+
+// SaveAgentMetrics saves new metrics. These metrics will be aggregated to determine metrics associated with agents and configurations.
+func (s *boltstore) SaveAgentMetrics(ctx context.Context, metrics []*record.Metric) error {
+	groupedMetrics := map[string][]*record.Metric{}
+	for _, m := range metrics {
+		groupedMetrics[m.Name] = append(groupedMetrics[m.Name], m)
+	}
+
+	var metricNames []string
+	for _, metric := range metrics {
+		metricNames = append(metricNames, metric.Name)
+	}
+
+	var errs error
+	for _, metricName := range supportedMetricNames {
+		if group, ok := groupedMetrics[metricName]; ok {
+			err := s.storeMeasurements(ctx, metricName, group)
+			if err != nil {
+				errs = multierror.Append(errs, err)
+			}
+		}
+	}
+
+	return errs
+}
+
+// ProcessMetrics is called in the background at regular intervals and performs metric roll-up and removes old data
+func (s *boltstore) ProcessMetrics(ctx context.Context) error {
+	var errs error
+	for _, m := range supportedMetricNames {
+		if err := s.cleanupMeasurements(ctx, m); err != nil {
+			errs = multierror.Append(errs, err)
+		}
+	}
+	return errs
+}
+
+func (s *boltstore) startMeasurements(ctx context.Context) {
+	// start the measurements timer for writing & rolling up
+	go func() {
+		measurementsTicker := time.NewTicker(time.Minute)
+		defer measurementsTicker.Stop()
+
+		for {
+			select {
+			case <-measurementsTicker.C:
+				// periodically clean up old measurements
+				if err := s.ProcessMetrics(ctx); err != nil {
+					s.logger.Error("error cleaning up measurements", zap.Error(err))
+				}
+			case <-ctx.Done():
+				// send anything left in the buffer before stopping
+				return
+			}
+		}
+	}()
+}
+
+func (s *boltstore) storeMeasurements(ctx context.Context, metricName string, metrics stats.MetricData) error {
+	if len(metrics) == 0 {
+		return nil
+	}
+	return s.db.Update(func(tx *bbolt.Tx) error {
+		var errs error
+		b := measurementsBucket(tx, metricName)
+
+		for _, m := range metrics {
+			data, err := json.Marshal(m)
+			if err != nil {
+				errs = multierror.Append(errs, err)
+				continue
+			}
+			for _, key := range metricsKeys(m) {
+				if err = b.Put(key, data); err != nil {
+					errs = multierror.Append(errs, err)
+				}
+			}
+		}
+		return errs
+	})
+}
+
+func (s *boltstore) cleanupMeasurements(ctx context.Context, metricName string) error {
+	return s.db.Update(func(tx *bbolt.Tx) error {
+		var errs error
+		c := measurementsBucket(tx, metricName).Cursor()
+
+		// Capture now to re-use for all the date math
+		now := time.Now()
+
+		// Only look at data points older than 100 seconds, and we keep all the latest 10s intervals
+		endCleanupDate := now.Add(-100 * time.Second)
+
+		// Iterate through all points in the bucket, due to ordering we can't just scan by date
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+			if ts, err := time.Parse(measurementsDateFormat, keyTimestamp(k)); err != nil {
+				errs = multierror.Append(errs, err)
+			} else {
+				// Assume anything older than the cutoff is being deleted, unless the
+				// normalized timestamp matches one of the rollup times
+				keep := ts.Sub(endCleanupDate) > 0
+				// For last 10 minutes keep the minute data
+				keep = keep || ts.Truncate(time.Minute*1).Equal(ts) && now.Sub(ts) <= 10*time.Minute
+				// for the last 6 hours keep the 5 minute data
+				keep = keep || ts.Truncate(time.Minute*5).Equal(ts) && now.Sub(ts) <= 6*time.Hour
+				// for the last 24 hours keep the hourly data
+				keep = keep || ts.Truncate(time.Hour*1).Equal(ts) && now.Sub(ts) <= 24*time.Hour
+				// for the last 31 days keep the daily data
+				keep = keep || ts.Truncate(time.Hour*24).Equal(ts) && now.Sub(ts) <= 24*31*time.Hour
+
+				if !keep {
+					if err := c.Delete(); err != nil {
+						errs = multierror.Append(errs, err)
+					}
+				}
+			}
+		}
+
+		return errs
+	})
+}
+
+func calculateRateMetric(first, last *record.Metric) *record.Metric {
+	// If we ended up with start & end being the same moment, or somehow
+	// start is later than end, we don't want to provide a 0 or negative rate
+	if first.Timestamp.Sub(last.Timestamp) >= 0 {
+		return nil
+	}
+
+	var lastValue, firstValue float64
+	var pass bool
+	if lastValue, pass = stats.Value(last); !pass {
+		return nil
+	}
+	if firstValue, pass = stats.Value(first); !pass {
+		return nil
+	}
+
+	delta := lastValue - firstValue
+	if delta < 0 {
+		// TODO - handle rollover better than this
+		delta = lastValue
+	}
+
+	duration := last.Timestamp.Sub(first.Timestamp)
+	if duration <= 0*time.Second {
+		return nil
+	}
+
+	rate := delta / duration.Seconds()
+	// Reduce to 2 decimal places
+	rate = math.Round(rate*100) / 100
+
+	return generateRecord(last, rate, last.Attributes)
+}
+
+func generateRecord(source *record.Metric, value interface{}, attributes map[string]interface{}) *record.Metric {
+	return &record.Metric{
+		Name:       source.Name,
+		Timestamp:  source.Timestamp.UTC(),
+		Value:      value,
+		Unit:       "B/s",
+		Type:       "Rate",
+		Attributes: attributes,
+		Resource:   source.Resource,
+	}
+}
+
+func keyTimestamp(k []byte) string {
+	return strings.Split(string(k), "|")[2]
+}
+
+// metricsKey provides a key to store *record.Metric based on the agentID, processor and configuration of a single metric. It is
+// assumed that all metrics come from a single agent using a single configuration.
+func metricsKeys(m *record.Metric) [][]byte {
+	normalizedTime := m.Timestamp.UTC().Truncate(10 * time.Second).Format(measurementsDateFormat)
+	return [][]byte{
+		[]byte(fmt.Sprintf("%s|%s|%s|%s|%s", model.KindAgent, stats.Agent(m), normalizedTime, stats.Configuration(m), stats.Processor(m))),
+		[]byte(fmt.Sprintf("%s|%s|%s|%s|%s", model.KindConfiguration, stats.Configuration(m), normalizedTime, stats.Agent(m), stats.Processor(m))),
+	}
+}
+
+func sanitizeKey(key string) string {
+	return strings.ReplaceAll(key, "|", "")
+}
+
+// ----------------------------------------------------------------------
 
 func getNameFromResource[R model.Resource](ctx context.Context, v []byte) (string, error) {
 	var resource R
