@@ -72,7 +72,7 @@ func newServerInitOptions(spec *model.ProfileSpec) *serverInitOptions {
 		spec:      spec,
 		Host:      spec.Host,
 		Port:      spec.Port,
-		ServerURL: spec.Server.ServerURL,
+		ServerURL: spec.ServerURL,
 		RemoteURL: spec.Server.RemoteURL,
 		Username:  spec.Username,
 		Password:  spec.Password,
