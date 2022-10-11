@@ -164,7 +164,7 @@ export const InlineSourceCard: React.FC<{
         ])}
         onClick={() => setEditing(true)}
       >
-        <CardActionArea>
+        <CardActionArea className={styles.action}>
           <CardContent>
             <Stack alignItems="center" textAlign={"center"} height="100%">
               <span

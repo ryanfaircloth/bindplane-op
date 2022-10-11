@@ -34,7 +34,7 @@
 
 .resource-card {
   width: 150px;
-  height: 100px;
+  height: 120px;
   cursor: pointer;
 
   border-radius: 4px;
@@ -47,6 +47,10 @@
 .resource-card:hover {
   background-color: colors.$gray;
   transition: background-color 0.2s ease-in-out;
+}
+
+.action {
+  height: 120px;
 }
 
 .processor-card {

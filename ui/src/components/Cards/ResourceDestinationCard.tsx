@@ -238,7 +238,7 @@ const ResourceDestinationCardComponent: React.FC<{
         ])}
         onClick={() => setEditing(true)}
       >
-        <CardActionArea>
+        <CardActionArea className={styles.action}>
           <CardContent>
             <Stack alignItems="center">
               <span

@@ -18,7 +18,6 @@ interface ConfigurationCardProps {
   attributes: Record<string, any>;
   metric: string;
   disabled?: boolean;
-  connectedNodesAndEdges: string[];
 }
 
 export const ConfigurationCard: React.FC<ConfigurationCardProps> = ({
@@ -27,7 +26,6 @@ export const ConfigurationCard: React.FC<ConfigurationCardProps> = ({
   attributes,
   metric,
   disabled,
-  connectedNodesAndEdges,
 }) => {
   const navigate = useNavigate();
   const configurationURL = `/configurations/${id.split("/").pop()}`;

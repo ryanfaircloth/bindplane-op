@@ -1,5 +1,5 @@
 import { Edge, Position, MarkerType, Node } from "react-flow-renderer";
-import { TELEMETRY_SIZE_METRICS } from '../../components/MeasurementControlBar/MeasurementControlBar';
+import { TELEMETRY_SIZE_METRICS } from "../../components/MeasurementControlBar/MeasurementControlBar";
 import { isSourceID } from "../../components/PipelineGraph/Nodes/ProcessorNode";
 import { Graph, GraphMetric } from "../../graphql/generated";
 
@@ -29,7 +29,7 @@ export function getNodesAndEdges(
 
   // This number gives the horizontal spacing between sources and targets
   // TODO: make function of Cards bounding box
-  const processorYoffset = 25;
+  const processorYoffset = 35;
   const targetProcOffsetMultiplier = 300;
 
   for (let i = 0; i < (graph.sources ?? []).length; i++) {
@@ -226,7 +226,8 @@ export function updateMetricData(
 ) {
   for (const node of nodes) {
     const metric = metrics.find(
-      (m) => m.nodeID === node.id && m.name === TELEMETRY_SIZE_METRICS[telemetryType]
+      (m) =>
+        m.nodeID === node.id && m.name === TELEMETRY_SIZE_METRICS[telemetryType]
     );
     if (metric != null) {
       node.data.metric = formatMetric(metric, rate);
@@ -239,7 +240,8 @@ export function updateMetricData(
       const destinationId = node.id.replace("/processors", "");
       const metric = metrics.find(
         (m) =>
-          m.nodeID === destinationId && m.name === TELEMETRY_SIZE_METRICS[telemetryType]
+          m.nodeID === destinationId &&
+          m.name === TELEMETRY_SIZE_METRICS[telemetryType]
       );
       if (metric != null) {
         node.data.metric = formatMetric(metric, rate);
