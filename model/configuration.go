@@ -187,7 +187,7 @@ func (c *Configuration) renderComponents(ctx context.Context, agent *Agent, conf
 
 type renderContext struct {
 	*otel.RenderContext
-	pipelineTypeUsage *pipelineTypeUsage
+	pipelineTypeUsage *PipelineTypeUsage
 }
 
 func (c *Configuration) otelConfiguration(ctx context.Context, agent *Agent, config BindPlaneConfiguration, store ResourceStore) (*otel.Configuration, error) {
@@ -736,19 +736,39 @@ func (p pipelineTypeUsageMap) setSupported(name string, partials otel.Partials) 
 	p.usage(name).supported.Set(partials.PipelineTypes())
 }
 
-type pipelineTypeUsage struct {
+// PipelineTypeUsage contains information about active telemetry on the Configuration
+// and its sources and destinations.
+type PipelineTypeUsage struct {
 	sources      pipelineTypeUsageMap
 	destinations pipelineTypeUsageMap
+
+	// active refers to the top level configuration
+	active otel.PipelineTypeFlags
 }
 
-func newPipelineTypeUsage() *pipelineTypeUsage {
-	return &pipelineTypeUsage{
+// ActiveFlagsForDestination returns the PipelineTypeFlags that are active for a destination with given name.
+func (p *PipelineTypeUsage) ActiveFlagsForDestination(name string) otel.PipelineTypeFlags {
+	return p.destinations.usage(name).active
+}
+
+// ActiveFlags returns the pipeline type flags that are in use by the configuration.
+func (p *PipelineTypeUsage) ActiveFlags() otel.PipelineTypeFlags {
+	return p.active
+}
+
+// setActive sets the top level activeFlags for a pipelineTypeUsage
+func (p *PipelineTypeUsage) setActive(t otel.PipelineType) {
+	p.active.Set(t.Flag())
+}
+
+func newPipelineTypeUsage() *PipelineTypeUsage {
+	return &PipelineTypeUsage{
 		sources:      pipelineTypeUsageMap{},
 		destinations: pipelineTypeUsageMap{},
 	}
 }
 
-func (c *Configuration) determinePipelineTypeUsage(ctx context.Context, store ResourceStore) *pipelineTypeUsage {
+func (c *Configuration) determinePipelineTypeUsage(ctx context.Context, store ResourceStore) *PipelineTypeUsage {
 	p := newPipelineTypeUsage()
 
 	// the agent ID and URL values aren't important
@@ -765,7 +785,15 @@ func (c *Configuration) determinePipelineTypeUsage(ctx context.Context, store Re
 	for _, pipeline := range config.Service.Pipelines {
 		p.sources.setActive(pipeline.SourceName(), pipeline.Type())
 		p.destinations.setActive(pipeline.DestinationName(), pipeline.Type())
+
+		p.setActive(pipeline.Type())
 	}
 
 	return p
+}
+
+// Usage returns a PipelineTypeUsage struct which contains information about the active and
+// supported telemetry types on a configuration.
+func (c *Configuration) Usage(ctx context.Context, store ResourceStore) *PipelineTypeUsage {
+	return c.determinePipelineTypeUsage(ctx, store)
 }

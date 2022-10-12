@@ -22,6 +22,7 @@ import (
 	"github.com/observiq/bindplane-op/internal/store"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/bindplane-op/model/graph"
+	"github.com/observiq/bindplane-op/model/otel"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,6 +39,14 @@ func (m *mockStore) Configurations(ctx context.Context, options ...store.QueryOp
 
 func (m *mockStore) Destinations(ctx context.Context) ([]*model.Destination, error) {
 	return m.destinations, nil
+}
+
+func (m *mockStore) Destination(ctx context.Context, name string) (*model.Destination, error) {
+	return m.destinations[0], nil
+}
+
+func (m *mockStore) DestinationType(ctx context.Context, name string) (*model.DestinationType, error) {
+	return model.NewDestinationType("macOS", nil), nil
 }
 
 func (m *mockStore) AgentsIDsMatchingConfiguration(ctx context.Context, c *model.Configuration) ([]string, error) {
@@ -305,7 +314,9 @@ func testDestination(name string) *model.Destination {
 				Name: name,
 			},
 		},
-		Spec: model.ParameterizedSpec{},
+		Spec: model.ParameterizedSpec{
+			Type: "macOS",
+		},
 	}
 }
 
@@ -363,14 +374,17 @@ func testNode(name, nodeType string, agentCount int) *graph.Node {
 		id = fmt.Sprintf("destination/%s", name)
 		kind = string(model.KindDestination)
 	}
+
+	var activeFlags otel.PipelineTypeFlags
 	return &graph.Node{
 		ID:    id,
 		Label: name,
 		Type:  nodeType,
 		Attributes: map[string]any{
-			"kind":       kind,
-			"resourceId": name,
-			"agentCount": agentCount,
+			"kind":            kind,
+			"resourceId":      name,
+			"agentCount":      agentCount,
+			"activeTypeFlags": activeFlags,
 		},
 	}
 }

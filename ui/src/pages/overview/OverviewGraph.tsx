@@ -11,9 +11,8 @@ import { useEffect, useState } from "react";
 import ReactFlow, { Controls, useReactFlow } from "react-flow-renderer";
 import { useNavigate } from "react-router-dom";
 import {
-  MeasurementControlBar,
-  DEFAULT_TELEMETRY_TYPE,
   DEFAULT_PERIOD,
+  MeasurementControlBar,
 } from "../../components/MeasurementControlBar/MeasurementControlBar";
 import {
   useGetOverviewPageQuery,
@@ -21,8 +20,8 @@ import {
 } from "../../graphql/generated";
 import { getNodesAndEdges, updateMetricData } from "../../utils/graph/utils";
 import { OverviewDestinationNode, ConfigurationNode } from "./nodes";
-
 import { OverviewEdge } from "./OverviewEdge";
+import { useOverviewPage } from "./OverviewPageContext";
 
 gql`
   query getOverviewPage {
@@ -81,14 +80,12 @@ const edgeTypes = {
 };
 
 export const OverviewGraph: React.FC = () => {
-  const [selectedTelemetry, setTelemetry] = useState(DEFAULT_TELEMETRY_TYPE);
   const [selectedPeriod, setPeriod] = useState(DEFAULT_PERIOD);
-
+  const { selectedTelemetry, onTelemetryTypeChange } = useOverviewPage();
   const { enqueueSnackbar } = useSnackbar();
   const reactFlowInstance = useReactFlow();
   const navigate = useNavigate();
 
-  // TODO (handle error and loading states)
   const { data, error, loading } = useGetOverviewPageQuery({
     fetchPolicy: "network-only",
   });
@@ -140,7 +137,7 @@ export const OverviewGraph: React.FC = () => {
       <div style={{ height: "100%", width: "100%", paddingBottom: 50 }}>
         <MeasurementControlBar
           telemetry={selectedTelemetry}
-          onTelemetryTypeChange={(t: string) => setTelemetry(t)}
+          onTelemetryTypeChange={onTelemetryTypeChange}
           period={selectedPeriod}
           onPeriodChange={(r: string) => setPeriod(r)}
         />

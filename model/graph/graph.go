@@ -109,6 +109,11 @@ func (f *Graph) Connect(source, target *Node) {
 // NodeAttributes allow additional information, like the kind of the node and active telemetry types, to be associated with nodes.
 type NodeAttributes map[string]any
 
+// AddAttribute adds a key value pair to a NodeAttributes map.
+func (n NodeAttributes) AddAttribute(key string, value any) {
+	n[key] = value
+}
+
 // MakeAttributes adds the expected attributes to a map for a Node
 func MakeAttributes(resourceKind, resourceID string) NodeAttributes {
 	return map[string]any{

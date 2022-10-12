@@ -55,7 +55,11 @@ func overviewGraph(ctx context.Context, store store.Store) (*graph.Graph, error)
 
 		configNodeID := fmt.Sprintf("configuration/%s", c.Name())
 		configAttrs := graph.MakeAttributes(string(model.KindConfiguration), c.Name())
-		configAttrs["agentCount"] = len(agentIDs)
+
+		configUsage := c.Usage(ctx, store)
+		configAttrs.AddAttribute("agentCount", len(agentIDs))
+		configAttrs.AddAttribute("activeTypeFlags", configUsage.ActiveFlags())
+
 		configNodes = append(configNodes, &graph.Node{
 			ID:         configNodeID,
 			Label:      c.Name(),
@@ -73,7 +77,9 @@ func overviewGraph(ctx context.Context, store store.Store) (*graph.Graph, error)
 			destNode, ok := destNodes[destNodeID]
 			if !ok {
 				destAttrs := graph.MakeAttributes(string(model.KindDestination), d.Name)
-				destAttrs["agentCount"] = len(agentIDs)
+				destAttrs.AddAttribute("agentCount", len(agentIDs))
+				destAttrs.AddAttribute("activeTypeFlags", configUsage.ActiveFlagsForDestination(d.Name))
+
 				node := &graph.Node{
 					ID:         destNodeID,
 					Label:      d.Name,

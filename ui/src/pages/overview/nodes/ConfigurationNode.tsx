@@ -1,5 +1,6 @@
 import { Handle, Position } from "react-flow-renderer";
 import { ConfigurationCard } from "../../../components/Cards/ConfigurationCard";
+import { isNodeDisabled } from "../../../components/PipelineGraph/Nodes/nodeUtils";
 import { useOverviewPage } from "../OverviewPageContext";
 
 export function ConfigurationNode(params: {
@@ -11,7 +12,13 @@ export function ConfigurationNode(params: {
     connectedNodesAndEdges: string[];
   };
 }) {
-  const { hoveredSet, setHoveredNodeAndEdgeSet } = useOverviewPage();
+  const { hoveredSet, setHoveredNodeAndEdgeSet, selectedTelemetry } =
+    useOverviewPage();
+
+  const isDisabled = isNodeDisabled(selectedTelemetry, params.data.attributes);
+  const isNotInHoverSet =
+    hoveredSet.length > 0 &&
+    !hoveredSet.find((elem) => elem === params.data.id);
 
   return (
     <div
@@ -22,10 +29,7 @@ export function ConfigurationNode(params: {
     >
       <ConfigurationCard
         {...params.data}
-        disabled={
-          hoveredSet.length > 0 &&
-          !hoveredSet.find((elem) => elem === params.data.id)
-        }
+        disabled={isDisabled || isNotInHoverSet}
       />
       <Handle type={"source"} position={Position.Right} />
     </div>

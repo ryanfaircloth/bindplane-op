@@ -3,6 +3,7 @@ import { Handle, Position } from "react-flow-renderer";
 import { CardMeasurementContent } from "../../../components/CardMeasurementContent/CardMeasurementContent";
 import { InlineDestinationCard } from "../../../components/Cards/InlineDestinationCard";
 import { ResourceDestinationCard } from "../../../components/Cards/ResourceDestinationCard";
+import { isNodeDisabled } from "../../../components/PipelineGraph/Nodes/nodeUtils";
 import { useOverviewPage } from "../OverviewPageContext";
 
 export function OverviewDestinationNode(params: {
@@ -16,7 +17,13 @@ export function OverviewDestinationNode(params: {
   };
 }): JSX.Element {
   const { id, attributes, metric, connectedNodesAndEdges } = params.data;
-  const { setHoveredNodeAndEdgeSet, hoveredSet } = useOverviewPage();
+  const { setHoveredNodeAndEdgeSet, hoveredSet, selectedTelemetry } =
+    useOverviewPage();
+
+  const isDisabled = isNodeDisabled(selectedTelemetry, params.data.attributes);
+  const isNotInHoverSet =
+    hoveredSet.length > 0 &&
+    !hoveredSet.find((elem) => elem === params.data.id);
   return (
     <div
       onMouseEnter={() => setHoveredNodeAndEdgeSet(connectedNodesAndEdges)}
@@ -27,9 +34,7 @@ export function OverviewDestinationNode(params: {
       ) : (
         <ResourceDestinationCard
           name={attributes.resourceId}
-          disabled={
-            hoveredSet.length > 0 && !hoveredSet.find((elem) => elem === id)
-          }
+          disabled={isDisabled || isNotInHoverSet}
           key={id}
         />
       )}
