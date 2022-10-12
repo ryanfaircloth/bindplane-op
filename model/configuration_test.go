@@ -848,8 +848,10 @@ service:
                 - plugin/source0__macos
                 - plugin/source0__journald
             processors:
+                - throughputmeasurement/_s0_logs_source0
                 - resourceattributetransposer/source0__processor0
                 - resourceattributetransposer/source0__processor1
+                - throughputmeasurement/_s1_logs_source0
                 - throughputmeasurement/_d1_logs_cabin-production-logs
                 - batch/cabin-production-logs
                 - snapshotprocessor
@@ -860,10 +862,8 @@ service:
                 - plugin/source0__macos
                 - plugin/source0__journald
             processors:
-                - throughputmeasurement/_s0_logs_source0
                 - resourceattributetransposer/source0__processor0
                 - resourceattributetransposer/source0__processor1
-                - throughputmeasurement/_s1_logs_source0
                 - throughputmeasurement/_d1_logs_googlecloud
                 - batch/googlecloud
                 - snapshotprocessor

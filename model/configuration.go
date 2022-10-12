@@ -17,6 +17,7 @@ package model
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/google/uuid"
@@ -26,6 +27,7 @@ import (
 	"github.com/observiq/bindplane-op/model/otel"
 	"github.com/observiq/bindplane-op/model/validation"
 	otelExt "go.opentelemetry.io/otel"
+	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v3"
 )
 
@@ -219,8 +221,17 @@ func (c *Configuration) otelConfigurationWithRenderContext(ctx context.Context, 
 		return nil, err
 	}
 
-	for sourceName, source := range sources {
-		for destinationName, destination := range destinations {
+	// to keep configurations consistent, iterate over the sorted keys instead of just iterating over the map directly.
+	sourceNames := maps.Keys(sources)
+	destinationNames := maps.Keys(destinations)
+	sort.Strings(sourceNames)
+	sort.Strings(destinationNames)
+
+	for _, sourceName := range sourceNames {
+		source := sources[sourceName]
+		for _, destinationName := range destinationNames {
+			destination := destinations[destinationName]
+
 			name := fmt.Sprintf("%s__%s", sourceName, destinationName)
 			configuration.AddPipeline(name, otel.Logs, sourceName, source, destinationName, destination, rc.RenderContext)
 			configuration.AddPipeline(name, otel.Metrics, sourceName, source, destinationName, destination, rc.RenderContext)
