@@ -126,7 +126,26 @@ const AgentPageContent: React.FC = () => {
     }
   }, [agentChanges, id, refetch]);
 
+  const currentConfig = useMemo(() => {
+    if (data?.agent == null || data?.configurations == null) {
+      return null;
+    }
+
+    const configName = data.agent.configurationResource?.metadata.name;
+    if (configName == null) {
+      return null;
+    }
+
+    return data.configurations.configurations.find(
+      (c) => c.metadata.name === configName
+    );
+  }, [data?.agent, data?.configurations]);
+
   const viewTelemetryButton = useMemo(() => {
+    if (currentConfig?.spec.raw !== "") {
+      return null;
+    }
+
     let disableReason: string | null = null;
 
     if (
@@ -177,7 +196,7 @@ const AgentPageContent: React.FC = () => {
         </Button>
       );
     }
-  }, [data]);
+  }, [currentConfig?.spec.raw, data]);
 
   // Here we use the distinction between graphql returning null vs undefined.
   // If the agent is null then this agent doesn't exist, redirect to agents.
@@ -250,11 +269,13 @@ const AgentPageContent: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      <RecentTelemetryDialog
-        open={recentTelemetryOpen}
-        onClose={() => setRecentTelemetryOpen(false)}
-        agentID={id!}
-      />
+      {currentConfig?.spec.raw !== "" && (
+        <RecentTelemetryDialog
+          open={recentTelemetryOpen}
+          onClose={() => setRecentTelemetryOpen(false)}
+          agentID={id!}
+        />
+      )}
     </>
   );
 };
