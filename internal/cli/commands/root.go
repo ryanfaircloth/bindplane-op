@@ -185,7 +185,6 @@ func initTracing(bindplane *cli.BindPlane) error {
 	traceType := config.Server.TraceType
 
 	if traceType == "" {
-		bindplane.Logger().Info("skipping trace setup, trace type is not set")
 		return nil
 	}
 
@@ -231,6 +230,6 @@ func initTracing(bindplane *cli.BindPlane) error {
 		}
 	})
 
-	bindplane.Logger().Info("tracing configured")
+	bindplane.Logger().Sugar().Infof("%s tracing configured", traceType)
 	return nil
 }
