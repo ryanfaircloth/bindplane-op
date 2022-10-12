@@ -354,6 +354,7 @@ jobs:
           file: ./coverage.out
           fail_ci_if_error: true
           verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   # Scan Go binaries for incomptable licenses.
   scan-go-licenses:
