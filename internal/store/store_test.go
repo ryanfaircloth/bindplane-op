@@ -118,10 +118,12 @@ var (
 		Sources: []model.ResourceConfiguration{
 			{
 				Name: macosSource.Name(),
-				Parameters: []model.Parameter{
-					{
-						Name:  "s",
-						Value: "1",
+				ParameterizedSpec: model.ParameterizedSpec{
+					Parameters: []model.Parameter{
+						{
+							Name:  "s",
+							Value: "1",
+						},
 					},
 				},
 			},

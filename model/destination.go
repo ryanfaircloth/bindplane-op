@@ -89,7 +89,7 @@ func NewDestinationWithSpec(name string, spec ParameterizedSpec) *Destination {
 func FindDestination(ctx context.Context, destination *ResourceConfiguration, defaultName string, store ResourceStore) (*Destination, error) {
 	if destination.Name == "" {
 		// inline destination
-		return NewDestination(defaultName, destination.Type, destination.Parameters), nil
+		return NewDestinationWithSpec(defaultName, destination.ParameterizedSpec), nil
 	}
 	// find the destination and override parameters
 	dest, err := store.Destination(ctx, destination.Name)

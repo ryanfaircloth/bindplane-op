@@ -959,6 +959,151 @@ func TestEvalConfigurationFailsMissingResource(t *testing.T) {
 	}
 }
 
+func TestConfigurationRender_DisabledDestination(t *testing.T) {
+	store := newTestResourceStore()
+	config := newTestConfiguration()
+
+	macos := testResource[*SourceType](t, "sourcetype-macos.yaml")
+	store.sourceTypes[macos.Name()] = macos
+
+	googleCloudType := testResource[*DestinationType](t, "destinationtype-googlecloud.yaml")
+	store.destinationTypes[googleCloudType.Name()] = googleCloudType
+
+	googleCloud := testResource[*Destination](t, "destination-googlecloud.yaml")
+	store.destinations[googleCloud.Name()] = googleCloud
+
+	cabinType := testResource[*DestinationType](t, "destinationtype-cabin.yaml")
+	store.destinationTypes[cabinType.Name()] = cabinType
+
+	cabin := testResource[*Destination](t, "destination-cabin.yaml")
+	store.destinations[cabin.Name()] = cabin
+
+	configuration := testResource[*Configuration](t, "configuration-macos-googlecloud-disabled.yaml")
+	result, err := configuration.Render(context.TODO(), nil, config, store)
+	require.NoError(t, err)
+
+	// We expect the full pipeline, omitting the disabled googlecloud destination
+	expect := strings.TrimLeft(`
+receivers:
+    plugin/source0__journald:
+        plugin:
+            name: journald
+    plugin/source0__macos:
+        parameters:
+            - name: enable_system_log
+              value: false
+            - name: system_log_path
+              value: /var/log/system.log
+            - name: enable_install_log
+              value: true
+            - name: install_log_path
+              value: /var/log/install.log
+            - name: start_at
+              value: end
+        plugin:
+            name: macos
+    plugin/source1__journald:
+        plugin:
+            name: journald
+    plugin/source1__macos:
+        parameters:
+            - name: enable_system_log
+              value: true
+            - name: system_log_path
+              value: /var/log/system.log
+            - name: enable_install_log
+              value: true
+            - name: install_log_path
+              value: /var/log/install.log
+            - name: start_at
+              value: end
+        plugin:
+            name: macos
+processors:
+    batch/cabin-production-logs: null
+exporters:
+    observiq/cabin-production-logs:
+        endpoint: https://nozzle.app.observiq.com
+        secret_key: 2c088c5e-2afc-483b-be52-e2b657fcff08
+        timeout: 10s
+service:
+    pipelines:
+        logs/source0__cabin-production-logs:
+            receivers:
+                - plugin/source0__macos
+                - plugin/source0__journald
+            processors:
+                - batch/cabin-production-logs
+            exporters:
+                - observiq/cabin-production-logs
+        logs/source1__cabin-production-logs:
+            receivers:
+                - plugin/source1__macos
+                - plugin/source1__journald
+            processors:
+                - batch/cabin-production-logs
+            exporters:
+                - observiq/cabin-production-logs
+`, "\n")
+	require.Equal(t, expect, result)
+}
+func TestConfigurationRender_DisabledSource(t *testing.T) {
+	store := newTestResourceStore()
+	config := newTestConfiguration()
+
+	macos := testResource[*SourceType](t, "sourcetype-macos.yaml")
+	store.sourceTypes[macos.Name()] = macos
+
+	fileLog := testResource[*SourceType](t, "sourcetype-filelog.yaml")
+	store.sourceTypes[fileLog.Name()] = fileLog
+
+	googleCloudType := testResource[*DestinationType](t, "destinationtype-googlecloud.yaml")
+	store.destinationTypes[googleCloudType.Name()] = googleCloudType
+
+	googleCloud := testResource[*Destination](t, "destination-googlecloud.yaml")
+	store.destinations[googleCloud.Name()] = googleCloud
+
+	configuration := testResource[*Configuration](t, "configuration-macos-source-disabled.yaml")
+	result, err := configuration.Render(context.TODO(), nil, config, store)
+	require.NoError(t, err)
+
+	// We expect the full pipeline, omitting the disabled macOS source
+	expect := strings.TrimLeft(`
+receivers:
+    plugin/source1:
+        parameters:
+            encoding: utf-8
+            file_path:
+                - /foo/bar/baz.log
+            log_type: file
+            multiline_line_start_pattern: ""
+            parse_format: none
+            start_at: end
+        path: $OIQ_OTEL_COLLECTOR_HOME/plugins/file_logs.yaml
+processors:
+    batch/googlecloud: null
+    resourcedetection/source1:
+        detectors:
+            - system
+        system:
+            hostname_sources:
+                - os
+exporters:
+    googlecloud/googlecloud: null
+service:
+    pipelines:
+        logs/source1__googlecloud:
+            receivers:
+                - plugin/source1
+            processors:
+                - resourcedetection/source1
+                - batch/googlecloud
+            exporters:
+                - googlecloud/googlecloud
+`, "\n")
+	require.Equal(t, expect, result)
+}
+
 func TestDuplicate(t *testing.T) {
 	duplicateName := "duplicate-config"
 
@@ -983,5 +1128,22 @@ func TestDuplicate(t *testing.T) {
 		// Set the configuration matchLabel
 		require.Contains(t, new.Spec.Selector.MatchLabels, "configuration")
 		require.Equal(t, new.Spec.Selector.MatchLabels["configuration"], duplicateName)
+	})
+}
+
+func TestConfigurationType(t *testing.T) {
+	t.Run("raw configuration", func(t *testing.T) {
+		c := NewConfigurationWithSpec("raw-config", ConfigurationSpec{
+			Raw: "my raw configuration",
+		})
+		require.Equal(t, ConfigurationTypeRaw, c.Type())
+	})
+	t.Run("managed configuration", func(t *testing.T) {
+		c := NewConfigurationWithSpec("managed-config", ConfigurationSpec{
+			Sources: []ResourceConfiguration{
+				{Name: "a source"},
+			},
+		})
+		require.Equal(t, ConfigurationTypeModular, c.Type())
 	})
 }

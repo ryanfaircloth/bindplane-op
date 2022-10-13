@@ -1958,6 +1958,9 @@ const docTemplate = `{
         "model.ParameterizedSpec": {
             "type": "object",
             "properties": {
+                "disabled": {
+                    "type": "boolean"
+                },
                 "parameters": {
                     "type": "array",
                     "items": {
@@ -2085,6 +2088,9 @@ const docTemplate = `{
         "model.ResourceConfiguration": {
             "type": "object",
             "properties": {
+                "disabled": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },

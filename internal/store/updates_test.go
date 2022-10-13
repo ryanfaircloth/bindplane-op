@@ -50,7 +50,10 @@ func updatesTestSetup(t *testing.T) {
 		newTestSource("s1", "st1"),
 		newTestSource("s2", "st2"),
 		newTestSource("s3", "st3"),
-		newTestSourceWithProcessors("s4", "st5", []model.ResourceConfiguration{{Type: "pt2"}, {Name: "p1"}}),
+		newTestSourceWithProcessors("s4", "st5", []model.ResourceConfiguration{
+			{ParameterizedSpec: model.ParameterizedSpec{Type: "pt2"}},
+			{Name: "p1"},
+		}),
 		newTestDestinationType("dt1"),
 		newTestDestinationType("dt2"),
 		newTestDestinationType("dt3"),
@@ -118,13 +121,13 @@ func newTestConfiguration(name string, sources []string, sourceTypes []string, d
 		c.Spec.Sources = append(c.Spec.Sources, model.ResourceConfiguration{Name: source})
 	}
 	for _, sourceType := range sourceTypes {
-		c.Spec.Sources = append(c.Spec.Sources, model.ResourceConfiguration{Type: sourceType})
+		c.Spec.Sources = append(c.Spec.Sources, model.ResourceConfiguration{ParameterizedSpec: model.ParameterizedSpec{Type: sourceType}})
 	}
 	for _, destination := range destinations {
 		c.Spec.Destinations = append(c.Spec.Destinations, model.ResourceConfiguration{Name: destination})
 	}
 	for _, destinationType := range destinationTypes {
-		c.Spec.Destinations = append(c.Spec.Destinations, model.ResourceConfiguration{Type: destinationType})
+		c.Spec.Destinations = append(c.Spec.Destinations, model.ResourceConfiguration{ParameterizedSpec: model.ParameterizedSpec{Type: destinationType}})
 	}
 	return c
 }

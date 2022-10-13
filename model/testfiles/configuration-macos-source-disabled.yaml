@@ -1,0 +1,19 @@
+apiVersion: bindplane.observiq.com/v1
+kind: Configuration
+metadata:
+  name: macos-xy
+spec:
+  contentType: text/yaml
+  sources:
+    - type: MacOS
+      parameters:
+        - name: enable_system_log
+          value: false
+      disabled: true
+    - type: file
+      parameters:
+        - name: file_path
+          value:
+            - /foo/bar/baz.log
+  destinations:
+    - name: googlecloud

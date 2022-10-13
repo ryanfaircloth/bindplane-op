@@ -26,6 +26,7 @@ type ParameterizedSpec struct {
 	Type       string                  `yaml:"type" json:"type" mapstructure:"type"`
 	Parameters []Parameter             `yaml:"parameters" json:"parameters" mapstructure:"parameters"`
 	Processors []ResourceConfiguration `yaml:"processors,omitempty" json:"processors,omitempty" mapstructure:"processors"`
+	Disabled   bool                    `yaml:"disabled" json:"disabled" mapstructure:"disabled"`
 }
 
 // parameterizedResource is a resource based on a resource type which provides a specific resource value via templated
@@ -69,9 +70,11 @@ func (s *ParameterizedSpec) validateTypeAndParameters(ctx context.Context, kind 
 	// ResourceConfiguration is a resource embedded in a Configuration, but it works equally well for Source and
 	// Destination validation.
 	rc := &ResourceConfiguration{
-		Type:       s.Type,
-		Parameters: s.Parameters,
-		Processors: s.Processors,
+		ParameterizedSpec: ParameterizedSpec{
+			Type:       s.Type,
+			Parameters: s.Parameters,
+			Processors: s.Processors,
+		},
 	}
 	rc.validateParameters(ctx, kind, errors, store)
 	rc.validateProcessors(ctx, kind, errors, store)

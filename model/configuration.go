@@ -99,10 +99,8 @@ type ConfigurationSpec struct {
 
 // ResourceConfiguration represents a source or destination configuration
 type ResourceConfiguration struct {
-	Name       string                  `json:"name,omitempty" yaml:"name,omitempty" mapstructure:"name"`
-	Type       string                  `json:"type,omitempty" yaml:"type,omitempty" mapstructure:"type"`
-	Parameters []Parameter             `json:"parameters,omitempty" yaml:"parameters,omitempty" mapstructure:"parameters"`
-	Processors []ResourceConfiguration `json:"processors,omitempty" yaml:"processors,omitempty" mapstructure:"processors"`
+	Name              string `json:"name,omitempty" yaml:"name,omitempty" mapstructure:"name"`
+	ParameterizedSpec `yaml:",inline" json:",inline" mapstructure:",squash"`
 }
 
 // Validate validates most of the configuration, but if a store is available, ValidateWithStore should be used to
@@ -277,6 +275,9 @@ func evalSource(ctx context.Context, source *ResourceConfiguration, defaultName 
 	}
 
 	srcName := src.Name()
+	if src.Spec.Disabled {
+		return srcName, otel.NewPartials()
+	}
 	partials := srcType.eval(src, errorHandler)
 
 	if rc.pipelineTypeUsage != nil {
@@ -318,6 +319,9 @@ func evalDestination(ctx context.Context, destination *ResourceConfiguration, de
 	}
 
 	destName := dest.Name()
+	if dest.Spec.Disabled {
+		return destName, otel.NewPartials()
+	}
 	partials := destType.eval(dest, errorHandler)
 
 	if rc.pipelineTypeUsage != nil {

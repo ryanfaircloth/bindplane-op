@@ -147,11 +147,11 @@ func testSourceAsAny(t *testing.T, name string, sourceType string) *model.AnyRes
 func testConfiguration(name string) *model.Configuration {
 	return model.NewConfigurationWithSpec(name, model.ConfigurationSpec{
 		Sources: []model.ResourceConfiguration{
-			{Type: "macos"},
-			{Type: "macos"},
+			{ParameterizedSpec: model.ParameterizedSpec{Type: "macos"}},
+			{ParameterizedSpec: model.ParameterizedSpec{Type: "macos"}},
 		},
 		Destinations: []model.ResourceConfiguration{
-			{Type: "cabin"},
+			{ParameterizedSpec: model.ParameterizedSpec{Type: "cabin"}},
 		},
 		Selector: model.AgentSelector{
 			MatchLabels: map[string]string{
