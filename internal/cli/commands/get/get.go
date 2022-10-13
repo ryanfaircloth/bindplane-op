@@ -34,6 +34,7 @@ func Command(bindplane *cli.BindPlane) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		ResourcesCommand(bindplane),
 		AgentsCommand(bindplane),
 		AgentVersionsCommand(bindplane),
 		ConfigurationsCommand(bindplane),

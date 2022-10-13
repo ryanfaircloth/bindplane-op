@@ -45,8 +45,8 @@ const (
 type ParameterDefinition struct {
 	Name        string `json:"name" yaml:"name"`
 	Label       string `json:"label" yaml:"label"`
-	Description string `json:"description" yaml:"description"`
-	Required    bool   `json:"required" yaml:"required"`
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+	Required    bool   `json:"required,omitempty" yaml:"required,omitempty"`
 
 	// "string", "int", "bool", "strings", or "enum"
 	Type string `json:"type" yaml:"type"`
@@ -57,10 +57,10 @@ type ParameterDefinition struct {
 	// Must be valid according to Type & ValidValues
 	Default        interface{}           `json:"default,omitempty" yaml:"default,omitempty"`
 	RelevantIf     []RelevantIfCondition `json:"relevantIf,omitempty" yaml:"relevantIf,omitempty" mapstructure:"relevantIf"`
-	Hidden         bool                  `json:"hidden" yaml:"hidden"`
-	AdvancedConfig bool                  `json:"advancedConfig" yaml:"advancedConfig" mapstructure:"advancedConfig"`
+	Hidden         bool                  `json:"hidden,omitempty" yaml:"hidden,omitempty"`
+	AdvancedConfig bool                  `json:"advancedConfig,omitempty" yaml:"advancedConfig,omitempty" mapstructure:"advancedConfig"`
 
-	Options ParameterOptions `json:"options" yaml:"options"`
+	Options ParameterOptions `json:"options,omitempty" yaml:"options,omitempty"`
 
 	Documentation []DocumentationLink `json:"documentation,omitempty" yaml:"documentation,omitempty"`
 }
@@ -75,11 +75,11 @@ type DocumentationLink struct {
 type ParameterOptions struct {
 	// Creatable will modify the "enum" parameter from a select to
 	// a creatable select where a user can specify a custom value
-	Creatable bool `json:"creatable" yaml:"creatable"`
+	Creatable bool `json:"creatable,omitempty" yaml:"creatable,omitempty"`
 
 	// TrackUnchecked will modify the "enums" parameter to store the
 	// unchecked values as the value.
-	TrackUnchecked bool `json:"trackUnchecked" yaml:"trackUnchecked"`
+	TrackUnchecked bool `json:"trackUnchecked,omitempty" yaml:"trackUnchecked,omitempty"`
 
 	// GridColumns will specify the number of flex-grid columns the
 	// control will take up, must be an integer between 1 and 12 or
@@ -90,7 +90,7 @@ type ParameterOptions struct {
 	// a switch for further configuration for UI styling.
 	SectionHeader *bool `json:"sectionHeader,omitempty" yaml:"sectionHeader,omitempty"`
 
-	MetricCategories []MetricCategory `json:"metricCategories" yaml:"metricCategories"`
+	MetricCategories []MetricCategory `json:"metricCategories,omitempty" yaml:"metricCategories,omitempty"`
 
 	// Multiline indicates that a multiline textarea should be used for editing a "string" parameter.
 	Multiline bool `json:"multiline,omitempty" yaml:"multiline,omitempty"`

@@ -33,21 +33,8 @@ var _ Printer = (*TablePrinter)(nil)
 
 // NewTablePrinter takes an io.Writer and returns a new *TablePrinter.
 func NewTablePrinter(writer io.Writer) *TablePrinter {
-	table := tablewriter.NewWriter(writer)
+	return &TablePrinter{writer: writer}
 
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(true)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetRowSeparator("")
-	table.SetHeaderLine(false)
-	table.SetBorder(false)
-	table.SetTablePadding("\t") // pad with tabs
-	table.SetNoWhiteSpace(true)
-
-	return &TablePrinter{writer: writer, table: table}
 }
 
 // PrintResource prints a generic model that implements the printable interface
@@ -72,6 +59,18 @@ func (tp *TablePrinter) PrintResources(list []model.Printable) {
 
 // Reset TODO(docs)
 func (tp *TablePrinter) Reset() {
+	tp.table = tablewriter.NewWriter(tp.writer)
+	tp.table.SetAutoWrapText(false)
+	tp.table.SetAutoFormatHeaders(true)
+	tp.table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	tp.table.SetAlignment(tablewriter.ALIGN_LEFT)
+	tp.table.SetCenterSeparator("")
+	tp.table.SetColumnSeparator("")
+	tp.table.SetRowSeparator("")
+	tp.table.SetHeaderLine(false)
+	tp.table.SetBorder(false)
+	tp.table.SetTablePadding("\t") // pad with tabs
+	tp.table.SetNoWhiteSpace(true)
 	tp.table.ClearRows()
 	tp.table.ClearFooter()
 	tp.table.SetHeader([]string{})

@@ -39,12 +39,12 @@ type ResourceType struct {
 
 // ResourceTypeSpec is the spec for a resourceType to
 type ResourceTypeSpec struct {
-	Version string `json:"version" yaml:"version" mapstructure:"version"`
+	Version string `json:"version,omitempty" yaml:"version,omitempty" mapstructure:"version"`
 
 	// Parameters currently uses the model from stanza. Eventually we will probably create a separate definition for
 	// BindPlane.
 	Parameters         []ParameterDefinition `json:"parameters"  yaml:"parameters"  mapstructure:"parameters"`
-	SupportedPlatforms []string              `json:"supportedPlatforms" yaml:"supportedPlatforms" mapstructure:"supportedPlatforms"`
+	SupportedPlatforms []string              `json:"supportedPlatforms,omitempty" yaml:"supportedPlatforms,omitempty" mapstructure:"supportedPlatforms"`
 
 	// individual
 	Logs    ResourceTypeOutput `json:"logs,omitempty"    yaml:"logs,omitempty"    mapstructure:"logs"`
