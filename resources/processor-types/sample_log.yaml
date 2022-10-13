@@ -42,4 +42,4 @@ spec:
           operators:
             - type: filter
               drop_ratio: {{ .drop_ratio }}
-              expr: true
+              expr: 'true'
