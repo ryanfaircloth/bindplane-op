@@ -269,7 +269,7 @@ const AgentPageContent: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {currentConfig?.spec.raw !== "" && (
+      {currentConfig?.spec.raw === "" && (
         <RecentTelemetryDialog
           open={recentTelemetryOpen}
           onClose={() => setRecentTelemetryOpen(false)}
