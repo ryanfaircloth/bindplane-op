@@ -1,9 +1,10 @@
 apiVersion: bindplane.observiq.com/v1
-kind: ProcessorType
+kind: DestinationType
 metadata:
   name: custom
   displayName: Custom
-  description: Insert a custom OpenTelemetry processor configuration.
+  description: Insert a custom OpenTelemetry exporter configuration.
+  icon: /icons/destinations/custom.svg
 
 spec:
   version: 0.0.1
@@ -11,36 +12,35 @@ spec:
     - name: telemetry_types
       label: Telemetry Types
       type: enums
-      description: "Select which types of telemetry the processor supports."
+      description: "Select which types of telemetry the exporter supports."
       validValues: ["Metrics", "Logs", "Traces"]
       default: []
 
     - name: configuration
       label: Configuration
-      description: Enter any supported Processor and the YAML will be inserted into the configuration.
+      description: Enter any supported OpenTelemetry exporter and the YAML will be inserted into the configuration.
       type: yaml
       options:
         gridColumns: 12
       required: true
       documentation:
-        - text: Processor Syntax
-          url: https://github.com/observIQ/observiq-otel-collector/blob/main/docs/processors.md
+        - text: Exporter Syntax
+          url: https://github.com/observIQ/observiq-otel-collector/blob/main/docs/exporters.md
 
   logs:
-    processors: |
+    exporters: |
       {{ if has "Logs" .telemetry_types }}
       - {{ .configuration | nindent 2 }}
       {{ end }}
 
   metrics:
-    processors: |
+    exporters: |
       {{ if has "Metrics" .telemetry_types }}
       - {{ .configuration | nindent 2 }}
       {{ end }}
 
-
   traces:
-    processors: |
+    exporters: |
       {{ if has "Traces" .telemetry_types }}
       - {{ .configuration | nindent 2 }}
       {{ end }}
