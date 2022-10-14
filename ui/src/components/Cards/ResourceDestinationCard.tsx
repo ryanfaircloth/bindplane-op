@@ -84,211 +84,213 @@ gql`
   }
 `;
 
-const ResourceDestinationCardComponent: React.FC<{
+interface ResourceDestinationCardProps {
   name: string;
+  // disabled indicates that the card is not active and should be greyed out
   disabled?: boolean;
-}> = ({ name, disabled }) => {
-  const { data, refetch: refetchDestination } = useGetDestinationWithTypeQuery({
-    variables: { name },
-    fetchPolicy: "cache-and-network",
-  });
+  enableProcessors?: boolean;
+}
 
-  const { configuration, refetchConfiguration } = useConfigurationPage();
-  const destinationIndex = configuration.spec.destinations?.findIndex(
-    (d) => d.name === name
-  );
-  const processors =
-    destinationIndex !== -1 && destinationIndex != null
-      ? configuration.spec.destinations?.[destinationIndex].processors
-      : [];
+const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
+  ({ name, disabled, enableProcessors = false }) => {
+    const { configuration, refetchConfiguration } = useConfigurationPage();
+    const { enqueueSnackbar } = useSnackbar();
+    const [editing, setEditing] = useState(false);
+    const [confirmDeleteOpen, setDeleteOpen] = useState(false);
 
-  const { enqueueSnackbar } = useSnackbar();
+    const { data, refetch: refetchDestination } =
+      useGetDestinationWithTypeQuery({
+        variables: { name },
+        fetchPolicy: "cache-and-network",
+      });
 
-  const [editing, setEditing] = useState(false);
-  const [confirmDeleteOpen, setDeleteOpen] = useState(false);
-
-  function closeEditDialog() {
-    setEditing(false);
-  }
-
-  async function onSave(formValues: FormValues) {
-    const updatedDestination = new BPDestination(
-      data!.destinationWithType!.destination!
+    const destinationIndex = configuration.spec.destinations?.findIndex(
+      (d) => d.name === name
     );
 
-    updatedDestination.setParamsFromMap(formValues);
+    const processors =
+      destinationIndex !== -1 && destinationIndex != null
+        ? configuration.spec.destinations?.[destinationIndex].processors
+        : [];
 
-    const updatedProcessors = formValues.processors;
-    if (updatedProcessors != null) {
-      // assign processors to the configuration
-      if (destinationIndex == null) {
+    function closeEditDialog() {
+      setEditing(false);
+    }
+
+    async function onSave(formValues: FormValues) {
+      const updatedDestination = new BPDestination(
+        data!.destinationWithType!.destination!
+      );
+
+      updatedDestination.setParamsFromMap(formValues);
+      const updatedProcessors = formValues.processors;
+
+      // Assign processors to the configuration if we have an
+      // index for the destination, implying that we are editing this
+      // destination on a particular config and that processors are enabled.
+      if (destinationIndex != null) {
+        const updatedConfig = new BPConfiguration(configuration);
+        updatedConfig.replaceDestination(
+          {
+            name: updatedDestination.name(),
+            processors: updatedProcessors,
+          },
+          destinationIndex
+        );
+
+        try {
+          const update = await updatedConfig.apply();
+          if (update.status === UpdateStatus.INVALID) {
+            throw new Error(
+              `failed to apply configuration, got status ${update.status}`
+            );
+          }
+        } catch (err) {
+          console.error(err);
+          enqueueSnackbar("Failed to update configuration.", {
+            variant: "error",
+          });
+        }
+      }
+
+      try {
+        const update = await updatedDestination.apply();
+        if (update.status === UpdateStatus.INVALID) {
+          console.error("Update: ", update);
+          throw new Error(
+            `failed to apply destination, got status ${update.status}`
+          );
+        }
+
+        enqueueSnackbar("Successfully saved destination.", {
+          variant: "success",
+        });
+        setEditing(false);
+        refetchConfiguration();
+        refetchDestination();
+      } catch (err) {
+        console.error(err);
         enqueueSnackbar("Failed to update destination.", { variant: "error" });
+      }
+    }
+
+    async function onDelete() {
+      if (destinationIndex == null) {
+        enqueueSnackbar("Failed to delete destination.", { variant: "error" });
         console.error(
           `Could not find index for destination named ${name} in configuration spec.`,
           configuration
         );
         return;
       }
+
       const updatedConfig = new BPConfiguration(configuration);
-      updatedConfig.replaceDestination(
-        {
-          name: updatedDestination.name(),
-          processors: updatedProcessors,
-        },
-        destinationIndex
-      );
+      updatedConfig.removeDestination(destinationIndex);
 
       try {
         const update = await updatedConfig.apply();
         if (update.status === UpdateStatus.INVALID) {
+          console.error("Update: ", update);
           throw new Error(
-            `failed to apply configuration, got status ${update.status}`
+            `failed to remove destination from configuration, configuration invalid`
           );
         }
+
+        closeEditDialog();
+        closeDeleteDialog();
+        refetchConfiguration();
+        refetchDestination();
       } catch (err) {
-        console.error(err);
-        enqueueSnackbar("Failed to update configuration.", {
-          variant: "error",
-        });
+        enqueueSnackbar("Failed to remove destination.", { variant: "error" });
       }
     }
 
-    try {
-      const update = await updatedDestination.apply();
-      if (update.status === UpdateStatus.INVALID) {
-        console.error("Update: ", update);
-        throw new Error(
-          `failed to apply destination, got status ${update.status}`
-        );
-      }
+    function closeDeleteDialog() {
+      setDeleteOpen(false);
+    }
 
-      enqueueSnackbar("Successfully saved destination.", {
-        variant: "success",
+    // Loading
+    if (data === undefined) {
+      return null;
+    }
+
+    if (data.destinationWithType.destination == null) {
+      enqueueSnackbar(`Could not retrieve destination ${name}.`, {
+        variant: "error",
       });
-      setEditing(false);
-      refetchConfiguration();
-      refetchDestination();
-    } catch (err) {
-      console.error(err);
-      enqueueSnackbar("Failed to update destination.", { variant: "error" });
+      return null;
     }
-  }
 
-  async function onDelete() {
-    if (destinationIndex == null) {
-      enqueueSnackbar("Failed to delete destination.", { variant: "error" });
-      console.error(
-        `Could not find index for destination named ${name} in configuration spec.`,
-        configuration
+    if (data.destinationWithType.destinationType == null) {
+      enqueueSnackbar(
+        `Could not retrieve destination type for destination ${name}.`,
+        { variant: "error" }
       );
-      return;
+      return null;
     }
 
-    const updatedConfig = new BPConfiguration(configuration);
-    updatedConfig.removeDestination(destinationIndex);
+    return (
+      <div className={disabled ? styles.disabled : undefined}>
+        <Card
+          className={classes([
+            styles["resource-card"],
+            disabled ? styles.disabled : undefined,
+          ])}
+          onClick={() => setEditing(true)}
+        >
+          <CardActionArea className={styles.action}>
+            <CardContent>
+              <Stack alignItems="center">
+                <span
+                  className={styles.icon}
+                  style={{
+                    backgroundImage: `url(${data?.destinationWithType?.destinationType?.metadata.icon})`,
+                  }}
+                />
+                <Typography component="div" fontWeight={600}>
+                  {name}
+                </Typography>
+              </Stack>
+            </CardContent>
+          </CardActionArea>
+        </Card>
 
-    try {
-      const update = await updatedConfig.apply();
-      if (update.status === UpdateStatus.INVALID) {
-        console.error("Update: ", update);
-        throw new Error(
-          `failed to remove destination from configuration, configuration invalid`
-        );
-      }
+        <EditResourceDialog
+          kind="destination"
+          displayName={name}
+          description={
+            data.destinationWithType.destinationType.metadata.description ?? ""
+          }
+          enableProcessors={enableProcessors}
+          processors={processors}
+          fullWidth
+          maxWidth="sm"
+          parameters={
+            data.destinationWithType.destination.spec.parameters ?? []
+          }
+          parameterDefinitions={
+            data.destinationWithType.destinationType.spec.parameters
+          }
+          open={editing}
+          onClose={closeEditDialog}
+          onCancel={closeEditDialog}
+          onDelete={() => setDeleteOpen(true)}
+          onSave={onSave}
+        />
 
-      closeEditDialog();
-      closeDeleteDialog();
-      refetchConfiguration();
-      refetchDestination();
-    } catch (err) {
-      enqueueSnackbar("Failed to remove destination.", { variant: "error" });
-    }
-  }
-
-  function closeDeleteDialog() {
-    setDeleteOpen(false);
-  }
-
-  // Loading
-  if (data === undefined) {
-    return null;
-  }
-
-  if (data.destinationWithType.destination == null) {
-    enqueueSnackbar(`Could not retrieve destination ${name}.`, {
-      variant: "error",
-    });
-    return null;
-  }
-
-  if (data.destinationWithType.destinationType == null) {
-    enqueueSnackbar(
-      `Could not retrieve destination type for destination ${name}.`,
-      { variant: "error" }
+        <ConfirmDeleteResourceDialog
+          open={confirmDeleteOpen}
+          onClose={closeDeleteDialog}
+          onCancel={closeDeleteDialog}
+          onDelete={onDelete}
+          action={"remove"}
+        >
+          <Typography>
+            Are you sure you want to remove this destination?
+          </Typography>
+        </ConfirmDeleteResourceDialog>
+      </div>
     );
-    return null;
-  }
-
-  return (
-    <div className={disabled ? styles.disabled : undefined}>
-      <Card
-        className={classes([
-          styles["resource-card"],
-          disabled ? styles.disabled : undefined,
-        ])}
-        onClick={() => setEditing(true)}
-      >
-        <CardActionArea className={styles.action}>
-          <CardContent>
-            <Stack alignItems="center">
-              <span
-                className={styles.icon}
-                style={{
-                  backgroundImage: `url(${data?.destinationWithType?.destinationType?.metadata.icon})`,
-                }}
-              />
-              <Typography component="div" fontWeight={600}>
-                {name}
-              </Typography>
-            </Stack>
-          </CardContent>
-        </CardActionArea>
-      </Card>
-
-      <EditResourceDialog
-        kind="destination"
-        displayName={name}
-        description={
-          data.destinationWithType.destinationType.metadata.description ?? ""
-        }
-        enableProcessors
-        processors={processors}
-        fullWidth
-        maxWidth="sm"
-        parameters={data.destinationWithType.destination.spec.parameters ?? []}
-        parameterDefinitions={
-          data.destinationWithType.destinationType.spec.parameters
-        }
-        open={editing}
-        onClose={closeEditDialog}
-        onCancel={closeEditDialog}
-        onDelete={() => setDeleteOpen(true)}
-        onSave={onSave}
-      />
-
-      <ConfirmDeleteResourceDialog
-        open={confirmDeleteOpen}
-        onClose={closeDeleteDialog}
-        onCancel={closeDeleteDialog}
-        onDelete={onDelete}
-        action={"remove"}
-      >
-        <Typography>
-          Are you sure you want to remove this destination?
-        </Typography>
-      </ConfirmDeleteResourceDialog>
-    </div>
-  );
-};
+  };
 
 export const ResourceDestinationCard = memo(ResourceDestinationCardComponent);

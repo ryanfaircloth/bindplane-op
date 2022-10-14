@@ -24,8 +24,9 @@ function DestinationNode(params: {
         <InlineDestinationCard id={id.replace("destination/", "")} key={id} />
       ) : (
         <ResourceDestinationCard
-          name={attributes.resourceId}
           key={id}
+          enableProcessors
+          name={attributes.resourceId}
           disabled={isNodeDisabled(selectedTelemetryType, attributes)}
         />
       )}

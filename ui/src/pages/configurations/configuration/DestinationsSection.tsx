@@ -168,7 +168,11 @@ const DestinationsSectionComponent: React.FC<{
                 id={`destination${ix}`}
               />
             ) : (
-              <ResourceDestinationCard key={d.name!} name={d.name!} />
+              <ResourceDestinationCard
+                key={d.name!}
+                name={d.name!}
+                enableProcessors
+              />
             );
           })}
         </Stack>
