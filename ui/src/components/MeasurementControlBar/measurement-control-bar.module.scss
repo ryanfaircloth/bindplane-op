@@ -1,0 +1,55 @@
+@use '../../styles/colors';
+
+.appbar {
+  background-color: colors.$background-grey;
+  border: unset;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.toolbar {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.flex-box {
+  margin-top: auto;
+  flex: 1;
+  display: flex;
+}
+
+.selected-text {
+  flex: 1;
+  color: colors.$active-blue;
+  font-weight: 999;
+}
+
+.regular-text {
+  color: colors.$true-black;
+  font-weight: 1000;
+}
+
+.menu-button {
+  padding: 1.2rem;
+  margin: 0 0px;
+  display: flex;
+  border-width: 0 0 0 0;
+  border-radius: 2px;
+  border-color: colors.$transparent;
+  border: 0;
+}
+
+.menu-button-selected {
+  border-color: colors.$active-blue;
+}
+
+.regular-box {
+  border: 2px solid colors.$transparent;
+  border-radius: 10px;
+  margin: 1px;
+  padding: 0px;
+}
+
+.selected-box {
+  border-color: colors.$active-blue;
+}

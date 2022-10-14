@@ -1,6 +1,7 @@
-import { AppBar, Toolbar, Button, Typography, Box } from "@mui/material";
+import { AppBar, Toolbar, Button, Typography, Box, Stack } from "@mui/material";
+import { classes } from "../../utils/styles";
 
-import styles from "./styles.module.scss";
+import styles from "./measurement-control-bar.module.scss";
 
 export const PERIODS: { [period: string]: string } = {
   "1m": "1m",
@@ -19,10 +20,10 @@ export const TELEMETRY_TYPES: { [telemetryType: string]: string } = {
 export const DEFAULT_TELEMETRY_TYPE = "logs";
 
 export const TELEMETRY_SIZE_METRICS: { [telemetryType: string]: string } = {
-  "logs": "log_data_size",
-  "metrics": "metric_data_size",
-  "traces": "trace_data_size",
-}
+  logs: "log_data_size",
+  metrics: "metric_data_size",
+  traces: "trace_data_size",
+};
 
 interface MeasurementControlBarProps {
   telemetry: string;
@@ -39,25 +40,69 @@ export const MeasurementControlBar: React.FC<MeasurementControlBarProps> = ({
 }) => {
   return (
     <AppBar classes={{ root: styles.appbar }} color="primary" position="static">
-      <Toolbar>
+      <Toolbar classes={{ root: styles.toolbar }}>
         {Object.entries(TELEMETRY_TYPES).map(([t, label]) => (
-          <Button
-            key={t}
-            color="inherit"
-            onClick={() => onTelemetryTypeChange(t)}
-          >
-            <Typography style={{ fontWeight: telemetry === t ? 700 : 300 }}>
-              {label}
-            </Typography>
-          </Button>
+          <Stack key={t}>
+            <Button
+              variant="outlined"
+              className={classes([
+                styles["menu-button"],
+                telemetry === t ? styles["menu-button-selected"] : undefined,
+              ])}
+              key={t}
+              color="inherit"
+              onClick={() => onTelemetryTypeChange(t)}
+            >
+              <Typography
+                className={
+                  telemetry === t
+                    ? styles["selected-text"]
+                    : styles["regular-text"]
+                }
+              >
+                {label}
+              </Typography>
+            </Button>
+
+            <Box
+              className={classes([
+                styles["regular-box"],
+                telemetry === t ? styles["selected-box"] : undefined,
+              ])}
+            />
+          </Stack>
         ))}
-        <Box flex={1} />
-        {Object.entries(PERIODS).map(([r, label]) => (
-          <Button key={r} color="inherit" onClick={() => onPeriodChange(r)}>
-            <Typography style={{ fontWeight: period === r ? 700 : 300 }}>
-              {label}
-            </Typography>
-          </Button>
+        <Box className={styles["flex-box"]} />
+
+        {Object.entries(PERIODS).map(([p, label]) => (
+          <Stack key={p}>
+            <Button
+              variant="outlined"
+              className={classes([
+                styles["menu-button"],
+                period === p ? styles["menu-button-selected"] : undefined,
+              ])}
+              key={p}
+              color="inherit"
+              onClick={() => onPeriodChange(p)}
+            >
+              <Typography
+                className={
+                  period === p
+                    ? styles["selected-text"]
+                    : styles["regular-text"]
+                }
+              >
+                {label}
+              </Typography>
+            </Button>
+            <Box
+              className={classes([
+                styles["regular-box"],
+                period === p ? styles["selected-box"] : undefined,
+              ])}
+            />
+          </Stack>
         ))}
       </Toolbar>
     </AppBar>

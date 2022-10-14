@@ -23,6 +23,8 @@ import { OverviewDestinationNode, ConfigurationNode } from "./nodes";
 import { OverviewEdge } from "./OverviewEdge";
 import { useOverviewPage } from "./OverviewPageContext";
 
+import styles from "./overview.styles.module.scss";
+
 gql`
   query getOverviewPage {
     overviewPage {
@@ -158,6 +160,7 @@ export const OverviewGraph: React.FC = () => {
             window.scrollBy(event.deltaX, event.deltaY);
           }}
           onNodesChange={onNodesChange}
+          className={styles["overview-graph"]}
         >
           <Controls showZoom={false} showInteractive={false} />
         </ReactFlow>
