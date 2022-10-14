@@ -734,6 +734,11 @@ func (mapstore *mapStore) SaveAgentMetrics(ctx context.Context, metrics []*recor
 	return nil
 }
 
+// MeasurementsSize returns the count of keys in the store, and is used only for testing
+func (mapstore *mapStore) MeasurementsSize() (int, error) {
+	return 0, nil
+}
+
 // ProcessMetrics is called in the background at regular intervals and performs metric roll-up and removes old data
 func (mapstore *mapStore) ProcessMetrics(ctx context.Context) error {
 	return nil

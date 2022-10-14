@@ -111,7 +111,7 @@ func InitDB(storageFilePath string) (*bbolt.DB, error) {
 
 	err = db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucketMeasurements))
-		for _, metric := range supportedMetricNames {
+		for _, metric := range stats.SupportedMetricNames {
 			_, _ = b.CreateBucketIfNotExists([]byte(metric))
 		}
 		return nil
@@ -314,7 +314,7 @@ func (s *boltstore) Clear() {
 		_, _ = tx.CreateBucketIfNotExists([]byte(bucketAgents))
 		b, _ := tx.CreateBucketIfNotExists([]byte(bucketMeasurements))
 
-		for _, metric := range supportedMetricNames {
+		for _, metric := range stats.SupportedMetricNames {
 			_, _ = b.CreateBucketIfNotExists([]byte(metric))
 		}
 		return nil
@@ -1028,16 +1028,7 @@ func (s *boltstore) getObjectIds(bucketFunc func(*bbolt.Tx) *bbolt.Bucket, kind 
 // ----------------------------------------------------------------------
 // Measurements implementation
 
-const logDataSizeName = "otelcol_processor_throughputmeasurement_log_data_size"
-const metricDataSizeName = "otelcol_processor_throughputmeasurement_metric_data_size"
-const traceDataSizeName = "otelcol_processor_throughputmeasurement_trace_data_size"
 const measurementsDateFormat = "2006-01-02T15:04:05"
-
-var supportedMetricNames = []string{
-	logDataSizeName,
-	metricDataSizeName,
-	traceDataSizeName,
-}
 
 // AgentMetrics provides metrics for an individual agents. They are essentially configuration metrics filtered to a
 // list of agents.
@@ -1053,7 +1044,7 @@ func (s *boltstore) AgentMetrics(ctx context.Context, ids []string, options ...s
 			return nil, err
 		}
 	}
-	return s.retrieveMetrics(ctx, supportedMetricNames, string(model.KindAgent), ids, options...)
+	return s.retrieveMetrics(ctx, stats.SupportedMetricNames, string(model.KindAgent), ids, options...)
 }
 
 // ConfigurationMetrics provides all metrics associated with a configuration aggregated from all agents using the
@@ -1072,7 +1063,7 @@ func (s *boltstore) ConfigurationMetrics(ctx context.Context, name string, optio
 		}
 	}
 
-	baseMetrics, err := s.retrieveMetrics(ctx, supportedMetricNames, string(model.KindConfiguration), names, options...)
+	baseMetrics, err := s.retrieveMetrics(ctx, stats.SupportedMetricNames, string(model.KindConfiguration), names, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -1110,39 +1101,81 @@ func (s *boltstore) OverviewMetrics(ctx context.Context, options ...stats.QueryO
 	return s.ConfigurationMetrics(ctx, "", options...)
 }
 
+// MeasurementsSize returns the count of keys in the store, and is used only for testing
+func (s *boltstore) MeasurementsSize() (int, error) {
+	count := 0
+	err := s.db.View(func(tx *bbolt.Tx) error {
+		for _, metricName := range stats.SupportedMetricNames {
+			count += measurementsBucket(tx, metricName).Stats().KeyN
+		}
+
+		return nil
+	})
+
+	return count, err
+}
+
+// available as a function so it can be mocked in tests
+var getCurrentTime = func() time.Time {
+	return time.Now()
+}
+
 func (s *boltstore) retrieveMetrics(ctx context.Context, metricNames []string, objectType string, ids []string, options ...stats.QueryOption) (stats.MetricData, error) {
 	result := stats.MetricData{}
+	opts := stats.MakeQueryOptions(options)
+	rollup := getRollupFromPeriod(opts)
+
+	endDate := getCurrentTime().Add(-10 * time.Second).Truncate(10 * time.Second)
+	startDate := endDate.Add(-1 * opts.Period).Truncate(rollup)
+
+	endDateString := endDate.Format(measurementsDateFormat)
+	startDateString := startDate.Format(measurementsDateFormat)
+
 	err := s.db.View(func(tx *bbolt.Tx) error {
 		var errs error
-		opts := stats.MakeQueryOptions(options)
-		for _, metricName := range metricNames {
+		for metricIndex, metricName := range metricNames {
 			cursor := measurementsBucket(tx, metricName).Cursor()
 
-			// Always start looking at a recent non-current chunk data point, as current
-			// bucket is not going to have all data for all resources if the frame is Now()
-			frame := opts.EndTime.Add(-10 * time.Second).UTC()
-			startDate := frame.Add(-1 * opts.Period).Truncate(getRollupFromPeriod(opts)).Format(measurementsDateFormat)
-			endDate := frame.Truncate(getRollupFromPeriod(opts))
-			endDateString := endDate.Format(measurementsDateFormat)
-
-			for _, id := range ids {
+			for idIndex, id := range ids {
 				endMetrics, err := findEndMetrics(cursor, endDateString, objectType, id)
 				if err != nil {
 					errs = multierror.Append(errs, err)
 					continue
 				}
 
+				// On the first metric & agent, check if a previous time would offer more complete data
+				if metricIndex == 0 && idIndex == 0 {
+					prevDate := endDate.Add(-10 * time.Second)
+					prevDateString := prevDate.Format(measurementsDateFormat)
+					// Ignore this error and just act on endMetrics if an error occured
+					prevMetrics, _ := findEndMetrics(cursor, prevDateString, objectType, id)
+
+					// If there were _more_ metrics in the latest bucket, assume that the current bucket
+					// has not been filled yet. This could also mean that there were configuration/agent
+					// changes that led to less resources having metrics in the latest bucket, but we
+					// would rather show stale data for 1 extra period (10s usually) than show data that was incorrect
+					if len(endMetrics) < len(prevMetrics) {
+						endMetrics = prevMetrics
+						endDate = prevDate
+						endDateString = prevDateString
+
+						startDate = endDate.Add(-1 * opts.Period).Truncate(rollup)
+						startDateString = startDate.Format(measurementsDateFormat)
+					}
+				}
+
 				if len(endMetrics) == 0 {
 					continue
 				}
 
-				// List the keys for which we want to find matching start points.
+				// List the keys for which we want to find matching start points. This will be modified as
+				// data is found in findStartMetrics
 				desiredKeys := map[string]interface{}{}
 				for k := range endMetrics {
 					desiredKeys[k] = true
 				}
 
-				startMetrics, err := findStartMetrics(cursor, startDate, endDate, objectType, id, desiredKeys)
+				startMetrics, err := findStartMetrics(cursor, startDateString, endDate, objectType, id, desiredKeys)
 				if err != nil {
 					errs = multierror.Append(errs, err)
 					continue
@@ -1265,7 +1298,7 @@ func (s *boltstore) SaveAgentMetrics(ctx context.Context, metrics []*record.Metr
 	}
 
 	var errs error
-	for _, metricName := range supportedMetricNames {
+	for _, metricName := range stats.SupportedMetricNames {
 		if group, ok := groupedMetrics[metricName]; ok {
 			err := s.storeMeasurements(ctx, metricName, group)
 			if err != nil {
@@ -1280,7 +1313,7 @@ func (s *boltstore) SaveAgentMetrics(ctx context.Context, metrics []*record.Metr
 // ProcessMetrics is called in the background at regular intervals and performs metric roll-up and removes old data
 func (s *boltstore) ProcessMetrics(ctx context.Context) error {
 	var errs error
-	for _, m := range supportedMetricNames {
+	for _, m := range stats.SupportedMetricNames {
 		if err := s.cleanupMeasurements(ctx, m); err != nil {
 			errs = multierror.Append(errs, err)
 		}
@@ -1339,7 +1372,7 @@ func (s *boltstore) cleanupMeasurements(ctx context.Context, metricName string) 
 		c := measurementsBucket(tx, metricName).Cursor()
 
 		// Capture now to re-use for all the date math
-		now := time.Now()
+		now := getCurrentTime()
 
 		// Only look at data points older than 100 seconds, and we keep all the latest 10s intervals
 		endCleanupDate := now.Add(-100 * time.Second)

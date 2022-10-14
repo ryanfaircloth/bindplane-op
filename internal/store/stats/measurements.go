@@ -24,15 +24,13 @@ import (
 
 // QueryOptions represents the set of options available for a measurements query
 type QueryOptions struct {
-	Period  time.Duration
-	EndTime time.Time
+	Period time.Duration
 }
 
 // MakeQueryOptions constructs a QueryOptions struct from the requested options
 func MakeQueryOptions(options []QueryOption) QueryOptions {
 	opts := QueryOptions{
-		Period:  1 * time.Hour,
-		EndTime: time.Now(),
+		Period: 1 * time.Hour,
 	}
 	for _, opt := range options {
 		opt(&opts)
@@ -50,13 +48,6 @@ func WithPeriod(period time.Duration) QueryOption {
 	}
 }
 
-// WithEndTime specifies the EndTime where the query should focus
-func WithEndTime(time time.Time) QueryOption {
-	return func(opts *QueryOptions) {
-		opts.EndTime = time
-	}
-}
-
 // MetricData is returned by Measurements when metrics are requested for agents and configurations
 type MetricData []*record.Metric
 
@@ -66,6 +57,9 @@ type MetricData []*record.Metric
 type Measurements interface {
 	// Clear clears the store and is mostly used for testing.
 	Clear()
+
+	// MeasurementsSize returns the count of keys in the store, and is used only for testing
+	MeasurementsSize() (int, error)
 
 	// AgentMetrics provides metrics for an individual agents. They are essentially configuration metrics filtered to a
 	// list of agents.
@@ -96,12 +90,22 @@ type Measurements interface {
 // ----------------------------------------------------------------------
 // Metric methods specific to measurements
 
-// Metric Attribute names used for measurements
+// Metric Attribute names used for measurements and Metric Names as they come exported with prometheus
 const (
 	AgentAttributeName         = "agent"
 	ConfigurationAttributeName = "configuration"
 	ProcessorAttributeName     = "processor"
+	LogDataSizeMetricName      = "otelcol_processor_throughputmeasurement_log_data_size"
+	MetricDataSizeMetricName   = "otelcol_processor_throughputmeasurement_metric_data_size"
+	TraceDataSizeMetricName    = "otelcol_processor_throughputmeasurement_trace_data_size"
 )
+
+// SupportedMetricNames is the list of metrics we care about coming from the self-monitoring of the agent
+var SupportedMetricNames = []string{
+	LogDataSizeMetricName,
+	MetricDataSizeMetricName,
+	TraceDataSizeMetricName,
+}
 
 // Processor returns the value of the metric attribute that corresponds to the processor name or "" if the attribute is
 // missing or not a string.
