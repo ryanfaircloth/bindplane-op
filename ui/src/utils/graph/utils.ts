@@ -3,7 +3,7 @@ import { TELEMETRY_SIZE_METRICS } from "../../components/MeasurementControlBar/M
 import { isSourceID } from "../../components/PipelineGraph/Nodes/ProcessorNode";
 import { Graph, GraphMetric } from "../../graphql/generated";
 
-export const GRAPH_NODE_OFFSET = 150;
+export const GRAPH_NODE_OFFSET = 160;
 export const GRAPH_PADDING = 120;
 
 export function getNodesAndEdges(
