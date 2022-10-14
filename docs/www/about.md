@@ -6,9 +6,7 @@ createdAt: "2022-06-01T15:49:31.618Z"
 updatedAt: "2022-08-11T14:49:32.906Z"
 ---
 
-![](https://files.readme.io/48f216c-bindplaneop.png "bindplaneop.png")
-
-
+<img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/bindplaneop.png" width="1000px" alt="bindplaneop.png">
 
 ## What is BindPlane OP?
 
@@ -16,9 +14,7 @@ BindPlane OP is an open source observability pipeline that gives you the ability
 
 To get started with BindPlane, see our [Getting Started](doc:getting-started) guide or check out the [Installation](doc:installation) page. Also, checkout the BindPlane OP GitHub repo [here](https://github.com/observIQ/bindplane-op).
 
-![](https://files.readme.io/1659f34-BindPlane_Architecture_Diagram.jpg "BindPlane_Architecture_Diagram.jpg")
-
-
+<img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/BindPlane_Architecture_Diagram.jpg" width="1000px" alt="BindPlane_Architecture_Diagram.jpg">
 
 ## Features
 
@@ -29,9 +25,7 @@ To get started with BindPlane, see our [Getting Started](doc:getting-started) gu
 
 ## Architecture
 
-![](https://files.readme.io/c1a71e4-BindPlane_OP_Architecture_Diagram.png "BindPlane OP Architecture Diagram.png")
-
-
+<img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/BindPlane_OP_Architecture_Diagram.png" width="1000px" alt="BindPlane OP Architecture Diagram.png">
 
 BindPlane OP is a lightweight web server (no dependencies) that you can deploy anywhere in your environment. It's composed of the following components:
 

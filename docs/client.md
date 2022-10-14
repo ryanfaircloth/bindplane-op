@@ -12,7 +12,7 @@ Using a web browser, the BindPlane OP web interface is available. Simply connect
 
 The web interface is intended to be fully featured. Users can install agents and manage configurations.
 
-![login](./images/login.png)
+<img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/login.png" width="1000px" alt="login.png">
 
 ## BindPlane CLI
 

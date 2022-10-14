@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/images/bindplaneop.png?raw=true"></p>
+<p align="center"><img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/bindplaneop.png?raw=true"></p>
 
 <center>
 
@@ -13,7 +13,7 @@
 
 BindPlane OP is an open source observability pipeline that gives you the ability to collect, refine, and ship metrics, logs, and traces to any destination. BindPlane OP provides the controls you need to reduce observability costs and simplify the deployment and management of telemetry agents at scale.
 
-<p align="center"><img src="docs/images/BindPlane_Architecture_Diagram.jpg?raw=true"></p>
+<p align="center"><img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/BindPlane_Architecture_Diagram.jpg?raw=true"></p>
 
 ## Features
 

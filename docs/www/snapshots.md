@@ -1,3 +1,10 @@
+---
+title: Snapshots
+excerpt: Utilize Snapshots in BindPlane OP
+category: 62e92906e7042004966d01ba
+slug: snapshots
+---
+
 # Snapshots
 
 Snapshots provide a way to view logs, metrics, and traces recently collected by an agent.
@@ -8,11 +15,11 @@ Snapshots can be viewed by clicking the `View Recent Telemetry` button found bel
 
 ### Logs
 
-<img src="./images/snapshot_logs_example.png" width="1000px" alt="PostgreSQL logs in the snapshot view">
+<img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/snapshot_logs_example.png" width="1000px" alt="PostgreSQL logs in the snapshot view">
 
 ### Metrics
 
-<img src="./images/snapshot_metrics_example.png" width="1000px" alt="PostgreSQL metrics in the snapshot view">
+<img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/snapshot_metrics_example.png" width="1000px" alt="PostgreSQL metrics in the snapshot view">
 
 If no metrics are available, it's possible none have been collected yet. For example, if an agent has been running
 for 30 seconds and collecting metrics with a 60 second interval, it won't have any recent metrics to show.
