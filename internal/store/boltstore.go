@@ -1117,7 +1117,7 @@ func (s *boltstore) MeasurementsSize() (int, error) {
 
 // available as a function so it can be mocked in tests
 var getCurrentTime = func() time.Time {
-	return time.Now()
+	return time.Now().UTC()
 }
 
 func (s *boltstore) retrieveMetrics(ctx context.Context, metricNames []string, objectType string, ids []string, options ...stats.QueryOption) (stats.MetricData, error) {
