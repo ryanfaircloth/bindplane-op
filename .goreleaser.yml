@@ -127,6 +127,7 @@ nfpms:
       group: bindplane
       mode: 0640
   scripts:
+    preremove: "./scripts/package/preremove.sh"
     preinstall: "./scripts/package/preinstall.sh"
     postinstall: ./scripts/package/postinstall.sh
 
