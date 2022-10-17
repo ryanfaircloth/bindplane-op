@@ -67,27 +67,3 @@ spec:
           {{ else if eq .auth_type "file" }}
           credentials_file: "{{ .credentials_file }}"
           {{ end }}
-          metric:
-            resource_filters:
-              - prefix: bigip
-              - prefix: container
-              - prefix: elasticsearch
-              - prefix: hadoop
-              - prefix: mongodb_atlas
-              - prefix: rabbitmq
-              - prefix: tomcat
-              - prefix: jmx
-              - prefix: process
-              - prefix: os
-              - prefix: zk
-              - prefix: server
-              - prefix: solr
-              - prefix: vcenter
-              - prefix: couchdb
-              - prefix: wildfly
-              - prefix: jboss
-              - prefix: hadoop
-              - prefix: hbase
-              - prefix: sqlserver
-              - prefix: kafka
-              - prefix: couchbase
