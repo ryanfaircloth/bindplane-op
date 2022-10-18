@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import { DEFAULT_TELEMETRY_TYPE } from "../../components/MeasurementControlBar/MeasurementControlBar";
 
 export interface OverviewPageContextValue {
@@ -24,9 +24,12 @@ export const OverviewPageProvider: React.FC = ({ children }) => {
     DEFAULT_TELEMETRY_TYPE
   );
 
-  function onTelemetryTypeChange(t: string) {
-    setSelectedTelemetry(t);
-  }
+  const onTelemetryTypeChange = useMemo(
+    () => (t: string) => {
+      setSelectedTelemetry(t);
+    },
+    []
+  );
 
   return (
     <OverviewPageContext.Provider

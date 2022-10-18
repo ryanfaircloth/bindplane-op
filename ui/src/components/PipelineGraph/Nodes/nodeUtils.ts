@@ -1,3 +1,4 @@
+import { PipelineType } from "../../../graphql/generated";
 import {
   getPipelineTypeFlags,
   isPipelineTypeFlagSet,
@@ -20,4 +21,23 @@ export function isNodeDisabled(
   const activeFlags =
     attributes[AttributeName.ActiveTypeFlags] ?? PipelineTypeFlags.ALL;
   return !isPipelineTypeFlagSet(activeFlags, typeFlag);
+}
+
+export function firstActiveTelemetry(
+  attributes: Record<string, any> | null
+): PipelineType | null {
+  if (attributes == null) return null;
+
+  const activeFlags = attributes[AttributeName.ActiveTypeFlags];
+  if (activeFlags & PipelineTypeFlags.Logs) {
+    return PipelineType.Logs;
+  }
+  if (activeFlags & PipelineTypeFlags.Metrics) {
+    return PipelineType.Metrics;
+  }
+  if (activeFlags && PipelineTypeFlags.Traces) {
+    return PipelineType.Traces;
+  }
+
+  return null;
 }

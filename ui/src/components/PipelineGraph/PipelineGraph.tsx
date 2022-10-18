@@ -8,14 +8,24 @@ import {
   MeasurementControlBar,
 } from "../MeasurementControlBar/MeasurementControlBar";
 import { ConfigurationFlow } from "./ConfigurationFlow";
+import { PipelineGraphProvider } from "./PipelineGraphContext";
 
 import styles from "./pipeline-graph.module.scss";
-import { PipelineGraphProvider } from "./PipelineGraphContext";
+import { firstActiveTelemetry } from "./Nodes/nodeUtils";
 
 export type MinimumRequiredConfig = NonNullable<ShowPageConfig>;
 
-export const PipelineGraph: React.FC = () => {
-  const [selectedTelemetry, setTelemetry] = useState(DEFAULT_TELEMETRY_TYPE);
+interface PipelineGraphProps {
+  configuration: MinimumRequiredConfig;
+}
+
+export const PipelineGraph: React.FC<PipelineGraphProps> = ({
+  configuration,
+}) => {
+  const [selectedTelemetry, setTelemetry] = useState(
+    firstActiveTelemetry(configuration.graph?.attributes) ??
+      DEFAULT_TELEMETRY_TYPE
+  );
   const [selectedPeriod, setPeriod] = useState(DEFAULT_PERIOD);
 
   return (

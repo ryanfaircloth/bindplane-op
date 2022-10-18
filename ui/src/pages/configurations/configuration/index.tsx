@@ -71,6 +71,7 @@ gql`
         }
       }
       graph {
+        attributes
         sources {
           id
           type
@@ -195,7 +196,7 @@ const ConfigPageContent: React.FC = () => {
 
       {!isRaw && hasPipeline && (
         <section>
-          <PipelineGraph />
+          <PipelineGraph configuration={data.configuration} />
         </section>
       )}
 

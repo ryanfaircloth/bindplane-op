@@ -118,6 +118,7 @@ type Graph {
   intermediates: [Node!]!
   targets: [Node!]!
   edges: [Edge!]!
+  attributes: Map!
 }
 
 type Node {

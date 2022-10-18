@@ -12,8 +12,10 @@ import ReactFlow, { Controls, useReactFlow } from "react-flow-renderer";
 import { useNavigate } from "react-router-dom";
 import {
   DEFAULT_PERIOD,
+  DEFAULT_TELEMETRY_TYPE,
   MeasurementControlBar,
 } from "../../components/MeasurementControlBar/MeasurementControlBar";
+import { firstActiveTelemetry } from "../../components/PipelineGraph/Nodes/nodeUtils";
 import {
   useGetOverviewPageQuery,
   useOverviewMetricsSubscription,
@@ -29,6 +31,7 @@ gql`
   query getOverviewPage {
     overviewPage {
       graph {
+        attributes
         sources {
           id
           label
@@ -106,6 +109,16 @@ export const OverviewGraph: React.FC = () => {
       });
     }
   }, [enqueueSnackbar, error]);
+
+  useEffect(() => {
+    // Set the first selected telemetry to the first active after we load.
+    if (data?.overviewPage?.graph?.attributes != null) {
+      onTelemetryTypeChange(
+        firstActiveTelemetry(data.overviewPage.graph.attributes) ??
+          DEFAULT_TELEMETRY_TYPE
+      );
+    }
+  }, [data?.overviewPage.graph.attributes, onTelemetryTypeChange]);
 
   if (loading || data == null || data?.overviewPage == null) {
     return <LoadingIndicator />;

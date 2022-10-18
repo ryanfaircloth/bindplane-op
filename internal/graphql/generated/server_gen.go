@@ -180,6 +180,7 @@ type ComplexityRoot struct {
 	}
 
 	Graph struct {
+		Attributes    func(childComplexity int) int
 		Edges         func(childComplexity int) int
 		Intermediates func(childComplexity int) int
 		Sources       func(childComplexity int) int
@@ -954,6 +955,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Edge.Target(childComplexity), true
+
+	case "Graph.attributes":
+		if e.complexity.Graph.Attributes == nil {
+			break
+		}
+
+		return e.complexity.Graph.Attributes(childComplexity), true
 
 	case "Graph.edges":
 		if e.complexity.Graph.Edges == nil {
@@ -2154,6 +2162,7 @@ type Graph {
   intermediates: [Node!]!
   targets: [Node!]!
   edges: [Edge!]!
+  attributes: Map!
 }
 
 type Node {
@@ -2424,7 +2433,7 @@ type GraphMetric {
   value: Float!
   # unit for the metric, e.g. B/s
   unit: String!
-  # hack just for Samuel
+  # associated agentID when metric is agent specific
   agentID: ID
 }
 
@@ -4868,6 +4877,8 @@ func (ec *executionContext) fieldContext_Configuration_graph(ctx context.Context
 				return ec.fieldContext_Graph_targets(ctx, field)
 			case "edges":
 				return ec.fieldContext_Graph_edges(ctx, field)
+			case "attributes":
+				return ec.fieldContext_Graph_attributes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Graph", field.Name)
 		},
@@ -6281,6 +6292,50 @@ func (ec *executionContext) fieldContext_Graph_edges(ctx context.Context, field 
 				return ec.fieldContext_Edge_target(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Edge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Graph_attributes(ctx context.Context, field graphql.CollectedField, obj *graph.Graph) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Graph_attributes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Attributes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(map[string]any)
+	fc.Result = res
+	return ec.marshalNMap2map(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Graph_attributes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Graph",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Map does not have child fields")
 		},
 	}
 	return fc, nil
@@ -7838,6 +7893,8 @@ func (ec *executionContext) fieldContext_OverviewPage_graph(ctx context.Context,
 				return ec.fieldContext_Graph_targets(ctx, field)
 			case "edges":
 				return ec.fieldContext_Graph_edges(ctx, field)
+			case "attributes":
+				return ec.fieldContext_Graph_attributes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Graph", field.Name)
 		},
@@ -15295,6 +15352,13 @@ func (ec *executionContext) _Graph(ctx context.Context, sel ast.SelectionSet, ob
 		case "edges":
 
 			out.Values[i] = ec._Graph_edges(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "attributes":
+
+			out.Values[i] = ec._Graph_attributes(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

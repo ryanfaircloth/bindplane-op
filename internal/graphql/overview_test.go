@@ -78,9 +78,11 @@ func Test_overviewGraph(t *testing.T) {
 			make(map[string][]string),
 			false,
 			&graph.Graph{
-				Sources: make([]*graph.Node, 0),
-				Targets: make([]*graph.Node, 0),
-				Edges:   make([]*graph.Edge, 0),
+				Sources:       make([]*graph.Node, 0),
+				Targets:       make([]*graph.Node, 0),
+				Intermediates: make([]*graph.Node, 0),
+				Edges:         make([]*graph.Edge, 0),
+				Attributes:    testAttributes(),
 			},
 			false,
 		},
@@ -100,12 +102,14 @@ func Test_overviewGraph(t *testing.T) {
 				Sources: []*graph.Node{
 					testNode("c-1", "configurationNode", 1),
 				},
+				Intermediates: make([]*graph.Node, 0),
 				Targets: []*graph.Node{
 					testNode("d-1", "destinationNode", 1),
 				},
 				Edges: []*graph.Edge{
 					graph.NewEdge("configuration/c-1", "destination/d-1"),
 				},
+				Attributes: testAttributes(),
 			},
 			false,
 		},
@@ -126,6 +130,7 @@ func Test_overviewGraph(t *testing.T) {
 				Sources: []*graph.Node{
 					testNode("c-1", "configurationNode", 1),
 				},
+				Intermediates: make([]*graph.Node, 0),
 				Targets: []*graph.Node{
 					testNode("d-1", "destinationNode", 1),
 					testNode("d-2", "destinationNode", 1),
@@ -134,6 +139,7 @@ func Test_overviewGraph(t *testing.T) {
 					graph.NewEdge("configuration/c-1", "destination/d-1"),
 					graph.NewEdge("configuration/c-1", "destination/d-2"),
 				},
+				Attributes: testAttributes(),
 			},
 			false,
 		},
@@ -156,6 +162,7 @@ func Test_overviewGraph(t *testing.T) {
 					testNode("c-1", "configurationNode", 1),
 					testNode("c-2", "configurationNode", 1),
 				},
+				Intermediates: make([]*graph.Node, 0),
 				Targets: []*graph.Node{
 					testNode("d-1", "destinationNode", 2),
 				},
@@ -163,6 +170,7 @@ func Test_overviewGraph(t *testing.T) {
 					graph.NewEdge("configuration/c-1", "destination/d-1"),
 					graph.NewEdge("configuration/c-2", "destination/d-1"),
 				},
+				Attributes: testAttributes(),
 			},
 			false,
 		},
@@ -186,6 +194,7 @@ func Test_overviewGraph(t *testing.T) {
 					testNode("c-1", "configurationNode", 1),
 					testNode("c-2", "configurationNode", 1),
 				},
+				Intermediates: make([]*graph.Node, 0),
 				Targets: []*graph.Node{
 					testNode("d-1", "destinationNode", 1),
 					testNode("d-2", "destinationNode", 1),
@@ -194,6 +203,7 @@ func Test_overviewGraph(t *testing.T) {
 					graph.NewEdge("configuration/c-1", "destination/d-1"),
 					graph.NewEdge("configuration/c-2", "destination/d-2"),
 				},
+				Attributes: testAttributes(),
 			},
 			false,
 		},
@@ -217,6 +227,7 @@ func Test_overviewGraph(t *testing.T) {
 					testNode("c-1", "configurationNode", 1),
 					testNode("c-2", "configurationNode", 1),
 				},
+				Intermediates: make([]*graph.Node, 0),
 				Targets: []*graph.Node{
 					testNode("d-1", "destinationNode", 1),
 					testNode("d-2", "destinationNode", 2),
@@ -226,6 +237,7 @@ func Test_overviewGraph(t *testing.T) {
 					graph.NewEdge("configuration/c-1", "destination/d-2"),
 					graph.NewEdge("configuration/c-2", "destination/d-2"),
 				},
+				Attributes: testAttributes(),
 			},
 			false,
 		},
@@ -247,12 +259,14 @@ func Test_overviewGraph(t *testing.T) {
 				Sources: []*graph.Node{
 					testNode("c-1", "configurationNode", 1),
 				},
+				Intermediates: make([]*graph.Node, 0),
 				Targets: []*graph.Node{
 					testNode("d-1", "destinationNode", 1),
 				},
 				Edges: []*graph.Edge{
 					graph.NewEdge("configuration/c-1", "destination/d-1"),
 				},
+				Attributes: testAttributes(),
 			},
 			false,
 		},
@@ -275,6 +289,7 @@ func Test_overviewGraph(t *testing.T) {
 					testNode("GCP", "configurationNode", 1),
 					testNode("c-1", "configurationNode", 1),
 				},
+				Intermediates: make([]*graph.Node, 0),
 				Targets: []*graph.Node{
 					testNode("GCP", "destinationNode", 2),
 				},
@@ -282,6 +297,7 @@ func Test_overviewGraph(t *testing.T) {
 					graph.NewEdge("configuration/GCP", "destination/GCP"),
 					graph.NewEdge("configuration/c-1", "destination/GCP"),
 				},
+				Attributes: testAttributes(),
 			},
 			false,
 		},
@@ -386,5 +402,12 @@ func testNode(name, nodeType string, agentCount int) *graph.Node {
 			"agentCount":      agentCount,
 			"activeTypeFlags": activeFlags,
 		},
+	}
+}
+
+func testAttributes() map[string]any {
+	var flags otel.PipelineTypeFlags
+	return map[string]any{
+		"activeTypeFlags": flags,
 	}
 }

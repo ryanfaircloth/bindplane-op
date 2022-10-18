@@ -26,6 +26,9 @@ type Graph struct {
 	Intermediates []*Node
 	Targets       []*Node
 	Edges         []*Edge
+
+	// Attributes allow arbitrary information to be included with the Graph
+	Attributes map[string]any
 }
 
 // Node represents a single node in a graph and will be connected to other nodes by Edges.
@@ -66,6 +69,7 @@ func NewGraph() *Graph {
 		Intermediates: []*Node{},
 		Targets:       []*Node{},
 		Edges:         []*Edge{},
+		Attributes:    make(map[string]any),
 	}
 }
 

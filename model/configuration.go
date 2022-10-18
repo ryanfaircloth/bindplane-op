@@ -617,6 +617,7 @@ func (c *Configuration) Graph(ctx context.Context, store ResourceStore) (*graph.
 	lastNodes := make([]*graph.Node, 0, len(c.Spec.Sources))
 
 	pipelineUsage := c.determinePipelineTypeUsage(ctx, store)
+	g.Attributes["activeTypeFlags"] = pipelineUsage.ActiveFlags()
 
 	for i, source := range c.Spec.Sources {
 		sourceName := source.localName(KindSource, i)

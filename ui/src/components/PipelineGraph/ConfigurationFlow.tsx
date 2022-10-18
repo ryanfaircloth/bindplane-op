@@ -59,6 +59,7 @@ export const ConfigurationFlow: React.FC<ConfigurationFlowProps> = ({
       name: configuration.metadata.name,
     },
   });
+
   updateMetricData(
     nodes,
     data?.configurationMetrics.metrics ?? [],
@@ -66,7 +67,6 @@ export const ConfigurationFlow: React.FC<ConfigurationFlowProps> = ({
     selectedTelemetry
   );
 
-  // TODO: find card height programmatically
   const viewPortHeight =
     GRAPH_PADDING +
     Math.max(
@@ -78,7 +78,6 @@ export const ConfigurationFlow: React.FC<ConfigurationFlowProps> = ({
     reactFlowInstance.fitView();
   }, [reactFlowInstance]);
 
-  // This should work without the delay?
   useEffect(() => {
     setTimeout(() => {
       reactFlowInstance.fitView();

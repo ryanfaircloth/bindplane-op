@@ -21,9 +21,13 @@ import (
 	"github.com/observiq/bindplane-op/internal/store"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/bindplane-op/model/graph"
+	"github.com/observiq/bindplane-op/model/otel"
 )
 
 func overviewGraph(ctx context.Context, store store.Store) (*graph.Graph, error) {
+	g := graph.NewGraph()
+	var activeFlags otel.PipelineTypeFlags
+
 	configs, err := store.Configurations(ctx)
 	if err != nil {
 		return nil, err
@@ -59,6 +63,7 @@ func overviewGraph(ctx context.Context, store store.Store) (*graph.Graph, error)
 		configUsage := c.Usage(ctx, store)
 		configAttrs.AddAttribute("agentCount", len(agentIDs))
 		configAttrs.AddAttribute("activeTypeFlags", configUsage.ActiveFlags())
+		activeFlags = activeFlags | configUsage.ActiveFlags()
 
 		configNodes = append(configNodes, &graph.Node{
 			ID:         configNodeID,
@@ -96,9 +101,10 @@ func overviewGraph(ctx context.Context, store store.Store) (*graph.Graph, error)
 		}
 	}
 
-	return &graph.Graph{
-		Sources: configNodes,
-		Targets: destNodesSlice,
-		Edges:   edges,
-	}, nil
+	g.Sources = configNodes
+	g.Targets = destNodesSlice
+	g.Edges = edges
+	g.Attributes["activeTypeFlags"] = activeFlags
+
+	return g, nil
 }
