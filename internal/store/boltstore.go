@@ -1184,7 +1184,7 @@ func (s *boltstore) retrieveMetrics(ctx context.Context, metricNames []string, o
 				// Only calculate rates if we found a start point to match the end points desired
 				for key, first := range startMetrics {
 					if last, ok := endMetrics[key]; ok {
-						if metric := calculateRateMetric(first, last); metric != nil {
+						if metric := s.calculateRateMetric(first, last); metric != nil {
 							result = append(result, metric)
 						}
 					}
@@ -1406,31 +1406,47 @@ func (s *boltstore) cleanupMeasurements(ctx context.Context, metricName string) 
 	})
 }
 
-func calculateRateMetric(first, last *record.Metric) *record.Metric {
+func (s *boltstore) calculateRateMetric(first, last *record.Metric) *record.Metric {
 	// If we ended up with start & end being the same moment, or somehow
 	// start is later than end, we don't want to provide a 0 or negative rate
 	if first.Timestamp.Sub(last.Timestamp) >= 0 {
 		return nil
 	}
 
-	var lastValue, firstValue float64
+	var lastValue float64
 	var pass bool
 	if lastValue, pass = stats.Value(last); !pass {
 		return nil
 	}
-	if firstValue, pass = stats.Value(first); !pass {
-		return nil
-	}
 
-	delta := lastValue - firstValue
-	if delta < 0 {
-		// TODO - handle rollover better than this
+	var duration time.Duration
+	var delta float64
+	// If we're looking at the same "reset" of the counter, we can do meaningful math
+	// with the "first" metric's value, otherwise we can only act on the information we
+	// have about the latest reset stored in the "last" metric
+	if last.StartTimestamp.Equal(first.StartTimestamp) {
+		var firstValue float64
+		if firstValue, pass = stats.Value(first); !pass {
+			return nil
+		}
+
+		delta = lastValue - firstValue
+		// This kind of rollover shouldn't happen any more as it should be caught by the
+		// StartTimestamp comparison
+		if delta < 0 {
+			delta = lastValue
+		}
+
+		duration = last.Timestamp.Sub(first.Timestamp)
+		if duration <= 0*time.Second {
+			return nil
+		}
+	} else {
 		delta = lastValue
-	}
-
-	duration := last.Timestamp.Sub(first.Timestamp)
-	if duration <= 0*time.Second {
-		return nil
+		duration = last.Timestamp.Sub(last.StartTimestamp)
+		if duration <= 0*time.Second {
+			return nil
+		}
 	}
 
 	rate := delta / duration.Seconds()
@@ -1442,13 +1458,14 @@ func calculateRateMetric(first, last *record.Metric) *record.Metric {
 
 func generateRecord(source *record.Metric, value interface{}, attributes map[string]interface{}) *record.Metric {
 	return &record.Metric{
-		Name:       source.Name,
-		Timestamp:  source.Timestamp.UTC(),
-		Value:      value,
-		Unit:       "B/s",
-		Type:       "Rate",
-		Attributes: attributes,
-		Resource:   source.Resource,
+		Name:           source.Name,
+		Timestamp:      source.Timestamp.UTC(),
+		StartTimestamp: source.StartTimestamp.UTC(),
+		Value:          value,
+		Unit:           "B/s",
+		Type:           "Rate",
+		Attributes:     attributes,
+		Resource:       source.Resource,
 	}
 }
 

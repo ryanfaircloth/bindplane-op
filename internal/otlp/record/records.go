@@ -27,13 +27,14 @@ import (
 
 // Metric is a metric record sent to bindplane
 type Metric struct {
-	Name       string                 `json:"name"`
-	Timestamp  time.Time              `json:"timestamp"`
-	Value      interface{}            `json:"value"`
-	Unit       string                 `json:"unit"`
-	Type       string                 `json:"type"`
-	Attributes map[string]interface{} `json:"attributes"`
-	Resource   map[string]interface{} `json:"resource"`
+	Name           string                 `json:"name"`
+	Timestamp      time.Time              `json:"timestamp"`
+	StartTimestamp time.Time              `json:"start_timestamp,omitempty"`
+	Value          interface{}            `json:"value"`
+	Unit           string                 `json:"unit"`
+	Type           string                 `json:"type"`
+	Attributes     map[string]interface{} `json:"attributes"`
+	Resource       map[string]interface{} `json:"resource"`
 }
 
 // Log is a log record sent to bindplane
@@ -100,13 +101,14 @@ func getMetricRecordsFromSum(metric pmetric.Metric, resourceAttributes map[strin
 	for i := 0; i < points.Len(); i++ {
 		point := points.At(i)
 		record := Metric{
-			Name:       metricName,
-			Timestamp:  point.Timestamp().AsTime(),
-			Value:      getDataPointValue(point),
-			Unit:       metricUnit,
-			Type:       metricType,
-			Attributes: point.Attributes().AsRaw(),
-			Resource:   resourceAttributes,
+			Name:           metricName,
+			Timestamp:      point.Timestamp().AsTime(),
+			StartTimestamp: point.StartTimestamp().AsTime(),
+			Value:          getDataPointValue(point),
+			Unit:           metricUnit,
+			Type:           metricType,
+			Attributes:     point.Attributes().AsRaw(),
+			Resource:       resourceAttributes,
 		}
 		metricRecords = append(metricRecords, &record)
 	}
@@ -148,13 +150,14 @@ func getMetricRecordsFromSummary(metric pmetric.Metric, resourceAttributes map[s
 	for i := 0; i < points.Len(); i++ {
 		point := points.At(i)
 		record := Metric{
-			Name:       metricName,
-			Timestamp:  point.Timestamp().AsTime(),
-			Value:      getSummaryPointValue(point),
-			Unit:       metricUnit,
-			Type:       metricType,
-			Attributes: point.Attributes().AsRaw(),
-			Resource:   resourceAttributes,
+			Name:           metricName,
+			Timestamp:      point.Timestamp().AsTime(),
+			StartTimestamp: point.StartTimestamp().AsTime(),
+			Value:          getSummaryPointValue(point),
+			Unit:           metricUnit,
+			Type:           metricType,
+			Attributes:     point.Attributes().AsRaw(),
+			Resource:       resourceAttributes,
 		}
 		metricRecords = append(metricRecords, &record)
 	}

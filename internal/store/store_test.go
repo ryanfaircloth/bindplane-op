@@ -1371,8 +1371,11 @@ func runTestMeasurements(t *testing.T, store Store) {
 	now := time.Now().Truncate(24 * time.Hour).UTC()
 	getCurrentTime = func() time.Time { return now }
 
-	saveMetrics := func(name string, timestamp time.Time, interval time.Duration, configuration, agent, processor string, values []float64) {
-		saveTestMetrics(ctx, t, measurements, name, timestamp, interval, configuration, agent, processor, values)
+	// Use epochStart as startTime for counters when we're not testing rollover
+	epochStart := time.Unix(0, 0).UTC()
+
+	saveMetrics := func(name string, timestamp, startTime time.Time, interval time.Duration, configuration, agent, processor string, values []float64) {
+		saveTestMetrics(ctx, t, measurements, name, timestamp, startTime, interval, configuration, agent, processor, values)
 	}
 
 	t.Run("returns empty measurements with no data", func(t *testing.T) {
@@ -1403,12 +1406,12 @@ func runTestMeasurements(t *testing.T, store Store) {
 		prev := frame.Add(-10 * time.Second)
 		timestamp := frame.Add(-3 * time.Minute)
 
-		saveMetrics(stats.LogDataSizeMetricName, timestamp, 10*time.Second, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 90, 90, 90, 90, 90, 100, 110})
+		saveMetrics(stats.LogDataSizeMetricName, timestamp, epochStart, 10*time.Second, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 90, 90, 90, 90, 90, 100, 110})
 
-		saveMetrics(stats.LogDataSizeMetricName, timestamp, 10*time.Second, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 90, 90, 90, 90, 90, 100, 110})
-		saveMetrics(stats.LogDataSizeMetricName, timestamp, 10*time.Second, c1, a1, p2, []float64{0, 0, 0, 0, 0, 0, 20, 20, 20, 20, 20, 20, 200, 200, 200, 200, 200, 200, 220})
-		saveMetrics(stats.LogDataSizeMetricName, timestamp, 10*time.Second, c1, a2, p1, []float64{0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 1000, 1000, 1000, 1000, 1000, 1000, 10000})
-		saveMetrics(stats.LogDataSizeMetricName, timestamp, 10*time.Second, c1, a2, p2, []float64{0, 0, 0, 0, 0, 0, 200, 200, 200, 200, 200, 200, 2000, 2000, 2000, 2000, 2000, 2000, 20000})
+		saveMetrics(stats.LogDataSizeMetricName, timestamp, epochStart, 10*time.Second, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 90, 90, 90, 90, 90, 100, 110})
+		saveMetrics(stats.LogDataSizeMetricName, timestamp, epochStart, 10*time.Second, c1, a1, p2, []float64{0, 0, 0, 0, 0, 0, 20, 20, 20, 20, 20, 20, 200, 200, 200, 200, 200, 200, 220})
+		saveMetrics(stats.LogDataSizeMetricName, timestamp, epochStart, 10*time.Second, c1, a2, p1, []float64{0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 1000, 1000, 1000, 1000, 1000, 1000, 10000})
+		saveMetrics(stats.LogDataSizeMetricName, timestamp, epochStart, 10*time.Second, c1, a2, p2, []float64{0, 0, 0, 0, 0, 0, 200, 200, 200, 200, 200, 200, 2000, 2000, 2000, 2000, 2000, 2000, 20000})
 
 		err = measurements.ProcessMetrics(ctx)
 		require.NoError(t, err)
@@ -1417,15 +1420,15 @@ func runTestMeasurements(t *testing.T, store Store) {
 			metrics, err := measurements.AgentMetrics(ctx, []string{a1}, stats.WithPeriod(time.Minute))
 			require.NoError(t, err)
 			requireMetrics(t, []*record.Metric{
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a1, p1, 1.5),
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a1, p2, 3),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a1, p1, 1.5),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a1, p2, 3),
 			}, metrics)
 
 			metrics, err = measurements.AgentMetrics(ctx, []string{a2}, stats.WithPeriod(time.Minute))
 			require.NoError(t, err)
 			requireMetrics(t, []*record.Metric{
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a2, p1, 15),
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a2, p2, 30),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a2, p1, 15),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a2, p2, 30),
 			}, metrics)
 		})
 
@@ -1433,10 +1436,10 @@ func runTestMeasurements(t *testing.T, store Store) {
 			metrics, err := measurements.AgentMetrics(ctx, []string{a1, a2}, stats.WithPeriod(time.Minute))
 			require.NoError(t, err)
 			requireMetrics(t, []*record.Metric{
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a1, p1, 1.5),
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a1, p2, 3),
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a2, p1, 15),
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a2, p2, 30),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a1, p1, 1.5),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a1, p2, 3),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a2, p1, 15),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a2, p2, 30),
 			}, metrics)
 		})
 
@@ -1444,10 +1447,10 @@ func runTestMeasurements(t *testing.T, store Store) {
 			metrics, err := measurements.AgentMetrics(ctx, []string{}, stats.WithPeriod(time.Minute))
 			require.NoError(t, err)
 			requireMetrics(t, []*record.Metric{
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a1, p1, 1.5),
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a1, p2, 3),
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a2, p1, 15),
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a2, p2, 30),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a1, p1, 1.5),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a1, p2, 3),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a2, p1, 15),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a2, p2, 30),
 			}, metrics)
 		})
 
@@ -1455,8 +1458,8 @@ func runTestMeasurements(t *testing.T, store Store) {
 			metrics, err := measurements.ConfigurationMetrics(ctx, c1, stats.WithPeriod(time.Minute))
 			require.NoError(t, err)
 			requireMetrics(t, []*record.Metric{
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, "", p1, 16.5),
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, "", p2, 33),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, "", p1, 16.5),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, "", p2, 33),
 			}, metrics)
 		})
 
@@ -1464,8 +1467,8 @@ func runTestMeasurements(t *testing.T, store Store) {
 			metrics, err := measurements.OverviewMetrics(ctx, stats.WithPeriod(time.Minute))
 			require.NoError(t, err)
 			requireMetrics(t, []*record.Metric{
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, "", p1, 16.5),
-				generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, "", p2, 33),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, "", p1, 16.5),
+				generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, "", p2, 33),
 			}, metrics)
 		})
 	})
@@ -1477,16 +1480,36 @@ func runTestMeasurements(t *testing.T, store Store) {
 		expectedTimestamp := frame.Add(-20 * time.Second)
 		timestamp := frame.Add(-3 * time.Minute)
 
-		saveMetrics(stats.LogDataSizeMetricName, timestamp, 10*time.Second, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 90, 90, 90, 90, 90, 100})
-		saveMetrics(stats.LogDataSizeMetricName, timestamp, 10*time.Second, c1, a1, p2, []float64{0, 0, 0, 0, 0, 0, 20, 20, 20, 20, 20, 20, 200, 200, 200, 200, 200})
-		saveMetrics(stats.LogDataSizeMetricName, timestamp, 10*time.Second, c1, a2, p1, []float64{0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 1000, 1000, 1000, 1000, 1000})
-		saveMetrics(stats.LogDataSizeMetricName, timestamp, 10*time.Second, c1, a2, p2, []float64{0, 0, 0, 0, 0, 0, 200, 200, 200, 200, 200, 200, 2000, 2000, 2000, 2000, 2000})
+		saveMetrics(stats.LogDataSizeMetricName, timestamp, epochStart, 10*time.Second, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 90, 90, 90, 90, 90, 100})
+		saveMetrics(stats.LogDataSizeMetricName, timestamp, epochStart, 10*time.Second, c1, a1, p2, []float64{0, 0, 0, 0, 0, 0, 20, 20, 20, 20, 20, 20, 200, 200, 200, 200, 200})
+		saveMetrics(stats.LogDataSizeMetricName, timestamp, epochStart, 10*time.Second, c1, a2, p1, []float64{0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 1000, 1000, 1000, 1000, 1000})
+		saveMetrics(stats.LogDataSizeMetricName, timestamp, epochStart, 10*time.Second, c1, a2, p2, []float64{0, 0, 0, 0, 0, 0, 200, 200, 200, 200, 200, 200, 2000, 2000, 2000, 2000, 2000})
 
 		metrics, err := measurements.AgentMetrics(ctx, []string{a1}, stats.WithPeriod(time.Minute))
 		require.NoError(t, err)
 		requireMetrics(t, []*record.Metric{
-			generateExpectMetric(stats.LogDataSizeMetricName, expectedTimestamp, c1, a1, p1, 1.33),
-			generateExpectMetric(stats.LogDataSizeMetricName, expectedTimestamp, c1, a1, p2, 3),
+			generateExpectMetric(stats.LogDataSizeMetricName, expectedTimestamp, epochStart, c1, a1, p1, 1.33),
+			generateExpectMetric(stats.LogDataSizeMetricName, expectedTimestamp, epochStart, c1, a1, p2, 3),
+		}, metrics)
+	})
+
+	t.Run("handles rollovers using the startTime of the end data point", func(t *testing.T) {
+		reset()
+
+		frame := now.Truncate(10 * time.Second)
+		expectedTimestamp := frame.Add(-10 * time.Second)
+		oldDataTimestamp := frame.Add(-25 * time.Hour)
+
+		rolloverPoint := frame.Add(-1 * time.Hour)
+
+		saveMetrics(stats.LogDataSizeMetricName, expectedTimestamp, rolloverPoint, 10*time.Second, c1, a1, p1, []float64{500})
+
+		saveMetrics(stats.LogDataSizeMetricName, oldDataTimestamp, epochStart, 1*time.Hour, c1, a1, p1, []float64{300, 300, 300})
+
+		metrics, err := measurements.AgentMetrics(ctx, []string{a1}, stats.WithPeriod(24*time.Hour))
+		require.NoError(t, err)
+		requireMetrics(t, []*record.Metric{
+			generateExpectMetric(stats.LogDataSizeMetricName, expectedTimestamp, rolloverPoint, c1, a1, p1, 0.14),
 		}, metrics)
 	})
 
@@ -1494,17 +1517,17 @@ func runTestMeasurements(t *testing.T, store Store) {
 		reset()
 
 		// Metrics completely out of scope of measurements, should all be removed
-		saveMetrics(stats.LogDataSizeMetricName, now.Add(-60*24*time.Hour).Truncate(24*time.Hour), 1*time.Hour, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0})
+		saveMetrics(stats.LogDataSizeMetricName, now.Add(-60*24*time.Hour).Truncate(24*time.Hour), epochStart, 1*time.Hour, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0})
 		// Metrics in the last 31 days, only daily metrics saved - 3 should be saved, 3 deleted
-		saveMetrics(stats.LogDataSizeMetricName, now.Add(-30*24*time.Hour).Truncate(24*time.Hour), 12*time.Hour, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0})
+		saveMetrics(stats.LogDataSizeMetricName, now.Add(-30*24*time.Hour).Truncate(24*time.Hour), epochStart, 12*time.Hour, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0})
 		// Metrics in the last 1 day, only hourly metrics saved - 3 should be saved, 3 deleted
-		saveMetrics(stats.LogDataSizeMetricName, now.Add(-23*time.Hour).Truncate(1*time.Hour), 30*time.Minute, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0})
+		saveMetrics(stats.LogDataSizeMetricName, now.Add(-23*time.Hour).Truncate(1*time.Hour), epochStart, 30*time.Minute, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0})
 		// Metrics in the last 6 hours, only 5min metrics saved - 2 should be saved, 4 deleted
-		saveMetrics(stats.LogDataSizeMetricName, now.Add(-5*time.Hour).Truncate(1*time.Hour), 2*time.Minute, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0})
+		saveMetrics(stats.LogDataSizeMetricName, now.Add(-5*time.Hour).Truncate(1*time.Hour), epochStart, 2*time.Minute, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0})
 		// Metrics in the last 10 minutes, only 1min metrics saved - 3 should be saved, 3 deleted
-		saveMetrics(stats.LogDataSizeMetricName, now.Add(-9*time.Minute).Truncate(1*time.Minute), 30*time.Second, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0})
+		saveMetrics(stats.LogDataSizeMetricName, now.Add(-9*time.Minute).Truncate(1*time.Minute), epochStart, 30*time.Second, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0})
 		// Metrics in the last 100 seconds, all 6 saved
-		saveMetrics(stats.LogDataSizeMetricName, now.Add(-90*time.Second).Truncate(10*time.Second), 10*time.Second, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0})
+		saveMetrics(stats.LogDataSizeMetricName, now.Add(-90*time.Second).Truncate(10*time.Second), epochStart, 10*time.Second, c1, a1, p1, []float64{0, 0, 0, 0, 0, 0})
 
 		// Each data point is written once to be looked up by Agent, once by Configuration, so we need to double the
 		// number of metrics saved
@@ -1523,11 +1546,11 @@ func runTestMeasurements(t *testing.T, store Store) {
 	t.Run("handles more periods than just one minute", func(t *testing.T) {
 		reset()
 
-		saveMetrics(stats.LogDataSizeMetricName, now.Add(-25*time.Hour).Truncate(1*time.Hour), 1*time.Hour, c1, a1, p1, []float64{1000, 1000, 1000})
-		saveMetrics(stats.LogDataSizeMetricName, now.Add(-80*time.Minute).Truncate(10*time.Minute), 10*time.Minute, c1, a1, p1, []float64{2000, 2000, 2000})
-		saveMetrics(stats.LogDataSizeMetricName, now.Add(-6*time.Minute).Truncate(1*time.Minute), 1*time.Minute, c1, a1, p1, []float64{3000, 3000, 3000})
-		saveMetrics(stats.LogDataSizeMetricName, now.Add(-80*time.Second).Truncate(10*time.Second), 10*time.Second, c1, a1, p1, []float64{4000, 4000, 4000})
-		saveMetrics(stats.LogDataSizeMetricName, now.Add(-30*time.Second).Truncate(10*time.Second), 10*time.Second, c1, a1, p1, []float64{5000, 5000, 5000})
+		saveMetrics(stats.LogDataSizeMetricName, now.Add(-25*time.Hour).Truncate(1*time.Hour), epochStart, 1*time.Hour, c1, a1, p1, []float64{1000, 1000, 1000})
+		saveMetrics(stats.LogDataSizeMetricName, now.Add(-80*time.Minute).Truncate(10*time.Minute), epochStart, 10*time.Minute, c1, a1, p1, []float64{2000, 2000, 2000})
+		saveMetrics(stats.LogDataSizeMetricName, now.Add(-6*time.Minute).Truncate(1*time.Minute), epochStart, 1*time.Minute, c1, a1, p1, []float64{3000, 3000, 3000})
+		saveMetrics(stats.LogDataSizeMetricName, now.Add(-80*time.Second).Truncate(10*time.Second), epochStart, 10*time.Second, c1, a1, p1, []float64{4000, 4000, 4000})
+		saveMetrics(stats.LogDataSizeMetricName, now.Add(-30*time.Second).Truncate(10*time.Second), epochStart, 10*time.Second, c1, a1, p1, []float64{5000, 5000, 5000})
 
 		err := measurements.ProcessMetrics(ctx)
 		require.NoError(t, err)
@@ -1538,25 +1561,25 @@ func runTestMeasurements(t *testing.T, store Store) {
 		metrics, err := measurements.AgentMetrics(ctx, []string{a1}, stats.WithPeriod(time.Minute))
 		require.NoError(t, err)
 		requireMetrics(t, []*record.Metric{
-			generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a1, p1, 16.67),
+			generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a1, p1, 16.67),
 		}, metrics)
 
 		metrics, err = measurements.AgentMetrics(ctx, []string{a1}, stats.WithPeriod(5*time.Minute))
 		require.NoError(t, err)
 		requireMetrics(t, []*record.Metric{
-			generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a1, p1, 5.71),
+			generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a1, p1, 5.71),
 		}, metrics)
 
 		metrics, err = measurements.AgentMetrics(ctx, []string{a1}, stats.WithPeriod(1*time.Hour))
 		require.NoError(t, err)
 		requireMetrics(t, []*record.Metric{
-			generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a1, p1, 0.84),
+			generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a1, p1, 0.84),
 		}, metrics)
 
 		metrics, err = measurements.AgentMetrics(ctx, []string{a1}, stats.WithPeriod(24*time.Hour))
 		require.NoError(t, err)
 		requireMetrics(t, []*record.Metric{
-			generateExpectMetric(stats.LogDataSizeMetricName, prev, c1, a1, p1, 0.05),
+			generateExpectMetric(stats.LogDataSizeMetricName, prev, epochStart, c1, a1, p1, 0.05),
 		}, metrics)
 	})
 }
@@ -1573,13 +1596,14 @@ const (
 	c2 = "localhost"
 )
 
-func generateExpectMetric(name string, timestamp time.Time, configuration, agent, processor string, value float64) *record.Metric {
+func generateExpectMetric(name string, timestamp, startTime time.Time, configuration, agent, processor string, value float64) *record.Metric {
 	m := &record.Metric{
-		Name:      name,
-		Timestamp: timestamp,
-		Value:     value,
-		Unit:      "B/s",
-		Type:      "Rate",
+		Name:           name,
+		StartTimestamp: startTime,
+		Timestamp:      timestamp,
+		Value:          value,
+		Unit:           "B/s",
+		Type:           "Rate",
 		Attributes: map[string]interface{}{
 			"configuration": configuration,
 		},
@@ -1601,18 +1625,19 @@ func requireMetrics(t *testing.T, expected, actual []*record.Metric) {
 	require.ElementsMatch(t, expected, actual)
 }
 
-func saveTestMetrics(ctx context.Context, t *testing.T, m stats.Measurements, name string, timestamp time.Time, interval time.Duration, configuration, agent, processor string, values []float64) {
-	err := m.SaveAgentMetrics(ctx, generateTestMetrics(t, name, timestamp, interval, configuration, agent, processor, values))
+func saveTestMetrics(ctx context.Context, t *testing.T, m stats.Measurements, name string, timestamp, startTime time.Time, interval time.Duration, configuration, agent, processor string, values []float64) {
+	err := m.SaveAgentMetrics(ctx, generateTestMetrics(t, name, timestamp, startTime, interval, configuration, agent, processor, values))
 	require.NoError(t, err)
 }
 
-func generateTestMetric(t *testing.T, name string, timestamp time.Time, configuration, agent, processor string, value float64) *record.Metric {
+func generateTestMetric(t *testing.T, name string, timestamp, startTime time.Time, configuration, agent, processor string, value float64) *record.Metric {
 	m := &record.Metric{
-		Name:      name,
-		Timestamp: timestamp,
-		Value:     value,
-		Unit:      "",
-		Type:      "Sum",
+		Name:           name,
+		Timestamp:      timestamp,
+		StartTimestamp: startTime,
+		Value:          value,
+		Unit:           "",
+		Type:           "Sum",
 		Attributes: map[string]interface{}{
 			"configuration": configuration,
 			"processor":     processor,
@@ -1626,13 +1651,14 @@ func generateTestMetric(t *testing.T, name string, timestamp time.Time, configur
 }
 
 // generateTestMetrics creates test metrics starting at timestamp with the specified interval. To create gaps in metrics, values < 0 are skipped.
-func generateTestMetrics(t *testing.T, name string, timestamp time.Time, interval time.Duration, configuration, agent, processor string, values []float64) []*record.Metric {
+func generateTestMetrics(t *testing.T, name string, timestamp, startTime time.Time, interval time.Duration, configuration, agent, processor string, values []float64) []*record.Metric {
 	var results []*record.Metric
 	for i := 0; i < len(values); i++ {
 		results = append(results, generateTestMetric(
 			t,
 			name,
 			timestamp.Add(time.Duration(i)*interval),
+			startTime,
 			configuration,
 			agent,
 			processor,
