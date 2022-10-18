@@ -491,9 +491,10 @@ func (p *Pipeline) AddReceivers(rc *RenderContext, id []ComponentID) {
 
 // AddProcessors adds processors to the pipeline
 func (p *Pipeline) AddProcessors(rc *RenderContext, ids []ComponentID) {
-	// when adding processors, only add measurement processors once
+	// when adding processors, only add source measurement processors once even if it is being sent to multiple
+	// destinations
 	for _, id := range ids {
-		if isMeasurementProcessor(id) {
+		if isSourceMeasurementProcessor(id) {
 			if rc.hasMeasurementProcessor(id) {
 				continue
 			}
@@ -508,7 +509,6 @@ func (p *Pipeline) AddExporters(rc *RenderContext, id []ComponentID) {
 	p.Exporters = append(p.Exporters, id...)
 }
 
-func isMeasurementProcessor(id ComponentID) bool {
-	componentType, _ := ParseComponentID(id)
-	return componentType == string(MeasureProcessorName)
+func isSourceMeasurementProcessor(id ComponentID) bool {
+	return strings.HasPrefix(string(id), fmt.Sprintf("%s/_s", MeasureProcessorName))
 }

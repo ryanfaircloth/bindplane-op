@@ -15,6 +15,7 @@
 package record
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -302,4 +303,19 @@ func (m *Metric) AttributeString(name string, defaultValue string) string {
 		}
 	}
 	return defaultValue
+}
+
+// Clone returns a deep copy of the object by using JSON Marshal/Unmarshal.
+func Clone[T any](src *T) (*T, error) {
+	s, err := json.Marshal(src)
+	if err != nil {
+		return nil, err
+	}
+
+	var dest T
+	if err = json.Unmarshal(s, &dest); err != nil {
+		return nil, err
+	}
+
+	return &dest, nil
 }

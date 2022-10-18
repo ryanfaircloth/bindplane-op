@@ -284,8 +284,7 @@ func evalSource(ctx context.Context, source *ResourceConfiguration, defaultName 
 		rc.pipelineTypeUsage.sources.setSupported(srcName, partials)
 	}
 
-	addMeasureProcessors(partials, MeasurementPositionSourceBeforeProcessors, src.Name(), rc)
-
+	srcProcessors := otel.NewPartials()
 	// evaluate the processors associated with the source
 	for i, processor := range source.Processors {
 		processor := processor
@@ -293,10 +292,16 @@ func evalSource(ctx context.Context, source *ResourceConfiguration, defaultName 
 		if processorParts == nil {
 			continue
 		}
-		partials.Append(processorParts)
+		srcProcessors.Append(processorParts)
 	}
 
-	addMeasureProcessors(partials, MeasurementPositionSourceAfterProcessors, src.Name(), rc)
+	if srcProcessors.Empty() {
+		addMeasureProcessors(partials, MeasurementPositionSourceNoProcessors, src.Name(), rc)
+	} else {
+		addMeasureProcessors(partials, MeasurementPositionSourceBeforeProcessors, src.Name(), rc)
+		partials.Append(srcProcessors)
+		addMeasureProcessors(partials, MeasurementPositionSourceAfterProcessors, src.Name(), rc)
+	}
 
 	return srcName, partials
 }
@@ -328,9 +333,6 @@ func evalDestination(ctx context.Context, destination *ResourceConfiguration, de
 		rc.pipelineTypeUsage.sources.setSupported(destName, partials)
 	}
 
-	d0partials := otel.NewPartials()
-	addMeasureProcessors(d0partials, MeasurementPositionDestinationBeforeProcessors, destName, rc)
-
 	destProcessors := otel.NewPartials()
 	// evaluate the processors associated with the destination
 	for i, processor := range destination.Processors {
@@ -342,12 +344,20 @@ func evalDestination(ctx context.Context, destination *ResourceConfiguration, de
 		destProcessors.Append(processorParts)
 	}
 
-	d1partials := otel.NewPartials()
-	addMeasureProcessors(d1partials, MeasurementPositionDestinationAfterProcessors, destName, rc)
-
 	// destination processors are prepended to the destination
-	partials.Prepend(d1partials)
-	if !destProcessors.Empty() {
+	if destProcessors.Empty() {
+		dPartials := otel.NewPartials()
+		addMeasureProcessors(dPartials, MeasurementPositionDestinationNoProcessors, destName, rc)
+
+		partials.Prepend(dPartials)
+	} else {
+		d0partials := otel.NewPartials()
+		addMeasureProcessors(d0partials, MeasurementPositionDestinationBeforeProcessors, destName, rc)
+
+		d1partials := otel.NewPartials()
+		addMeasureProcessors(d1partials, MeasurementPositionDestinationAfterProcessors, destName, rc)
+
+		partials.Prepend(d1partials)
 		partials.Prepend(destProcessors)
 		partials.Prepend(d0partials)
 	}
@@ -688,6 +698,9 @@ const (
 	// MeasurementPositionSourceAfterProcessors is the throughput after source processors
 	MeasurementPositionSourceAfterProcessors MeasurementPosition = "s1"
 
+	// MeasurementPositionSourceNoProcessors is the throughput of the source with no processors
+	MeasurementPositionSourceNoProcessors MeasurementPosition = "s"
+
 	// MeasurementPositionDestinationBeforeProcessors is the throughput to the destination (from all sources) before
 	// destination processors
 	MeasurementPositionDestinationBeforeProcessors MeasurementPosition = "d0"
@@ -695,6 +708,10 @@ const (
 	// MeasurementPositionDestinationAfterProcessors is the throughput to the destination (from all sources) after
 	// destination processors
 	MeasurementPositionDestinationAfterProcessors MeasurementPosition = "d1"
+
+	// MeasurementPositionDestinationNoProcessors is the throughput of the destination (from all sources) with no
+	// destination processors
+	MeasurementPositionDestinationNoProcessors MeasurementPosition = "d"
 )
 
 func addMeasureProcessors(partials otel.Partials, position MeasurementPosition, resourceName string, rc *renderContext) {

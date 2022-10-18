@@ -23,6 +23,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/observiq/bindplane-op/internal/otlp/record"
 	"github.com/observiq/bindplane-op/internal/server"
+	"github.com/observiq/bindplane-op/internal/store/stats"
 	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
 	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
 	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
@@ -95,10 +96,43 @@ func getAgentMetrics(c *gin.Context, metrics []*record.Metric) []*record.Metric 
 
 	for _, metric := range metrics {
 		if strings.HasPrefix(metric.Name, "otelcol_processor_throughputmeasurement_") {
-			result = append(result, metric)
+			result = includeAgentMetrics(result, metric)
 		}
 	}
 
+	return result
+}
+
+func includeAgentMetrics(result []*record.Metric, metric *record.Metric) []*record.Metric {
+	processor := stats.Processor(metric)
+	position, _, _ := stats.ParseProcessorName(processor)
+	switch position {
+	case "s":
+		// need to replace this with s0 and s1
+		s0 := metric
+		s1, err := record.Clone(metric)
+		if err != nil {
+			return result
+		}
+		stats.SetProcessor(s0, strings.Replace(processor, "/_s_", "/_s0_", 1))
+		stats.SetProcessor(s1, strings.Replace(processor, "/_s_", "/_s1_", 1))
+		result = append(result, s0, s1)
+
+	case "d":
+		// need to replace this with d0 and d1
+		d0 := metric
+		d1, err := record.Clone(metric)
+		if err != nil {
+			return result
+		}
+		stats.SetProcessor(d0, strings.Replace(processor, "/_d_", "/_d0_", 1))
+		stats.SetProcessor(d1, strings.Replace(processor, "/_d_", "/_d1_", 1))
+		result = append(result, d0, d1)
+
+	default:
+		// ok to include as is
+		result = append(result, metric)
+	}
 	return result
 }
 
