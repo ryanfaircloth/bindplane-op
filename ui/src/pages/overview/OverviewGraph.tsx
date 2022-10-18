@@ -20,9 +20,9 @@ import {
   useGetOverviewPageQuery,
   useOverviewMetricsSubscription,
 } from "../../graphql/generated";
-import { getNodesAndEdges, updateMetricData } from "../../utils/graph/utils";
+import { getNodesAndEdges, Page, updateMetricData } from "../../utils/graph/utils";
 import { OverviewDestinationNode, ConfigurationNode } from "./nodes";
-import { OverviewEdge } from "./OverviewEdge";
+import OverviewEdge from "./OverviewEdge";
 import { useOverviewPage } from "./OverviewPageContext";
 
 import styles from "./overview.styles.module.scss";
@@ -139,9 +139,11 @@ export const OverviewGraph: React.FC = () => {
     data.overviewPage.graph.sources.length > 0 &&
     data.overviewPage.graph.targets.length > 0;
 
-  const { nodes, edges } = getNodesAndEdges(data!.overviewPage.graph, 500);
+  const { nodes, edges } = getNodesAndEdges(Page.Overview, data!.overviewPage.graph, 500);
   updateMetricData(
+    Page.Overview,
     nodes,
+    edges,
     overviewMetricsData?.overviewMetrics.metrics ?? [],
     selectedPeriod,
     selectedTelemetry
@@ -163,6 +165,7 @@ export const OverviewGraph: React.FC = () => {
           edgeTypes={edgeTypes}
           nodesConnectable={false}
           nodesDraggable={false}
+          proOptions={{account: 'paid-pro', hideAttribution: true}}
           fitView={true}
           deleteKeyCode={null}
           zoomOnScroll={false}

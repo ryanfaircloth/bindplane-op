@@ -6,7 +6,21 @@ import { Graph, GraphMetric } from "../../graphql/generated";
 export const GRAPH_NODE_OFFSET = 160;
 export const GRAPH_PADDING = 120;
 
+export const enum Page {
+  Overview,
+  Configuration,
+}
+
+export const enum MetricPosition {
+  SourceBeforeProcessors, // s0
+  SourceAfterProcessors, // s1
+  DestinationBeforeProcessors, // d0
+  DestinationAfterProcessors, // d1
+  Configuration,
+}
+
 export function getNodesAndEdges(
+  page: Page,
   graph: Graph,
   targetOffsetMultiplier: number
 ): {
@@ -25,12 +39,12 @@ export function getNodesAndEdges(
   //       the spacing.
 
   const offset = GRAPH_NODE_OFFSET;
-  const sourceOffsetMultiplier = 200;
+  const sourceOffsetMultiplier = 250;
 
   // This number gives the horizontal spacing between sources and targets
   // TODO: make function of Cards bounding box
   const processorYoffset = 35;
-  const targetProcOffsetMultiplier = 300;
+  const targetProcOffsetMultiplier = 270;
 
   for (let i = 0; i < (graph.sources ?? []).length; i++) {
     const n = graph.sources[i];
@@ -137,7 +151,7 @@ export function getNodesAndEdges(
   y += offset / 4;
 
   for (const e of graph.edges || []) {
-    let edge = {
+    const edge: Edge<any> & { key: string } = {
       key: e.id,
       id: e.id,
       source: e.source,
@@ -148,7 +162,7 @@ export function getNodesAndEdges(
       data: {
         connectedNodesAndEdges: [e.id],
       },
-      type: "overviewEdge",
+      type: page === Page.Configuration ? "configurationEdge" : "overviewEdge",
     };
 
     edges.push(edge);
@@ -218,8 +232,28 @@ export function pipelineOffsets(edges: { source: string; target: string }[]): {
   return result;
 }
 
+function getMetricPosition(nodeID: string): MetricPosition | undefined {
+  if (nodeID.startsWith("source/")) {
+    if (nodeID.endsWith("/processors")) {
+      return MetricPosition.SourceAfterProcessors;
+    } else {
+      return MetricPosition.SourceBeforeProcessors;
+    }
+  } else if (nodeID.startsWith("destination/")) {
+    if (nodeID.endsWith("/processors")) {
+      return MetricPosition.DestinationBeforeProcessors;
+    } else {
+      return MetricPosition.DestinationAfterProcessors;
+    }
+  } else if (nodeID.startsWith("configuration/")) {
+    return MetricPosition.Configuration;
+  }
+}
+
 export function updateMetricData(
+  page: Page,
   nodes: Node<any>[],
+  edges: Edge<any>[],
   metrics: GraphMetric[],
   rate: string,
   telemetryType: string
@@ -230,23 +264,67 @@ export function updateMetricData(
         m.nodeID === node.id && m.name === TELEMETRY_SIZE_METRICS[telemetryType]
     );
     if (metric != null) {
-      node.data.metric = formatMetric(metric, rate);
-    } else if (
-      node.id.startsWith("destination/") &&
-      node.id.endsWith("/processors")
-    ) {
-      // The destination processor node will look like destination/destinationName/processors. If that couldn't be found,
-      // then there are no destination processors so just use the metric from the destination.
-      const destinationId = node.id.replace("/processors", "");
-      const metric = metrics.find(
-        (m) =>
-          m.nodeID === destinationId &&
-          m.name === TELEMETRY_SIZE_METRICS[telemetryType]
-      );
-      if (metric != null) {
-        node.data.metric = formatMetric(metric, rate);
-      } else {
-        node.data.metric = "";
+      const formattedMetric = formatMetric(metric, rate);
+
+      var startOffset = "50%";
+      var textAnchor = "middle";
+      var edge: Edge<any> | undefined;
+
+      // put this metric on the associated edge:
+      //
+      // Configuration page:
+      //
+      // s0 => s1 ====> d0 => d1
+      //    A     B  C     D
+      //
+      // sX metrics go on the edges that match the source
+      //
+      // dX metrics go on the edges that match the target
+      //
+      const position = getMetricPosition(node.id);
+      switch (position) {
+        case MetricPosition.SourceBeforeProcessors:
+          // A
+          edge = edges.find((e) => e.source === node.id);
+          break;
+
+        case MetricPosition.SourceAfterProcessors:
+          // B
+          edge = edges.find((e) => e.source === node.id);
+          textAnchor = "start";
+          startOffset = "4%";
+          break;
+
+        case MetricPosition.DestinationBeforeProcessors:
+          // C
+          edge = edges.find((e) => e.target === node.id);
+          textAnchor = "end";
+          startOffset = "97%";
+          break;
+
+        case MetricPosition.DestinationAfterProcessors:
+          // D
+          edge = edges.find((e) => e.target === node.id);
+          if (page === Page.Overview) {
+            textAnchor = "end";
+            startOffset = "97%";
+          }
+          break;
+
+        case MetricPosition.Configuration:
+          edge = edges.find((e) => e.source === node.id);
+          textAnchor = "start";
+          startOffset = "4%";
+          break;
+      }
+
+      if (edge != null) {
+        edge.data.metrics ||= [];
+        edge.data.metrics.push({
+          startOffset,
+          textAnchor,
+          value: formattedMetric,
+        });
       }
     } else {
       node.data.metric = "";

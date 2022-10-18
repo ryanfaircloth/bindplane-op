@@ -7,12 +7,15 @@ import {
   getNodesAndEdges,
   GRAPH_NODE_OFFSET,
   GRAPH_PADDING,
+  Page,
   updateMetricData,
 } from "../../utils/graph/utils";
 import { ProcessorNode } from "./Nodes/ProcessorNode";
 import { useConfigurationPage } from "../../pages/configurations/configuration/ConfigurationPageContext";
 import { gql } from "@apollo/client";
 import { useConfigurationMetricsSubscription } from "../../graphql/generated";
+import OverviewEdge from '../../pages/overview/OverviewEdge';
+import ConfigurationEdge from './Nodes/ConfigurationEdge';
 
 gql`
   subscription ConfigurationMetrics($period: String!, $name: String!) {
@@ -35,6 +38,11 @@ const nodeTypes = {
   processorNode: ProcessorNode,
 };
 
+const edgeTypes = {
+  overviewEdge: OverviewEdge,
+  configurationEdge: ConfigurationEdge,
+};
+
 export const TARGET_OFFSET_MULTIPLIER = 250;
 
 interface ConfigurationFlowProps {
@@ -49,6 +57,7 @@ export const ConfigurationFlow: React.FC<ConfigurationFlowProps> = ({
   const reactFlowInstance = useReactFlow();
   const { configuration } = useConfigurationPage();
   const { nodes, edges } = getNodesAndEdges(
+    Page.Configuration,
     configuration.graph!,
     TARGET_OFFSET_MULTIPLIER
   );
@@ -61,7 +70,9 @@ export const ConfigurationFlow: React.FC<ConfigurationFlowProps> = ({
   });
 
   updateMetricData(
+    Page.Configuration,
     nodes,
+    edges,
     data?.configurationMetrics.metrics ?? [],
     period,
     selectedTelemetry
@@ -90,6 +101,8 @@ export const ConfigurationFlow: React.FC<ConfigurationFlowProps> = ({
         defaultNodes={nodes}
         defaultEdges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        proOptions={{account: 'paid-pro', hideAttribution: true}}
         nodesConnectable={false}
         nodesDraggable={false}
         fitView={true}

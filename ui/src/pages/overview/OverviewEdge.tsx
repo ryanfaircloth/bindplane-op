@@ -1,49 +1,16 @@
-import React from "react";
-import { EdgeProps, getBezierPath } from "react-flow-renderer";
+import React, { memo } from "react";
+import { EdgeProps } from "react-flow-renderer";
 import { useOverviewPage } from "./OverviewPageContext";
 
-interface EdgeData {
-  connectedNodesAndEdges: string[];
+import CustomEdge, { CustomEdgeData } from '../../components/PipelineGraph/Nodes/CustomEdge';
+
+const OverviewEdge: React.FC<EdgeProps<CustomEdgeData>> = (props) => {
+  const { hoveredSet } = useOverviewPage();
+  return CustomEdge({
+    ...props,
+    hoveredSet: hoveredSet,
+    className: 'overview-metric',
+  });
 }
 
-export const OverviewEdge: React.FC<EdgeProps<EdgeData>> = ({
-  id,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
-  data,
-  markerEnd,
-}) => {
-  const { hoveredSet } = useOverviewPage();
-
-  const edgePath = getBezierPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-  });
-
-  const dimmed =
-    hoveredSet.length > 0 && !hoveredSet.find((elem) => elem === id);
-  const highlight =
-    hoveredSet.length > 0 && hoveredSet.find((elem) => elem === id);
-  return (
-    <>
-      <path
-        id={id}
-        style={{
-          strokeWidth: highlight ? 1.5 : undefined,
-          strokeOpacity: dimmed ? 0.3 : undefined,
-        }}
-        className="react-flow__edge-path"
-        d={edgePath}
-        markerEnd={markerEnd}
-      />
-    </>
-  );
-};
+export default memo(OverviewEdge)
