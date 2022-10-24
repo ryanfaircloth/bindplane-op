@@ -5,7 +5,7 @@ metadata:
   displayName: Log Sampling
   description: Sample logs with a configured ratio.
 spec:
-  version: 0.0.1
+  version: 0.0.2
   parameters:
     - name: drop_ratio
       label: Drop Ratio
@@ -38,8 +38,5 @@ spec:
 
   logs:
     processors: |
-      - logstransform:
-          operators:
-            - type: filter
-              drop_ratio: {{ .drop_ratio }}
-              expr: 'true'
+      - sampling:
+          drop_ratio: {{ .drop_ratio }}
