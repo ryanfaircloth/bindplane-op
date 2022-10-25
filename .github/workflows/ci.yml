@@ -73,7 +73,7 @@ jobs:
           version: v0.8.0
           scandir: './scripts'
           severity: info
-          
+
   # Run go vet against Go code.
   vet:
     runs-on: "ubuntu-20.04"
@@ -294,11 +294,13 @@ jobs:
       # Push container images to dockerhub for use in other steps.
       # It is safe to push development images with the github sha tag.
       - name: Login to DockerHub
+        if: ${{ github.actor != 'dependabot[bot]' }}
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Push Container Images
+        if: ${{ github.actor != 'dependabot[bot]' }}
         run: |
           docker push observiq/bindplane-amd64:${{ env.GITHUB_SHA_SHORT }}
           docker push observiq/bindplane-arm64:${{ env.GITHUB_SHA_SHORT }}
