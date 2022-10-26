@@ -1,9 +1,8 @@
 ---
 title: "OpenTelemetry (OTLP)"
+category: 633dd7654359a20031653089
 slug: "opentelemetry"
 hidden: false
-createdAt: "2022-06-14T13:55:39.358Z"
-updatedAt: "2022-08-10T15:34:57.767Z"
 ---
 ## Supported Platforms
 

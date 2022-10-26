@@ -1,9 +1,8 @@
 ---
 title: "PostgreSQL"
+category: 633dd7654359a20031653089
 slug: "postgresql"
 hidden: false
-createdAt: "2022-06-07T18:44:29.418Z"
-updatedAt: "2022-08-10T15:35:20.763Z"
 ---
 ## Supported Platforms
 

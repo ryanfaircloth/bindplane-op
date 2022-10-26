@@ -1,9 +1,8 @@
 ---
 title: "SAP HANA"
+category: 633dd7654359a20031653089
 slug: "sap-hana"
 hidden: false
-createdAt: "2022-08-10T14:46:20.961Z"
-updatedAt: "2022-08-10T15:35:47.484Z"
 ---
 ## Supported Platforms
 

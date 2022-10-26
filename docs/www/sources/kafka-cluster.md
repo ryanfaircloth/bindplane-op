@@ -1,9 +1,8 @@
 ---
 title: "Kafka Cluster"
+category: 633dd7654359a20031653089
 slug: "kafka-cluster"
 hidden: false
-createdAt: "2022-08-02T13:46:43.406Z"
-updatedAt: "2022-08-10T15:33:46.660Z"
 ---
 ## Supported Platforms
 

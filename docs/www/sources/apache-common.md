@@ -1,9 +1,8 @@
 ---
 title: "Apache Common"
+category: 633dd7654359a20031653089
 slug: "apache-common"
 hidden: false
-createdAt: "2022-08-10T14:40:28.761Z"
-updatedAt: "2022-08-10T15:30:57.235Z"
 ---
 ## Supported Platforms
 

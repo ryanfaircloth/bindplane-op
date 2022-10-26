@@ -1,3 +1,10 @@
+---
+title: Filter Metric Name
+category: 633dd7654359a20031653089
+slug: filter-metric-name
+hidden: false
+---
+
 ## Metric Name Filter Processor
 
 The Metric Name Filter processor can be used to include or exclude metrics based on their name.

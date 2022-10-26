@@ -1,9 +1,8 @@
 ---
 title: "MongoDB"
+category: 633dd7654359a20031653089
 slug: "mongodb"
 hidden: false
-createdAt: "2022-06-06T19:00:47.874Z"
-updatedAt: "2022-08-10T15:34:34.741Z"
 ---
 ## Supported Platforms
 

@@ -1,3 +1,10 @@
+---
+title: Add Resource
+category: 633dd7654359a20031653089
+slug: add-resource
+hidden: false
+---
+
 ## Add Resource Attribute Processor
 
 The Add Resource Attribute processor can be used to enrich telemetry by adding resources to all metrics, traces, and logs in the pipeline.

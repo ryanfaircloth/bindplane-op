@@ -1,9 +1,8 @@
 ---
-title: "Kafka"
-slug: "kafka"
+title: Kafka
+category: 633dd7654359a20031653089
+slug: kafka
 hidden: false
-createdAt: "2022-08-10T15:04:19.680Z"
-updatedAt: "2022-08-10T15:10:43.183Z"
 ---
 
 ## Supported Types

@@ -1,3 +1,10 @@
+---
+title: Custom
+category: 633dd7654359a20031653089
+slug: custom
+hidden: false
+---
+
 ## Custom Processor
 
 The Custom processor can be used to inject a custom processor configuration into a pipeline. A list of supported processors can be found [here](https://github.com/observIQ/observiq-otel-collector/blob/main/docs/processors.md).

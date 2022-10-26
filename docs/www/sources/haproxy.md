@@ -1,9 +1,8 @@
 ---
 title: "HAProxy"
+category: 633dd7654359a20031653089
 slug: "haproxy"
 hidden: false
-createdAt: "2022-08-02T13:45:55.728Z"
-updatedAt: "2022-08-10T15:32:59.387Z"
 ---
 ## Supported Platforms
 

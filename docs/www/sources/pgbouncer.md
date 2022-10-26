@@ -1,9 +1,8 @@
 ---
 title: "PgBouncer"
+category: 633dd7654359a20031653089
 slug: "pgbouncer"
 hidden: false
-createdAt: "2022-08-02T13:47:14.865Z"
-updatedAt: "2022-08-10T15:35:10.900Z"
 ---
 ## Supported Platforms
 

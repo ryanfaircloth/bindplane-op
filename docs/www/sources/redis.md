@@ -1,9 +1,8 @@
 ---
 title: "Redis"
+category: 633dd7654359a20031653089
 slug: "redis"
 hidden: false
-createdAt: "2022-06-07T18:45:37.128Z"
-updatedAt: "2022-08-10T15:35:41.955Z"
 ---
 ## Supported Platforms
 

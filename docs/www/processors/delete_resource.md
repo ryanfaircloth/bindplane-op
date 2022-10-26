@@ -1,3 +1,10 @@
+---
+title: Delete Resource
+category: 633dd7654359a20031653089
+slug: delete-resource
+hidden: false
+---
+
 ## Delete Resource Processor
 
 The Delete Resource processor can be used to remove resources from metrics, traces, and logs.

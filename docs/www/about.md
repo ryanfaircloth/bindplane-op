@@ -1,9 +1,8 @@
 ---
-title: "About"
-slug: "about"
+title: About
+category: 633dd7654359a20031653087
+slug: about
 hidden: false
-createdAt: "2022-06-01T15:49:31.618Z"
-updatedAt: "2022-08-11T14:49:32.906Z"
 ---
 
 <img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/bindplaneop.png" width="1000px" alt="bindplaneop.png">

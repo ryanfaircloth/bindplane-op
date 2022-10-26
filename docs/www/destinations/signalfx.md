@@ -1,9 +1,8 @@
 ---
 title: "SignalFx"
+category: 633dd7654359a20031653089
 slug: "signalfx"
 hidden: false
-createdAt: "2022-08-10T15:06:35.799Z"
-updatedAt: "2022-08-10T15:08:21.887Z"
 ---
 
 ## Supported Types

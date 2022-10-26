@@ -1,9 +1,8 @@
 ---
 title: "Apache HTTP"
+category: 633dd7654359a20031653089
 slug: "apache-http"
 hidden: false
-createdAt: "2022-08-02T13:44:01.491Z"
-updatedAt: "2022-08-10T15:31:03.366Z"
 ---
 ## Supported Platforms
 

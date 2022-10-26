@@ -1,9 +1,8 @@
 ---
-title: "Elasticsearch"
-slug: "elasticsearch-1"
+title: Elasticsearch
+category: 633dd7654359a20031653089
+slug: elasticsearch-1
 hidden: false
-createdAt: "2022-06-07T18:46:18.264Z"
-updatedAt: "2022-08-10T15:00:59.015Z"
 ---
 
 ## Supported Types

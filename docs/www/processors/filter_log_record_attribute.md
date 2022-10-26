@@ -1,3 +1,10 @@
+---
+title: Filter Log Record Attribute
+category: 633dd7654359a20031653089
+slug: filter-log-record-attribute
+hidden: false
+---
+
 ## Log Record Attribute Filter Processor
 
 The Log Record Attribute Filter processor can be used to include or exclude logs based on matched attributes.

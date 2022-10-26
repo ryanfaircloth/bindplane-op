@@ -1,9 +1,8 @@
 ---
 title: "Microsoft IIS"
+category: 633dd7654359a20031653089
 slug: "microsoft-iis"
 hidden: false
-createdAt: "2022-06-06T18:47:40.171Z"
-updatedAt: "2022-08-10T15:34:23.366Z"
 ---
 ## Supported Platforms
 

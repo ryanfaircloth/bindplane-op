@@ -1,9 +1,8 @@
 ---
 title: "macOS"
+category: 633dd7654359a20031653089
 slug: "macos"
 hidden: false
-createdAt: "2022-06-06T18:56:16.318Z"
-updatedAt: "2022-08-10T15:34:14.269Z"
 ---
 ## Supported Platforms
 

@@ -1,8 +1,9 @@
 ---
 title: Overview
 excerpt: An Overview of Each Section in BindPlane OP
-category: 62e92906e7042004966d01b9
+category: 633dd7654359a20031653087
 slug: overview
+hidden: false
 ---
 
 ## Agents

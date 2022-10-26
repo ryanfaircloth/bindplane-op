@@ -1,9 +1,8 @@
 ---
 title: "Kafka Node"
+category: 633dd7654359a20031653089
 slug: "kafka-node"
 hidden: false
-createdAt: "2022-08-10T14:02:54.437Z"
-updatedAt: "2022-08-10T15:33:57.125Z"
 ---
 ## Supported Platforms
 

@@ -1,9 +1,8 @@
 ---
 title: "UDP"
+category: 633dd7654359a20031653089
 slug: "udp"
 hidden: false
-createdAt: "2022-08-05T15:13:51.354Z"
-updatedAt: "2022-08-10T15:36:37.790Z"
 ---
 ## Supported Platforms
 

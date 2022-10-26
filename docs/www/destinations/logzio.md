@@ -1,9 +1,8 @@
 ---
 title: "Logz.io"
+category: 633dd7654359a20031653089
 slug: "logzio"
 hidden: false
-createdAt: "2022-08-05T14:42:32.176Z"
-updatedAt: "2022-08-10T15:01:31.639Z"
 ---
 
 ## Supported Types

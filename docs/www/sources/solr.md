@@ -1,9 +1,8 @@
 ---
 title: "Solr"
+category: 633dd7654359a20031653089
 slug: "solr"
 hidden: false
-createdAt: "2022-06-17T17:38:39.828Z"
-updatedAt: "2022-08-10T15:36:00.170Z"
 ---
 ## Supported Platforms
 

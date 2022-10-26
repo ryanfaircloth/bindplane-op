@@ -1,10 +1,9 @@
 ---
-title: "Getting Started"
-slug: "getting-started"
-excerpt: "How to get up and running with BindPlane OP"
+title: Getting Started
+slug: getting-started
+excerpt: How to get up and running with BindPlane OP
+category: 633dd7654359a20031653087
 hidden: false
-createdAt: "2022-06-01T15:50:05.000Z"
-updatedAt: "2022-08-10T14:30:19.773Z"
 ---
 # Welcome to BindPlane OP
 

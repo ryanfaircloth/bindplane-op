@@ -1,9 +1,8 @@
 ---
-title: "Processors"
-slug: "processors"
+title: Processors
+category: 633dd7654359a20031653089
+slug: processors
 hidden: false
-createdAt: "2022-08-05T15:18:45.807Z"
-updatedAt: "2022-08-10T15:15:00.818Z"
 ---
 ## Processors Available for BindPlane OP
 

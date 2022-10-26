@@ -1,3 +1,10 @@
+---
+title: Log Sampling
+category: 633dd7654359a20031653089
+slug: log-sampling
+hidden: false
+---
+
 ## Log Sampling Processor
 
 The Log Sampling processor can be used to filter out logs with a configured "drop ratio".

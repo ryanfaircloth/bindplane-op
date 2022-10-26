@@ -1,3 +1,10 @@
+---
+title: Add Attribute
+category: 633dd7654359a20031653089
+slug: add-attribute
+hidden: false
+---
+
 ## Add Log Record Attribute Processor
 
 The Add Log Record Attribute processor can be used to enrich logs by adding attributes to all

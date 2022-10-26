@@ -1,9 +1,8 @@
 ---
 title: "Elasticsearch"
+category: 633dd7654359a20031653089
 slug: "elasticsearch"
 hidden: false
-createdAt: "2022-06-03T16:33:20.627Z"
-updatedAt: "2022-08-10T15:32:36.427Z"
 ---
 ## Supported Platforms
 

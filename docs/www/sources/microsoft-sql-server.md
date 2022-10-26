@@ -1,9 +1,8 @@
 ---
 title: "Microsoft SQL Server"
+category: 633dd7654359a20031653089
 slug: "microsoft-sql-server"
 hidden: false
-createdAt: "2022-08-02T13:47:52.718Z"
-updatedAt: "2022-08-10T15:34:29.244Z"
 ---
 ## Supported Platforms
 

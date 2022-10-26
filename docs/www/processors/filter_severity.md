@@ -1,3 +1,10 @@
+---
+title: Filter Severity
+category: 633dd7654359a20031653089
+slug: filter-severity
+hidden: false
+---
+
 ## Severity Filter Processor
 
 The Severity Filter processor can be used to filter out logs that do not meet a given severity threshold.

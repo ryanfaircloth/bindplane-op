@@ -1,9 +1,8 @@
 ---
 title: "Oracle Database"
+category: 633dd7654359a20031653089
 slug: "oracle-database"
 hidden: false
-createdAt: "2022-08-10T14:46:10.751Z"
-updatedAt: "2022-08-10T15:35:04.216Z"
 ---
 ## Supported Platforms
 

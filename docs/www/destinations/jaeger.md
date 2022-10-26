@@ -1,9 +1,8 @@
 ---
-title: "Jaeger"
-slug: "jaeger"
+title: Jaeger
+category: 633dd7654359a20031653089
+slug: jaeger
 hidden: false
-createdAt: "2022-08-05T14:38:28.713Z"
-updatedAt: "2022-08-10T15:00:51.681Z"
 ---
 
 ## Supported Types

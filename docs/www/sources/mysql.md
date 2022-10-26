@@ -1,9 +1,8 @@
 ---
 title: "MySQL"
+category: 633dd7654359a20031653089
 slug: "mysql"
 hidden: false
-createdAt: "2022-06-07T18:43:46.451Z"
-updatedAt: "2022-08-10T15:34:41.187Z"
 ---
 ## Supported Platforms
 

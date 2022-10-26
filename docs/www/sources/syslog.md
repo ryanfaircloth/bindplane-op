@@ -1,9 +1,8 @@
 ---
 title: "Syslog"
+category: 633dd7654359a20031653089
 slug: "syslog"
 hidden: false
-createdAt: "2022-06-07T18:45:50.011Z"
-updatedAt: "2022-08-10T15:36:06.769Z"
 ---
 ## Supported Platforms
 

@@ -1,7 +1,8 @@
 ---
-title: "Metric Filtering"
-slug: "metric-filtering"
-excerpt: "Filter metrics with BindPlane OP"
+title: Metric Filtering
+category: 633dd7654359a20031653088
+slug: metric-filtering
+excerpt: Filter metrics with BindPlane OP
 hidden: false
 ---
 # Metric Filtering

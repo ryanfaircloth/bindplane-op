@@ -1,9 +1,8 @@
 ---
 title: "Windows Events"
+category: 633dd7654359a20031653089
 slug: "windows-events"
 hidden: false
-createdAt: "2022-06-08T13:34:16.236Z"
-updatedAt: "2022-08-10T15:37:12.705Z"
 ---
 ## Supported Platforms
 

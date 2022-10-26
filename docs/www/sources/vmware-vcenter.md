@@ -1,9 +1,8 @@
 ---
 title: "VMware vCenter"
+category: 633dd7654359a20031653089
 slug: "vmware-vcenter"
 hidden: false
-createdAt: "2022-06-08T13:34:06.779Z"
-updatedAt: "2022-08-10T15:36:52.296Z"
 ---
 ## Supported Platforms
 

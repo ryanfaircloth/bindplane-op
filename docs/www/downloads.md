@@ -1,9 +1,8 @@
 ---
-title: "Downloads"
-slug: "downloads"
+title: Downloads
+category: 633dd7654359a20031653088
+slug: downloads
 hidden: false
-createdAt: "2022-06-13T13:36:33.379Z"
-updatedAt: "2022-07-01T20:38:12.818Z"
 ---
 The recommended way to install BindPlane OP is using the install commands found on the [Installation](doc:installation) page. Alternatively, these are direct downloads to server and client packages.
 

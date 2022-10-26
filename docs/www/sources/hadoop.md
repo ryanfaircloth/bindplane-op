@@ -1,9 +1,8 @@
 ---
 title: "Hadoop"
+category: 633dd7654359a20031653089
 slug: "hadoop"
 hidden: false
-createdAt: "2022-08-02T13:45:35.300Z"
-updatedAt: "2022-08-10T15:32:54.593Z"
 ---
 ## Supported Platforms
 

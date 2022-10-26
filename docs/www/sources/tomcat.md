@@ -1,9 +1,8 @@
 ---
 title: "Tomcat"
+category: 633dd7654359a20031653089
 slug: "tomcat"
 hidden: false
-createdAt: "2022-06-09T16:19:42.108Z"
-updatedAt: "2022-08-10T15:36:23.987Z"
 ---
 ## Supported Platforms
 

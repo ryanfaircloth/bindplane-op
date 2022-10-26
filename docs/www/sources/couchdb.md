@@ -1,9 +1,8 @@
 ---
 title: "CouchDB"
+category: 633dd7654359a20031653089
 slug: "couchdb"
 hidden: false
-createdAt: "2022-08-05T15:32:12.484Z"
-updatedAt: "2022-08-10T15:32:23.615Z"
 ---
 ## Supported Platforms
 

@@ -1,9 +1,8 @@
 ---
 title: "Common Event Format"
+category: 633dd7654359a20031653089
 slug: "common-event-format"
 hidden: false
-createdAt: "2022-08-10T14:45:27.009Z"
-updatedAt: "2022-08-10T15:32:11.304Z"
 ---
 ## Supported Platforms
 

@@ -1,9 +1,8 @@
 ---
 title: "Nginx"
+category: 633dd7654359a20031653089
 slug: "nginx"
 hidden: false
-createdAt: "2022-06-07T18:44:13.769Z"
-updatedAt: "2022-08-10T15:34:48.091Z"
 ---
 ## Supported Platforms
 

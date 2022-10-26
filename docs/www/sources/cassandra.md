@@ -1,9 +1,8 @@
 ---
 title: "Cassandra"
+category: 633dd7654359a20031653089
 slug: "cassandra"
 hidden: false
-createdAt: "2022-06-06T18:45:10.122Z"
-updatedAt: "2022-08-10T15:31:19.094Z"
 ---
 ## Supported Platforms
 

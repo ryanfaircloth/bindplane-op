@@ -1,9 +1,8 @@
 ---
-title: "Destinations"
-slug: "destinations"
+title: Destinations
+category: 633dd7654359a20031653089
+slug: destinations
 hidden: false
-createdAt: "2022-06-01T15:51:19.486Z"
-updatedAt: "2022-08-10T15:12:12.742Z"
 ---
 
 ## Destinations Available for Bindplane OP
@@ -19,4 +18,5 @@ updatedAt: "2022-08-10T15:12:12.742Z"
 | [OpenTelemetry](doc:otlp)            | ✓       | ✓    | ✓      |
 | [Prometheus](doc:prometheus-1)       | ✓       |      |        |
 | [SignalFx](doc:signalfx)             | ✓       | ✓    | ✓      |
+| [Splunk HEC](doc:splunk-hec)         |         | ✓    |        |
 | [Zipkin](doc:zipkin)                 |         |      | ✓      |

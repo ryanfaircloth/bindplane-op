@@ -1,9 +1,8 @@
 ---
 title: "WildFly"
+category: 633dd7654359a20031653089
 slug: "wildfly"
 hidden: false
-createdAt: "2022-08-02T13:49:11.781Z"
-updatedAt: "2022-08-10T15:37:00.235Z"
 ---
 ## Supported Platforms
 

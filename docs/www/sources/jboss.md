@@ -1,9 +1,8 @@
 ---
 title: "JBoss"
+category: 633dd7654359a20031653089
 slug: "jboss"
 hidden: false
-createdAt: "2022-08-10T15:21:56.836Z"
-updatedAt: "2022-08-10T15:33:18.744Z"
 ---
 ## Supported Platforms
 

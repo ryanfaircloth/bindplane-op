@@ -1,9 +1,8 @@
 ---
-title: "Sources"
-slug: "sources"
+title: Sources
+category: 633dd7654359a20031653089
+slug: sources
 hidden: false
-createdAt: "2022-06-01T15:51:13.144Z"
-updatedAt: "2022-08-10T15:30:08.516Z"
 ---
 ## Sources Available for Bindplane OP
 

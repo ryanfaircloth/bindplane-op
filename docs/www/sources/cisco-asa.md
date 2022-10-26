@@ -1,9 +1,8 @@
 ---
 title: "Cisco ASA"
+category: 633dd7654359a20031653089
 slug: "cisco-asa"
 hidden: false
-createdAt: "2022-08-10T14:32:12.736Z"
-updatedAt: "2022-08-10T15:31:52.863Z"
 ---
 ## Supported Platforms
 

@@ -1,9 +1,8 @@
 ---
 title: "CSV"
+category: 633dd7654359a20031653089
 slug: "csv"
 hidden: false
-createdAt: "2022-08-02T13:44:52.263Z"
-updatedAt: "2022-08-10T15:32:29.271Z"
 ---
 ## Supported Platforms
 

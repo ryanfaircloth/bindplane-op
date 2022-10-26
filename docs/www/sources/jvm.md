@@ -1,9 +1,8 @@
 ---
 title: "JVM"
+category: 633dd7654359a20031653089
 slug: "jvm"
 hidden: false
-createdAt: "2022-06-08T13:33:38.974Z"
-updatedAt: "2022-08-10T15:33:37.137Z"
 ---
 ## Supported Platforms
 

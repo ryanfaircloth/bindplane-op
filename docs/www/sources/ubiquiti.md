@@ -1,9 +1,8 @@
 ---
 title: "Ubiquiti"
+category: 633dd7654359a20031653089
 slug: "ubiquiti"
 hidden: false
-createdAt: "2022-08-10T14:34:04.618Z"
-updatedAt: "2022-08-10T15:36:31.350Z"
 ---
 ## Supported Platforms
 

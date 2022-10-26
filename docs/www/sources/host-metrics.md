@@ -1,9 +1,8 @@
 ---
 title: "Host Metrics"
+category: 633dd7654359a20031653089
 slug: "host-metrics"
 hidden: false
-createdAt: "2022-06-03T14:30:50.595Z"
-updatedAt: "2022-08-10T15:33:12.901Z"
 ---
 ## Supported Platforms
 

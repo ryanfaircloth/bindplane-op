@@ -1,9 +1,8 @@
 ---
 title: "Zipkin"
+category: 633dd7654359a20031653089
 slug: "zipkin"
 hidden: false
-createdAt: "2022-08-05T14:47:01.044Z"
-updatedAt: "2022-08-10T15:03:12.350Z"
 ---
 
 ## Supported Types

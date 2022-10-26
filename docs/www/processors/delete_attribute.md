@@ -1,3 +1,10 @@
+---
+title: Delete Attribute
+category: 633dd7654359a20031653089
+slug: delete-attribute
+hidden: false
+---
+
 ## Delete Log Record Attribute Processor
 
 The Delete Log Record Attribute processor can be used to remove attributes from all

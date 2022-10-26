@@ -1,9 +1,8 @@
 ---
 title: "RabbitMQ"
+category: 633dd7654359a20031653089
 slug: "rabbitmq"
 hidden: false
-createdAt: "2022-06-07T18:45:13.616Z"
-updatedAt: "2022-08-10T15:35:34.524Z"
 ---
 ## Supported Platforms
 

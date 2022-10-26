@@ -1,9 +1,8 @@
 ---
 title: "New Relic"
+category: 633dd7654359a20031653089
 slug: "new-relic"
 hidden: false
-createdAt: "2022-06-07T18:46:33.613Z"
-updatedAt: "2022-08-10T15:01:57.656Z"
 ---
 
 ## Supported Types

@@ -1,9 +1,8 @@
 ---
-title: "Installation"
-slug: "installation"
+title: Installation
+category: 633dd7654359a20031653088
+slug: installation
 hidden: false
-createdAt: "2022-06-01T15:50:44.845Z"
-updatedAt: "2022-08-11T14:49:50.132Z"
 ---
 ## Install BindPlane OP
 

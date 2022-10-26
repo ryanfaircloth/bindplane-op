@@ -1,3 +1,10 @@
+---
+title: Filter Resource Attribute
+category: 633dd7654359a20031653089
+slug: filter-resource-attribute
+hidden: false
+---
+
 ## Resource Attribute Filter Processor
 
 The Resource Attribute Filter processor can be used to include or exclude logs based on matched resources.

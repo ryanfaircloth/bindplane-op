@@ -1,9 +1,8 @@
 ---
 title: "Journald"
+category: 633dd7654359a20031653089
 slug: "journald"
 hidden: false
-createdAt: "2022-06-06T18:41:24.733Z"
-updatedAt: "2022-08-10T15:33:25.131Z"
 ---
 ## Supported Platforms
 

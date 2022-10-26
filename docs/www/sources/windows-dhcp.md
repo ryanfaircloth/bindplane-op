@@ -1,9 +1,8 @@
 ---
 title: "Windows DHCP"
+category: 633dd7654359a20031653089
 slug: "windows-dhcp"
 hidden: false
-createdAt: "2022-08-10T14:45:03.212Z"
-updatedAt: "2022-08-10T15:37:08.010Z"
 ---
 ## Supported Platforms
 

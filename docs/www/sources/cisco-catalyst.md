@@ -1,9 +1,8 @@
 ---
 title: "Cisco Catalyst"
+category: 633dd7654359a20031653089
 slug: "cisco-catalyst"
 hidden: false
-createdAt: "2022-08-10T14:36:16.599Z"
-updatedAt: "2022-08-10T15:32:02.217Z"
 ---
 ## Supported Platforms
 

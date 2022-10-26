@@ -1,9 +1,8 @@
 ---
-title: "CLI"
-slug: "cli"
+title: CLI
+category: 633dd7654359a20031653088
+slug: cli
 hidden: false
-createdAt: "2022-06-01T15:50:52.887Z"
-updatedAt: "2022-06-13T20:16:49.723Z"
 ---
 
 You can access the BindPlane CLI by using the `bindplane` command from the install directory or preceded by the absolute path of the install directory.

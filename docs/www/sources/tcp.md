@@ -1,9 +1,8 @@
 ---
 title: "TCP"
+category: 633dd7654359a20031653089
 slug: "tcp"
 hidden: false
-createdAt: "2022-08-02T13:48:06.771Z"
-updatedAt: "2022-08-10T15:36:13.444Z"
 ---
 ## Supported Platforms
 

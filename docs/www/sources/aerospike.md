@@ -1,9 +1,8 @@
 ---
 title: "Aerospike"
+category: 633dd7654359a20031653089
 slug: "aerospike"
 hidden: false
-createdAt: "2022-08-02T13:43:05.323Z"
-updatedAt: "2022-08-10T15:30:42.437Z"
 ---
 ## Supported Platforms
 

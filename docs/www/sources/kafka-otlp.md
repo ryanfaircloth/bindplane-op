@@ -1,9 +1,8 @@
 ---
 title: "Kafka OTLP"
+category: 633dd7654359a20031653089
 slug: "kafka-otlp"
 hidden: false
-createdAt: "2022-08-10T14:10:14.026Z"
-updatedAt: "2022-08-10T14:18:18.719Z"
 ---
 ## Supported Platforms
 

@@ -1,9 +1,8 @@
 ---
 title: "HBase"
+category: 633dd7654359a20031653089
 slug: "hbase"
 hidden: false
-createdAt: "2022-08-02T13:46:16.664Z"
-updatedAt: "2022-08-10T15:33:06.160Z"
 ---
 ## Supported Platforms
 

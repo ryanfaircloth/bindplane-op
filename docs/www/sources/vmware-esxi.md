@@ -1,9 +1,8 @@
 ---
 title: "VMware ESXi"
+category: 633dd7654359a20031653089
 slug: "vmware-esxi"
 hidden: false
-createdAt: "2022-08-02T13:48:45.045Z"
-updatedAt: "2022-08-10T15:36:44.262Z"
 ---
 ## Supported Platforms
 

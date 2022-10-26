@@ -1,9 +1,8 @@
 ---
 title: "Splunk HTTP Event Collector (HEC)"
+category: 633dd7654359a20031653089
 slug: "splunk-hec"
 hidden: false
-createdAt: "2022-06-06T19:19:31.753Z"
-updatedAt: "2022-08-10T15:00:21.324Z"
 ---
 
 ## Supported Types

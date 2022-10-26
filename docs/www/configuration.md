@@ -1,8 +1,9 @@
 ---
 title: Configuration
 excerpt: Configure BindPlane OP
-category: 62e92906e7042004966d01ba
+category: 633dd7654359a20031653088
 slug: configuration
+hidden: false
 ---
 
 ## Options

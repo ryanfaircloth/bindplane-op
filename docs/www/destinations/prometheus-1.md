@@ -1,9 +1,8 @@
 ---
 title: "Prometheus"
+category: 633dd7654359a20031653089
 slug: "prometheus-1"
 hidden: false
-createdAt: "2022-06-07T18:47:19.095Z"
-updatedAt: "2022-08-10T15:02:44.293Z"
 ---
 
 ## Supported Types

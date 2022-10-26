@@ -1,9 +1,8 @@
 ---
 title: "Active Directory"
+category: 633dd7654359a20031653089
 slug: "active-directory"
 hidden: false
-createdAt: "2022-08-02T13:42:55.412Z"
-updatedAt: "2022-08-10T15:17:11.448Z"
 ---
 ## Supported Platforms
 
