@@ -1,0 +1,98 @@
+apiVersion: bindplane.observiq.com/v1
+kind: DestinationType
+metadata:
+  name: splunkhec
+  displayName: Splunk HTTP Event Collector (HEC)
+  icon: /icons/destinations/splunk.svg
+  description: Send logs to a Splunk HTTP Event Collector.
+spec:
+  parameters:
+    - name: token
+      label: Token
+      description: Authentication token used when connecting to the HTTP Event Collector.
+      documentation:
+        - text: Read more
+          url: https://docs.splunk.com/Documentation/Splunk/latest/Data/UsetheHTTPEventCollector.
+      type: string
+      default: ""
+      required: true
+    
+    - name: index
+      label: Index
+      description: Optional name of the Splunk index targeted.
+      type: string
+      default: ""
+
+    - name: hostname
+      label: Hostname
+      description: Hostname or IP address of the HTTP Event Collector.
+      type: string
+      default: "localhost"
+
+    - name: port
+      label: Port
+      description: TCP port to which the exporter is going to send data.
+      type: int
+      default: 8088
+
+    - name: path
+      label: Path
+      description: The HTTP API path to which the exporter is going to send data.
+      type: string
+      default: "/services/collector/event"
+      advancedConfig: true
+
+    - name: enable_tls
+      label: Enable TLS
+      description: Whether or not to use TLS.
+      type: bool
+      default: false
+      options:
+        sectionHeader: true
+      advancedConfig: true
+
+    - name: insecure_skip_verify
+      label: Skip TLS Certificate Verification
+      description: Enable to skip TLS certificate verification.
+      type: bool
+      default: false
+      relevantIf:
+        - name: enable_tls
+          operator: equals
+          value: true
+      advancedConfig: true
+
+    - name: ca_file
+      label: TLS Certificate Authority File
+      description: Certificate authority used to validate TLS certificates.
+      type: string
+      required: false
+      default: ""
+      relevantIf:
+        - name: enable_tls
+          operator: equals
+          value: true
+      advancedConfig: true
+
+  logs:
+    exporters: |
+      - splunk_hec:
+          token: "{{ .token }}"
+          {{ if .index }}
+          index: "{{ .index }}"
+          {{ end }}
+          {{ if .enable_tls }}
+          endpoint: "https://{{ .hostname }}:{{ .port }}{{ .path }}"
+          tls:
+            insecure: false
+            insecure_skip_verify: {{ .insecure_skip_verify }}
+            {{ if .ca_file }}
+            ca_file: "{{ .ca_file }}"
+            {{ end }}
+          {{ else }}
+          endpoint: "http://{{ .hostname }}:{{ .port }}{{ .path }}"
+          tls:
+            insecure: true
+          {{ end }}
+    processors: |
+      - batch:
