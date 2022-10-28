@@ -103,6 +103,7 @@ type ResourceConfiguration {
   type: String
   parameters: [Parameter!]
   processors: [ResourceConfiguration!]
+  disabled: Boolean!
 }
 
 type Parameter {
@@ -326,6 +327,7 @@ type ParameterizedSpec {
   type: String!
   parameters: [Parameter!]
   processors: [ResourceConfiguration!]
+  disabled: Boolean!
 }
 
 type Components {

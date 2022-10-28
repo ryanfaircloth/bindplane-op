@@ -226,6 +226,45 @@ export const MenuIcon: React.FC<IconProps> = (props) => {
   );
 };
 
+export const PauseIcon: React.FC<IconProps> = (props) => {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="rgb(165,165,165)"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="feather feather-pause"
+      {...props}
+    >
+      <rect x="6" y="4" width="4" height="16"></rect>
+      <rect x="14" y="4" width="4" height="16"></rect>
+    </svg>
+  );
+};
+
+export const PlayIcon: React.FC<IconProps> = (props) => {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="rgb(46,163,92)"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="feather feather-play"
+      {...props}
+    >
+      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+    </svg>
+  )
+}
+
 export const PlusCircleIcon: React.FC<IconProps> = (props) => {
   return (
     <svg

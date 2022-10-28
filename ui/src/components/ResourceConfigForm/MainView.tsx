@@ -1,4 +1,4 @@
-import { Grid, Button, Typography } from "@mui/material";
+import { DialogActions, Grid, Button, Stack, Typography } from "@mui/material";
 import { isFunction } from "lodash";
 import { ParameterDefinition } from "../../graphql/generated";
 import { ResourceNameInput, useValidationContext, isValid } from ".";
@@ -8,11 +8,11 @@ import { useResourceDialog } from "../ResourceDialog/ResourceDialogContext";
 import { memo, useMemo } from "react";
 import { TitleSection } from "../ResourceDialog/TitleSection";
 import { ContentSection } from "../ResourceDialog/ContentSection";
-import { ActionsSection } from "../ResourceDialog/ActionSection";
 import { initFormErrors } from "./init-form-values";
 import { ParameterSection } from "./ParameterSection";
 
 import mixins from "../../styles/mixins.module.scss";
+import { PauseIcon, PlayIcon } from "../Icons";
 
 export interface ParameterGroup {
   advanced: boolean;
@@ -53,9 +53,11 @@ interface MainProps {
   saveButtonLabel?: string;
   onDelete?: () => void;
   onAddProcessor: () => void;
+  onTogglePause?: () => void;
   onEditProcessor: (editingIndex: number) => void;
   onRemoveProcessor: (removeIndex: number) => void;
   disableSave?: boolean;
+  paused?: boolean;
 }
 
 export const MainViewComponent: React.FC<MainProps> = ({
@@ -74,6 +76,8 @@ export const MainViewComponent: React.FC<MainProps> = ({
   onAddProcessor,
   onEditProcessor,
   disableSave,
+  onTogglePause,
+  paused,
 }) => {
   const { touchAll, setErrors } = useValidationContext();
   const { setFormValues } = useResourceFormValues();
@@ -122,6 +126,17 @@ export const MainViewComponent: React.FC<MainProps> = ({
   const deleteButton: JSX.Element | null = isFunction(onDelete) ? (
     <Button variant="outlined" color="error" onClick={onDelete}>
       Delete
+    </Button>
+  ) : null;
+
+  const togglePauseButton: JSX.Element | null = isFunction(onTogglePause) ? (
+    <Button
+      variant="contained"
+      color={paused ? "primary" : "secondary"}
+      onClick={onTogglePause}
+      data-testid="resource-form-toggle-pause"
+    >
+      {paused ? "Resume" : "Pause"}
     </Button>
   ) : null;
 
@@ -180,11 +195,29 @@ export const MainViewComponent: React.FC<MainProps> = ({
         </form>
       </ContentSection>
 
-      <ActionsSection>
-        {deleteButton}
-        {backButton}
-        {primaryButton}
-      </ActionsSection>
+      <Stack direction="row">
+        <DialogActions>
+          {paused != null && (paused ?
+            (
+              <Button disabled={true} startIcon={<PauseIcon />}>Paused</Button>
+            ) :
+            (
+              <Button disabled={true} startIcon={<PlayIcon />}>Running</Button>
+            )
+          )}
+          {togglePauseButton}
+        </DialogActions>
+
+        <DialogActions
+          sx={{
+            marginLeft: 'auto'
+          }}
+        >
+          {deleteButton}
+          {backButton}
+          {primaryButton}
+        </DialogActions>
+      </Stack>
     </>
   );
 };

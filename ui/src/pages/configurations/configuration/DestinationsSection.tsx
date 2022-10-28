@@ -66,13 +66,14 @@ const DestinationsSectionComponent: React.FC<{
       spec: {
         parameters: [],
         type: destinationType.metadata.name,
+        disabled: false,
       },
     });
 
     destination.setParamsFromMap(values);
 
     const updatedConfiguration = new BPConfiguration(configuration);
-    updatedConfiguration.addDestination({ name: destination.name() });
+    updatedConfiguration.addDestination({ name: destination.name(), disabled: destination.spec.disabled });
 
     try {
       const { updates } = await applyResources([
@@ -125,7 +126,10 @@ const DestinationsSectionComponent: React.FC<{
 
   async function addExistingDestination(existingDestination: DialogResource) {
     const config = new BPConfiguration(configuration);
-    config.addDestination({ name: existingDestination.metadata.name });
+    config.addDestination({
+      name: existingDestination.metadata.name,
+      disabled: existingDestination.spec.disabled ?? false,
+    });
 
     try {
       const update = await config.apply();

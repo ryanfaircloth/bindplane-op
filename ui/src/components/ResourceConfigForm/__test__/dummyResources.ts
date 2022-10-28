@@ -306,6 +306,7 @@ export const Destination1: Destination = {
   spec: {
     parameters: [],
     type: "resource-type-1",
+    disabled: false,
   },
 };
 
@@ -320,5 +321,6 @@ export const Destination2: Destination = {
   spec: {
     parameters: [],
     type: "resource-type-1",
+    disabled: false,
   },
 };

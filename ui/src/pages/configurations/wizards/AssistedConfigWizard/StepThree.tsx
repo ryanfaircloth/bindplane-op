@@ -108,6 +108,7 @@ gql`
           name
           value
         }
+        disabled
       }
     }
   }
@@ -141,6 +142,7 @@ export const StepThree: React.FC = () => {
         spec: {
           type: formValues.destination.resourceConfiguration.type!,
           parameters: formValues.destination.resourceConfiguration.parameters,
+          disabled: false,
         },
         metadata: {
           name: formValues.destination.resourceConfiguration.name!,
@@ -170,6 +172,7 @@ export const StepThree: React.FC = () => {
     if (formValues.destination) {
       configuration.addDestination({
         name: formValues.destination.resourceConfiguration.name,
+        disabled: false,
       });
     }
 
@@ -218,6 +221,7 @@ export const StepThree: React.FC = () => {
   ) {
     const resourceConfiguration = new BPResourceConfiguration({
       type: resourceType.metadata.name,
+      disabled: false,
     });
     resourceConfiguration.setParamsFromMap(values);
     const destinationConfiguration: ResourceConfigurationAction = {
@@ -235,6 +239,7 @@ export const StepThree: React.FC = () => {
         resourceConfiguration: {
           name: resource.metadata.name,
           type: resource.spec.type,
+          disabled: resource.spec.disabled ?? false,
         },
         create: false,
       },
@@ -246,6 +251,7 @@ export const StepThree: React.FC = () => {
     const newDestination = new BPResourceConfiguration({
       name: formValues.destination?.resourceConfiguration.name,
       type: formValues.destination?.resourceConfiguration.type,
+      disabled: formValues.destination?.resourceConfiguration.disabled ?? false,
     });
     newDestination.setParamsFromMap(values);
 

@@ -82,6 +82,12 @@ interface ResourceConfigurationViewProps {
 
   // The callback when cancel is clicked.
   onBack?: () => void;
+
+  // If present, whether the resource is paused
+  paused?: boolean;
+
+  // Callback for when the Pause/Resume button is clicked
+  onTogglePause?: () => void;
 }
 
 interface ComponentProps extends ResourceConfigurationViewProps {
@@ -100,6 +106,8 @@ const ResourceConfigurationViewComponent: React.FC<ComponentProps> = ({
   onDelete,
   onSave,
   saveButtonLabel,
+  paused,
+  onTogglePause,
   onBack,
   initValues,
   telemetryTypes,
@@ -194,6 +202,8 @@ const ResourceConfigurationViewComponent: React.FC<ComponentProps> = ({
           onEditProcessor={handleEditProcessorClick}
           onRemoveProcessor={handleRemoveProcessor}
           disableSave={!isDirty}
+          paused={paused}
+          onTogglePause={onTogglePause}
         />
       );
     case Page.CREATE_PROCESSOR_SELECT:

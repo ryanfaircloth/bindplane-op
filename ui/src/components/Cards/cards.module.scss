@@ -109,3 +109,8 @@
 .disabled {
   opacity: 0.4;
 }
+
+.paused {
+  background-color: colors.$medium-gray;
+  opacity: 1;
+}

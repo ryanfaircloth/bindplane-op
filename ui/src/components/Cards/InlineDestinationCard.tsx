@@ -19,6 +19,7 @@ import { BPResourceConfiguration } from "../../utils/classes/resource-configurat
 
 import styles from "./cards.module.scss";
 import { useConfigurationPage } from "../../pages/configurations/configuration/ConfigurationPageContext";
+import { classes } from "../../utils/styles";
 
 gql`
   query DestinationType($name: String!) {
@@ -145,6 +146,38 @@ export const InlineDestinationCard: React.FC<{
     }
   }
 
+  /**
+   * Toggle `disabled` on the destination, replace it in the configuration, and save
+   */
+  async function onTogglePause() {
+    const updatedConfig = new BPConfiguration(configuration);
+    const updatedDestination = new BPResourceConfiguration(destination);
+    updatedDestination.disabled = !destination.disabled;
+
+    updatedConfig.replaceDestination(updatedDestination, destinationIndex);
+
+    const action = updatedDestination.disabled ? "pause" : "resume";
+    try {
+      const { status, reason } = await updatedConfig.apply();
+      if (status === UpdateStatus.INVALID) {
+        throw new Error(
+          `failed to ${action} destination, configuration invalid, ${reason}`
+        );
+      }
+
+      enqueueSnackbar(`Successfully ${action}d destination.`, {
+        variant: "success",
+      });
+      closeEditDialog();
+      refetchConfiguration();
+    } catch (err) {
+      enqueueSnackbar(`Failed to ${action} destination.`, {
+        variant: "error",
+      });
+      console.error(err);
+    }
+  }
+
   function closeEditDialog() {
     setEditing(false);
   }
@@ -156,7 +189,10 @@ export const InlineDestinationCard: React.FC<{
   return (
     <>
       <Card
-        className={styles["resource-card"]}
+        className={classes([
+          styles["resource-card"],
+          destination.disabled ? styles.paused : undefined,
+        ])}
         onClick={() => setEditing(true)}
       >
         <CardActionArea sx={{ root: { padding: 0 } }}>
@@ -169,6 +205,11 @@ export const InlineDestinationCard: React.FC<{
               <Typography component="div" fontWeight={600}>
                 {displayName}
               </Typography>
+              {destination.disabled && (
+                <Typography component="div" fontWeight={400} fontSize={14} variant="overline">
+                  Paused
+                </Typography>
+              )}
             </Stack>
           </CardContent>
         </CardActionArea>
@@ -187,6 +228,8 @@ export const InlineDestinationCard: React.FC<{
         onCancel={closeEditDialog}
         onDelete={() => setDeleteOpen(true)}
         onSave={onSave}
+        paused={destination.disabled}
+        onTogglePause={onTogglePause}
       />
 
       <ConfirmDeleteResourceDialog

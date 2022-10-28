@@ -462,6 +462,7 @@ describe("AssistedConfigWizard", () => {
         name: "dest-name",
       },
       spec: {
+        disabled: false,
         parameters: [
           {
             name: "parameter1",

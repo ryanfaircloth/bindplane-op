@@ -34,6 +34,7 @@ gql`
             name
             value
           }
+          disabled
         }
       }
       destinationType {
@@ -134,6 +135,7 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
           {
             name: updatedDestination.name(),
             processors: updatedProcessors,
+            disabled: updatedDestination.spec.disabled,
           },
           destinationIndex
         );
@@ -205,6 +207,62 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
       }
     }
 
+    /**
+     * Toggle `disabled` on the destination spec, replace it in the configuration, and save
+     */
+    async function onTogglePause() {
+      const updatedConfig = new BPConfiguration(configuration);
+      const updatedDestination = new BPDestination(data!.destinationWithType!.destination!);
+      updatedDestination.toggleDisabled();
+
+      const action = updatedDestination.spec.disabled ? "pause" : "resume";
+      if (destinationIndex != null) {
+        updatedConfig.replaceDestination({
+          name: updatedDestination.name(),
+          processors: updatedDestination.spec.processors,
+          parameters: updatedDestination.spec.parameters,
+          type: updatedDestination.spec.type,
+          disabled: updatedDestination.spec.disabled,
+        }, destinationIndex);
+
+        try {
+          const update = await updatedConfig.apply();
+          if (update.status === UpdateStatus.INVALID) {
+            throw new Error(
+              `failed to ${action} destination, got status ${update.status}`
+            );
+          }
+        } catch (err) {
+          console.error(err);
+          enqueueSnackbar("Failed to update configuration.", {
+            variant: "error",
+          });
+        }
+      }
+
+      try {
+        const { status, reason } = await updatedDestination.apply();
+        if (status === UpdateStatus.INVALID) {
+          throw new Error(
+            `failed to update configuration, configuration invalid, ${reason}`
+          );
+        }
+
+
+        enqueueSnackbar(`Successfully ${action}d destination.`, {
+          variant: "success",
+        });
+        closeEditDialog();
+        refetchConfiguration();
+        refetchDestination();
+      } catch (err) {
+        enqueueSnackbar(`Failed to ${action} destination.`, {
+          variant: "error",
+        });
+        console.error(err);
+      }
+    }
+
     function closeDeleteDialog() {
       setDeleteOpen(false);
     }
@@ -230,11 +288,15 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
     }
 
     return (
-      <div className={disabled ? styles.disabled : undefined}>
+      <div className={classes([
+        disabled ? styles.disabled : undefined,
+        data.destinationWithType.destination?.spec.disabled ? styles.paused : undefined,
+      ])}>
         <Card
           className={classes([
             styles["resource-card"],
             disabled ? styles.disabled : undefined,
+            data.destinationWithType.destination?.spec.disabled ? styles.paused : undefined,
           ])}
           onClick={() => setEditing(true)}
         >
@@ -247,9 +309,14 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
                     backgroundImage: `url(${data?.destinationWithType?.destinationType?.metadata.icon})`,
                   }}
                 />
-                <Typography component="div" fontWeight={600}>
+                <Typography component="div" fontWeight={600} gutterBottom>
                   {name}
                 </Typography>
+                {data.destinationWithType.destination?.spec.disabled && (
+                  <Typography component="div" fontWeight={400} fontSize={14} variant="overline">
+                    Paused
+                  </Typography>
+                )}
               </Stack>
             </CardContent>
           </CardActionArea>
@@ -276,6 +343,8 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
           onCancel={closeEditDialog}
           onDelete={() => setDeleteOpen(true)}
           onSave={onSave}
+          paused={data.destinationWithType.destination?.spec.disabled ?? false}
+          onTogglePause={onTogglePause}
         />
 
         <ConfirmDeleteResourceDialog

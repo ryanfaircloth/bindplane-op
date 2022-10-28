@@ -50,6 +50,12 @@ export class BPDestination implements Destination {
     this.spec = newSpec;
   }
 
+  toggleDisabled() {
+    const newSpec = cloneDeep(this.spec);
+    newSpec.disabled = !newSpec.disabled;
+    this.spec = newSpec;
+  }
+
   async apply(): Promise<ResourceStatus> {
     const { updates } = await applyResources([this]);
     const update = updates.find(

@@ -11,5 +11,5 @@ export type DialogResource = {
   metadata: {
     name: string;
   };
-  spec: { type: string; parameters?: Maybe<Parameter[]> };
+  spec: { type: string; parameters?: Maybe<Parameter[]>, disabled?: boolean };
 };

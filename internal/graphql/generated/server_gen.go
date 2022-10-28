@@ -279,6 +279,7 @@ type ComplexityRoot struct {
 	}
 
 	ParameterizedSpec struct {
+		Disabled   func(childComplexity int) int
 		Parameters func(childComplexity int) int
 		Processors func(childComplexity int) int
 		Type       func(childComplexity int) int
@@ -331,6 +332,7 @@ type ComplexityRoot struct {
 	}
 
 	ResourceConfiguration struct {
+		Disabled   func(childComplexity int) int
 		Name       func(childComplexity int) int
 		Parameters func(childComplexity int) int
 		Processors func(childComplexity int) int
@@ -1376,6 +1378,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ParameterOptions.TrackUnchecked(childComplexity), true
 
+	case "ParameterizedSpec.disabled":
+		if e.complexity.ParameterizedSpec.Disabled == nil {
+			break
+		}
+
+		return e.complexity.ParameterizedSpec.Disabled(childComplexity), true
+
 	case "ParameterizedSpec.parameters":
 		if e.complexity.ParameterizedSpec.Parameters == nil {
 			break
@@ -1709,6 +1718,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RelevantIfCondition.Value(childComplexity), true
+
+	case "ResourceConfiguration.disabled":
+		if e.complexity.ResourceConfiguration.Disabled == nil {
+			break
+		}
+
+		return e.complexity.ResourceConfiguration.Disabled(childComplexity), true
 
 	case "ResourceConfiguration.name":
 		if e.complexity.ResourceConfiguration.Name == nil {
@@ -2147,6 +2163,7 @@ type ResourceConfiguration {
   type: String
   parameters: [Parameter!]
   processors: [ResourceConfiguration!]
+  disabled: Boolean!
 }
 
 type Parameter {
@@ -2370,6 +2387,7 @@ type ParameterizedSpec {
   type: String!
   parameters: [Parameter!]
   processors: [ResourceConfiguration!]
+  disabled: Boolean!
 }
 
 type Components {
@@ -5114,6 +5132,8 @@ func (ec *executionContext) fieldContext_ConfigurationSpec_sources(ctx context.C
 				return ec.fieldContext_ResourceConfiguration_parameters(ctx, field)
 			case "processors":
 				return ec.fieldContext_ResourceConfiguration_processors(ctx, field)
+			case "disabled":
+				return ec.fieldContext_ResourceConfiguration_disabled(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ResourceConfiguration", field.Name)
 		},
@@ -5165,6 +5185,8 @@ func (ec *executionContext) fieldContext_ConfigurationSpec_destinations(ctx cont
 				return ec.fieldContext_ResourceConfiguration_parameters(ctx, field)
 			case "processors":
 				return ec.fieldContext_ResourceConfiguration_processors(ctx, field)
+			case "disabled":
+				return ec.fieldContext_ResourceConfiguration_disabled(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ResourceConfiguration", field.Name)
 		},
@@ -5554,6 +5576,8 @@ func (ec *executionContext) fieldContext_Destination_spec(ctx context.Context, f
 				return ec.fieldContext_ParameterizedSpec_parameters(ctx, field)
 			case "processors":
 				return ec.fieldContext_ParameterizedSpec_processors(ctx, field)
+			case "disabled":
+				return ec.fieldContext_ParameterizedSpec_disabled(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParameterizedSpec", field.Name)
 		},
@@ -8876,8 +8900,54 @@ func (ec *executionContext) fieldContext_ParameterizedSpec_processors(ctx contex
 				return ec.fieldContext_ResourceConfiguration_parameters(ctx, field)
 			case "processors":
 				return ec.fieldContext_ResourceConfiguration_processors(ctx, field)
+			case "disabled":
+				return ec.fieldContext_ResourceConfiguration_disabled(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ResourceConfiguration", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ParameterizedSpec_disabled(ctx context.Context, field graphql.CollectedField, obj *model.ParameterizedSpec) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ParameterizedSpec_disabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Disabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ParameterizedSpec_disabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParameterizedSpec",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9074,6 +9144,8 @@ func (ec *executionContext) fieldContext_Processor_spec(ctx context.Context, fie
 				return ec.fieldContext_ParameterizedSpec_parameters(ctx, field)
 			case "processors":
 				return ec.fieldContext_ParameterizedSpec_processors(ctx, field)
+			case "disabled":
+				return ec.fieldContext_ParameterizedSpec_disabled(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParameterizedSpec", field.Name)
 		},
@@ -11100,8 +11172,54 @@ func (ec *executionContext) fieldContext_ResourceConfiguration_processors(ctx co
 				return ec.fieldContext_ResourceConfiguration_parameters(ctx, field)
 			case "processors":
 				return ec.fieldContext_ResourceConfiguration_processors(ctx, field)
+			case "disabled":
+				return ec.fieldContext_ResourceConfiguration_disabled(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ResourceConfiguration", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ResourceConfiguration_disabled(ctx context.Context, field graphql.CollectedField, obj *model.ResourceConfiguration) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ResourceConfiguration_disabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Disabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ResourceConfiguration_disabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ResourceConfiguration",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11676,6 +11794,8 @@ func (ec *executionContext) fieldContext_Source_spec(ctx context.Context, field 
 				return ec.fieldContext_ParameterizedSpec_parameters(ctx, field)
 			case "processors":
 				return ec.fieldContext_ParameterizedSpec_processors(ctx, field)
+			case "disabled":
+				return ec.fieldContext_ParameterizedSpec_disabled(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParameterizedSpec", field.Name)
 		},
@@ -15972,6 +16092,13 @@ func (ec *executionContext) _ParameterizedSpec(ctx context.Context, sel ast.Sele
 
 			out.Values[i] = ec._ParameterizedSpec_processors(ctx, field, obj)
 
+		case "disabled":
+
+			out.Values[i] = ec._ParameterizedSpec_disabled(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16735,6 +16862,13 @@ func (ec *executionContext) _ResourceConfiguration(ctx context.Context, sel ast.
 
 			out.Values[i] = ec._ResourceConfiguration_processors(ctx, field, obj)
 
+		case "disabled":
+
+			out.Values[i] = ec._ResourceConfiguration_disabled(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -17527,12 +17661,12 @@ func (ec *executionContext) marshalNAgents2ᚖgithubᚗcomᚋobserviqᚋbindplan
 	return ec._Agents(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNAny2interface(ctx context.Context, v interface{}) (any, error) {
+func (ec *executionContext) unmarshalNAny2interface(ctx context.Context, v interface{}) (interface{}, error) {
 	res, err := graphql.UnmarshalAny(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNAny2interface(ctx context.Context, sel ast.SelectionSet, v any) graphql.Marshaler {
+func (ec *executionContext) marshalNAny2interface(ctx context.Context, sel ast.SelectionSet, v interface{}) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

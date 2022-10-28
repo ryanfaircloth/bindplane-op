@@ -134,6 +134,38 @@ export const InlineSourceCard: React.FC<{
     }
   }
 
+  /**
+   * Toggle `disabled` on the source, replace it in the configuration, and save
+   */
+  async function onTogglePause() {
+    const updatedConfig = new BPConfiguration(configuration);
+    const updatedSource = new BPResourceConfiguration(source);
+    updatedSource.disabled = !source.disabled;
+    updatedConfig.replaceSource(updatedSource, sourceIndex);
+
+    const action = updatedSource.disabled ? "pause" : "resume";
+    try {
+      const { status, reason } = await updatedConfig.apply();
+      if (status === UpdateStatus.INVALID) {
+        throw new Error(
+          `failed to ${action} source, configuration invalid, ${reason}`
+        );
+      }
+
+      enqueueSnackbar(`Successfully ${action}d source!`, {
+        variant: "success",
+        autoHideDuration: 3000,
+      });
+      closeEditDialog();
+      refetchConfiguration();
+    } catch (err) {
+      enqueueSnackbar(`Failed to ${action} configuration.`, {
+        variant: "error",
+      });
+      console.error(err);
+    }
+  }
+
   async function onDelete() {
     const updatedConfig = new BPConfiguration(configuration);
     updatedConfig.removeSource(sourceIndex);
@@ -161,19 +193,26 @@ export const InlineSourceCard: React.FC<{
         className={classes([
           styles["resource-card"],
           disabled ? styles.disabled : undefined,
+          source.disabled ? styles.paused : undefined,
         ])}
         onClick={() => setEditing(true)}
       >
         <CardActionArea className={styles.action}>
-          <CardContent>
+          <CardContent data-testid={`source-card-${id}`}>
             <Stack alignItems="center" textAlign={"center"} height="100%">
               <span
                 className={styles.icon}
                 style={{ backgroundImage: `url(${icon})` }}
               />
-              <Typography component="div" fontWeight={600} fontSize={fontSize}>
+              <Typography component="div" fontWeight={600} fontSize={fontSize} gutterBottom>
                 {displayName}
               </Typography>
+              {/* TODO: horizontal line separating displayName from Paused */}
+              {source.disabled && (
+                <Typography component="div" fontWeight={400} fontSize={14} variant="overline">
+                  Paused
+                </Typography>
+              )}
             </Stack>
           </CardContent>
         </CardActionArea>
@@ -192,6 +231,8 @@ export const InlineSourceCard: React.FC<{
         onCancel={closeEditDialog}
         onDelete={() => setDeleteOpen(true)}
         onSave={onSave}
+        paused={source.disabled}
+        onTogglePause={onTogglePause}
       />
 
       <ConfirmDeleteResourceDialog
@@ -202,7 +243,7 @@ export const InlineSourceCard: React.FC<{
         action={"remove"}
       >
         <Typography>
-          Are you sure you want to remove this destination?
+          Are you sure you want to remove this source?
         </Typography>
       </ConfirmDeleteResourceDialog>
     </>

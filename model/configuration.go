@@ -324,7 +324,7 @@ func evalDestination(ctx context.Context, destination *ResourceConfiguration, de
 	}
 
 	destName := dest.Name()
-	if dest.Spec.Disabled {
+	if dest.Spec.Disabled || destination.Disabled {
 		return destName, otel.NewPartials()
 	}
 	partials := destType.eval(dest, errorHandler)

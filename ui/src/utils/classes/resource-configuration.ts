@@ -9,11 +9,13 @@ export class BPResourceConfiguration implements ResourceConfiguration {
   type?: Maybe<string> | undefined;
   parameters?: Maybe<Parameter[]> | undefined;
   processors?: Maybe<ResourceConfiguration[]> | undefined;
+  disabled: boolean;
   constructor(rc?: ResourceConfiguration) {
     this.name = rc?.name;
     this.type = rc?.type;
     this.parameters = rc?.parameters;
     this.processors = rc?.processors;
+    this.disabled = rc?.disabled ?? false;
   }
 
   isInline(): boolean {

@@ -24,11 +24,14 @@ interface EditResourceDialogProps extends DialogProps {
   // The supported telemetry types of the resource type that is
   // being configured.  a subset of ['logs', 'metrics', 'traces']
   telemetryTypes?: string[];
+  paused?: boolean;
+  onTogglePause?: () => void;
 }
 
 const EditResourceDialogComponent: React.FC<EditResourceDialogProps> = ({
   onSave,
   onDelete,
+  onTogglePause,
   onCancel,
   displayName,
   description,
@@ -39,6 +42,7 @@ const EditResourceDialogComponent: React.FC<EditResourceDialogProps> = ({
   kind,
   telemetryTypes,
   includeNameField = false,
+  paused = false,
   ...dialogProps
 }) => {
   return (
@@ -55,6 +59,8 @@ const EditResourceDialogComponent: React.FC<EditResourceDialogProps> = ({
         onSave={onSave}
         onDelete={onDelete}
         telemetryTypes={telemetryTypes}
+        paused={paused}
+        onTogglePause={onTogglePause}
       />
     </Dialog>
   );

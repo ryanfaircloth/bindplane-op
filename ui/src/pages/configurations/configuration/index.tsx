@@ -49,7 +49,9 @@ gql`
               name
               value
             }
+            disabled
           }
+          disabled
         }
         destinations {
           type
@@ -64,7 +66,9 @@ gql`
               name
               value
             }
+            disabled
           }
+          disabled
         }
         selector {
           matchLabels
