@@ -1,0 +1,44 @@
+apiVersion: bindplane.observiq.com/v1
+kind: AgentVersion
+metadata:
+    id: 1942ebe1-4eee-4b99-b2f9-fd167f228bc3
+    name: observiq-otel-collector-v1.10.2
+spec:
+    type: observiq-otel-collector
+    version: v1.10.2
+    releaseNotesURL: https://github.com/observIQ/observiq-otel-collector/releases/tag/v1.10.2
+    draft: false
+    prerelease: false
+    installer:
+        darwin/amd64:
+            url: https://github.com/observIQ/observiq-otel-collector/releases/download/v1.10.2/install_macos.sh
+        darwin/arm64:
+            url: https://github.com/observIQ/observiq-otel-collector/releases/download/v1.10.2/install_macos.sh
+        linux/amd64:
+            url: https://github.com/observIQ/observiq-otel-collector/releases/download/v1.10.2/install_unix.sh
+        linux/arm:
+            url: https://github.com/observIQ/observiq-otel-collector/releases/download/v1.10.2/install_unix.sh
+        linux/arm64:
+            url: https://github.com/observIQ/observiq-otel-collector/releases/download/v1.10.2/install_unix.sh
+        windows/amd64:
+            url: https://github.com/observIQ/observiq-otel-collector/releases/download/v1.10.2/observiq-otel-collector.msi
+    download:
+        darwin/amd64:
+            url: https://github.com/observIQ/observiq-otel-collector/releases/download/v1.10.2/observiq-otel-collector-v1.10.2-darwin-amd64.tar.gz
+            hash: 46e9219acced6166999b3e59bb813ac8bd0a915ab52e4a8633e0c54dc377c1aa
+        darwin/arm64:
+            url: https://github.com/observIQ/observiq-otel-collector/releases/download/v1.10.2/observiq-otel-collector-v1.10.2-darwin-arm64.tar.gz
+            hash: 7ce2ae2cfb82635be5873d41e4f41de00a47136f5a6cb7edf25763ab3ca3bea2
+        linux/amd64:
+            url: https://github.com/observIQ/observiq-otel-collector/releases/download/v1.10.2/observiq-otel-collector-v1.10.2-linux-amd64.tar.gz
+            hash: 94c0f91c408ad8ab5d6a2abf9bafbc52c38cbb5076d23ba7f17e9ca82ae43d17
+        linux/arm:
+            url: https://github.com/observIQ/observiq-otel-collector/releases/download/v1.10.2/observiq-otel-collector-v1.10.2-linux-arm.tar.gz
+            hash: 4ee54adcdf208f8f7bfdbe633cf9b865bacf1d44479374930773549c6bdb55ad
+        linux/arm64:
+            url: https://github.com/observIQ/observiq-otel-collector/releases/download/v1.10.2/observiq-otel-collector-v1.10.2-linux-arm64.tar.gz
+            hash: 4348d2647c4af7ce1f7691af0f2af0a3ba8b2b31b721c4a661346ab09cb385d1
+        windows/amd64:
+            url: https://github.com/observIQ/observiq-otel-collector/releases/download/v1.10.2/observiq-otel-collector-v1.10.2-windows-amd64.zip
+            hash: 01ed2a0657469c235974677b6b48d1cea65da6291d6e7440d8c5ea565fb3de49
+    releaseDate: "2022-10-24T16:26:13Z"
