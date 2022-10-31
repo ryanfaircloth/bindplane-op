@@ -299,7 +299,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Push Container Images
+      - name: Push Container Images to Dockerhub
         if: ${{ github.actor != 'dependabot[bot]' }}
         run: |
           docker push observiq/bindplane-amd64:${{ env.GITHUB_SHA_SHORT }}
@@ -308,6 +308,22 @@ jobs:
                   "observiq/bindplane-amd64:${{ env.GITHUB_SHA_SHORT }}" \
                   "observiq/bindplane-arm64:${{ env.GITHUB_SHA_SHORT }}"
           docker manifest push "observiq/bindplane:${{ env.GITHUB_SHA_SHORT }}"
+
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push Container Images to Github Container Registry
+        if: ${{ github.actor != 'dependabot[bot]' }}
+        run: |
+          docker push ghcr.io/observiq/bindplane-amd64:${{ env.GITHUB_SHA_SHORT }}
+          docker push ghcr.io/observiq/bindplane-arm64:${{ env.GITHUB_SHA_SHORT }}
+          docker manifest create "ghcr.io/observiq/bindplane:${{ env.GITHUB_SHA_SHORT }}" \
+                  "ghcr.io/observiq/bindplane-amd64:${{ env.GITHUB_SHA_SHORT }}" \
+                  "ghcr.io/observiq/bindplane-arm64:${{ env.GITHUB_SHA_SHORT }}"
+          docker manifest push "ghcr.io/observiq/bindplane:${{ env.GITHUB_SHA_SHORT }}"
 
       # Scan binaries for invalid 3rd party licenses
       - name: Scan Binaries
@@ -398,7 +414,7 @@ jobs:
           curl -X POST \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token ${GITHUB_TOKEN}" \
-            --data "{\"event_type\": \"new_tag\", \"client_payload\": { \"image\": \"observiq/bindplane:${commit_tag}\"}}" \
+            --data "{\"event_type\": \"new_tag\", \"client_payload\": { \"image\": \"ghcr.io/observiq/bindplane:${commit_tag}\"}}" \
             "https://api.github.com/repos/observiq/${DEPLOY_REPO_NAME}/dispatches"
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}

@@ -101,6 +101,8 @@ BindPlane OP can run as a container using Docker. The following commands will:
 - Keep persistent data in a volume named `bindplane`
 - Expose port 3001 (REST and Websocket)
 
+Be sure to replace `latest` with the disired release image tag. E.g: `observiq/bindplane:1.3.0`.
+
 ```bash
 docker volume create bindplane
 

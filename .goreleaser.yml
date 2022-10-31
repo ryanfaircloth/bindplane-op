@@ -137,12 +137,18 @@ dockers:
   ids:
   - bindplane
   image_templates:
+  # Dockerhub
   - "observiq/bindplane-amd64:latest"
   - "observiq/bindplane-amd64:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
   - "observiq/bindplane-amd64:{{ .Major }}.{{ .Minor }}"
   - "observiq/bindplane-amd64:{{ .Major }}"
-  # ShortCommit: git rev-parse --short HEAD
   - "observiq/bindplane-amd64:{{ .ShortCommit }}"
+  # Github
+  - "ghcr.io/observiq/bindplane-amd64:latest"
+  - "ghcr.io/observiq/bindplane-amd64:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+  - "ghcr.io/observiq/bindplane-amd64:{{ .Major }}.{{ .Minor }}"
+  - "ghcr.io/observiq/bindplane-amd64:{{ .Major }}"
+  - "ghcr.io/observiq/bindplane-amd64:{{ .ShortCommit }}"
   dockerfile: ./Dockerfile
   use: buildx
   build_flag_templates:
@@ -156,12 +162,18 @@ dockers:
   ids:
   - bindplane
   image_templates:
+  # Dockerhub
   - "observiq/bindplane-arm64:latest"
   - "observiq/bindplane-arm64:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
   - "observiq/bindplane-arm64:{{ .Major }}.{{ .Minor }}"
   - "observiq/bindplane-arm64:{{ .Major }}"
-  # ShortCommit: git rev-parse --short HEAD
   - "observiq/bindplane-arm64:{{ .ShortCommit }}"
+  # Github
+  - "ghcr.io/observiq/bindplane-arm64:latest"
+  - "ghcr.io/observiq/bindplane-arm64:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+  - "ghcr.io/observiq/bindplane-arm64:{{ .Major }}.{{ .Minor }}"
+  - "ghcr.io/observiq/bindplane-arm64:{{ .Major }}"
+  - "ghcr.io/observiq/bindplane-arm64:{{ .ShortCommit }}"
   dockerfile: ./Dockerfile
   use: buildx
   build_flag_templates:
@@ -172,6 +184,7 @@ dockers:
   - "--platform=linux/arm64"
 
 docker_manifests:
+  # Dockerhub
   - name_template: "observiq/bindplane:latest"
     image_templates:
       - "observiq/bindplane-amd64:latest"
@@ -192,12 +205,35 @@ docker_manifests:
       - "observiq/bindplane-amd64:{{ .Major }}"
       - "observiq/bindplane-arm64:{{ .Major }}"
     skip_push: false
-  # ShortCommit: git rev-parse --short HEAD
   - name_template: "observiq/bindplane:{{ .ShortCommit }}"
     image_templates:
       - "observiq/bindplane-amd64:{{ .ShortCommit }}"
       - "observiq/bindplane-arm64:{{ .ShortCommit }}"
-
+  # Github
+  - name_template: "ghcr.io/observiq/bindplane:latest"
+    image_templates:
+      - "ghcr.io/observiq/bindplane-amd64:latest"
+      - "ghcr.io/observiq/bindplane-arm64:latest"
+    skip_push: false
+  - name_template: "ghcr.io/observiq/bindplane:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+    image_templates:
+      - "ghcr.io/observiq/bindplane-amd64:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+      - "ghcr.io/observiq/bindplane-arm64:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+    skip_push: false
+  - name_template: "ghcr.io/observiq/bindplane:{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "ghcr.io/observiq/bindplane-amd64:{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/observiq/bindplane-arm64:{{ .Major }}.{{ .Minor }}"
+    skip_push: false
+  - name_template: "ghcr.io/observiq/bindplane:{{ .Major }}"
+    image_templates:
+      - "ghcr.io/observiq/bindplane-amd64:{{ .Major }}"
+      - "ghcr.io/observiq/bindplane-arm64:{{ .Major }}"
+    skip_push: false
+  - name_template: "ghcr.io/observiq/bindplane:{{ .ShortCommit }}"
+    image_templates:
+      - "ghcr.io/observiq/bindplane-amd64:{{ .ShortCommit }}"
+      - "ghcr.io/observiq/bindplane-arm64:{{ .ShortCommit }}"
 
 checksum:
   name_template: '{{ .ProjectName }}-v{{ .Version }}-SHA256SUMS'

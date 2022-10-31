@@ -76,6 +76,8 @@ sudo systemctl enable --now bindplane
 BindPlane server can run as a container. Persistent data is stored in a volume
 named `bindplane`.
 
+Be sure to replace `latest` with the disired release image tag. E.g: `observiq/bindplane:1.3.0`.
+
 ```bash
 docker volume create bindplane
 
