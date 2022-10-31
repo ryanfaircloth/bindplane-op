@@ -16,11 +16,11 @@
 set -e
 
 rpm_install() {
-    sudo rpm -i '/tmp/data/bindplane_*_linux_amd64.rpm'
+    sudo bash /tmp/data/install-linux.sh --file /tmp/data/bindplane_*_linux_amd64.rpm
 }
 
 deb_install() {
-    sudo apt-get install -y -f /tmp/data/bindplane_*_linux_amd64.deb
+    sudo bash /tmp/data/install-linux.sh --file /tmp/data/bindplane_*_linux_amd64.deb
 }
 
 start() {

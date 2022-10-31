@@ -272,6 +272,7 @@ kitchen-prep: release-test
 	mkdir -p dist/kitchen
 	cp dist/bindplane_*amd64.deb dist/kitchen
 	cp dist/bindplane_*amd64.rpm dist/kitchen
+	cp scripts/install-linux.sh dist/kitchen
 
 # Assumes you have a ssh key pair at ~/.ssh/id_rsa && ~/.ssh/id_rsa.pub
 # Assumes you are authenticated to GCP with Gcloud SDK
