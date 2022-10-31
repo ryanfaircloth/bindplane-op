@@ -1,0 +1,511 @@
+apiVersion: bindplane.observiq.com/v1
+kind: SourceType
+metadata:
+  name: mongodbatlas
+  displayName: MongoDB Atlas
+  icon: /icons/sources/mongodb.svg
+  description: Collect metrics, logs, and alert events from MongoDB Atlas.
+spec:
+  version: 0.0.1
+  supported_platforms:
+    - macos
+    - linux
+    - windows
+  parameters:
+    # Authentication
+    #
+    - name: public_key
+      label: API Public Key
+      description: API Public Key with at least Organization Read Only permissions.
+      type: string
+      default: ""
+      required: true
+
+    - name: private_key
+      label: API Private Key
+      description: API Private Key
+      type: string
+      default: ""
+      required: true
+
+    # Metrics
+    #
+    - name: enable_metrics
+      label: Enable Metrics
+      description: Enable to collect metrics.
+      type: bool
+      default: true
+
+    - name: collection_interval
+      label: Collection Interval
+      description: How often (seconds) to scrape for metrics.
+      type: int
+      default: 60
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+      advancedConfig: true
+
+    - name: granularity
+      label: Metric Granularity
+      documentation:
+        - text: Read more
+          url: https://www.mongodb.com/docs/atlas/reference/api/process-measurements/#request-query-parameters
+      description: Duration interval between measurement data points.
+      type: enum
+      validValues:
+        - PT1M
+        - PT5M
+        - PT1H
+        - P1D
+      default: PT1M
+      advancedConfig: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
+    - name: disable_metrics
+      label: Filtering
+      type: metrics
+      advancedConfig: true
+      default: []
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+      options:
+        metricCategories:
+          - label: System
+            column: 0
+            metrics:
+              - name: mongodbatlas.disk.partition.iops.average
+              - name: mongodbatlas.disk.partition.iops.max
+              - name: mongodbatlas.disk.partition.latency.average
+              - name: mongodbatlas.disk.partition.latency.max
+              - name: mongodbatlas.disk.partition.space.average
+              - name: mongodbatlas.disk.partition.space.max
+              - name: mongodbatlas.disk.partition.usage.average
+              - name: mongodbatlas.disk.partition.usage.max
+              - name: mongodbatlas.disk.partition.utilization.average
+              - name: mongodbatlas.disk.partition.utilization.max
+              - name: mongodbatlas.system.cpu.normalized.usage.average
+              - name: mongodbatlas.system.cpu.normalized.usage.max
+              - name: mongodbatlas.system.cpu.usage.average
+              - name: mongodbatlas.system.cpu.usage.max
+              - name: mongodbatlas.system.fts.cpu.normalized.usage
+              - name: mongodbatlas.system.fts.cpu.usage
+              - name: mongodbatlas.system.fts.disk.used
+              - name: mongodbatlas.system.fts.memory.usage
+              - name: mongodbatlas.system.memory.usage.average
+              - name: mongodbatlas.system.memory.usage.max
+              - name: mongodbatlas.system.network.io.average
+              - name: mongodbatlas.system.network.io.max
+              - name: mongodbatlas.system.paging.io.average
+              - name: mongodbatlas.system.paging.io.max
+              - name: mongodbatlas.system.paging.usage.average
+              - name: mongodbatlas.system.paging.usage.max
+          - label: Database
+            metrics:
+              - name: mongodbatlas.db.size
+              - name: mongodbatlas.db.counts
+          - label: Process
+            column: 1
+            metrics:
+              - name: mongodbatlas.process.asserts
+              - name: mongodbatlas.process.background_flush
+              - name: mongodbatlas.process.cache.io
+              - name: mongodbatlas.process.cache.size
+              - name: mongodbatlas.process.connections
+              - name: mongodbatlas.process.cpu.children.normalized.usage.average
+              - name: mongodbatlas.process.cpu.children.normalized.usage.max
+              - name: mongodbatlas.process.cpu.children.usage.average
+              - name: mongodbatlas.process.cpu.children.usage.max
+              - name: mongodbatlas.process.cpu.normalized.usage.average
+              - name: mongodbatlas.process.cpu.normalized.usage.max
+              - name: mongodbatlas.process.cpu.usage.average
+              - name: mongodbatlas.process.cpu.usage.max
+              - name: mongodbatlas.process.cursors
+              - name: mongodbatlas.process.db.document.rate
+              - name: mongodbatlas.process.db.operations.rate
+              - name: mongodbatlas.process.db.operations.time
+              - name: mongodbatlas.process.db.query_executor.scanned
+              - name: mongodbatlas.process.db.query_targeting.scanned_per_returned
+              - name: mongodbatlas.process.db.storage
+              - name: mongodbatlas.process.fts.cpu.usage
+              - name: mongodbatlas.process.global_lock
+              - name: mongodbatlas.process.index.btree_miss_ratio
+              - name: mongodbatlas.process.index.counters
+              - name: mongodbatlas.process.journaling.commits
+              - name: mongodbatlas.process.journaling.data_files
+              - name: mongodbatlas.process.journaling.written
+              - name: mongodbatlas.process.memory.usage
+              - name: mongodbatlas.process.network.io
+              - name: mongodbatlas.process.network.requests
+              - name: mongodbatlas.process.oplog.rate
+              - name: mongodbatlas.process.oplog.time
+              - name: mongodbatlas.process.page_faults
+              - name: mongodbatlas.process.restarts
+              - name: mongodbatlas.process.tickets
+
+    # Logs
+    #
+    - name: enable_logs
+      label: Enable Logs
+      description: Enable to collect MongoDB Atlas logs from the API.
+      type: bool
+      default: true
+
+    - name: log_project_name
+      label: Project Name
+      description: Project to collect logs for.
+      type: string
+      default: ""
+      required: true
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+
+    - name: collect_audit_logs
+      label: Collect Audit Logs
+      description: Enable to collect Audit Logs. Must be enabled on project and API Key must have Organization Owner permissions.
+      type: bool
+      default: false
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+
+    - name: log_filter_mode
+      label: Cluster Filtering Mode
+      description: Mode of filtering clusters. Either collect from all clusters or specify an inclusive list or exclusive list.
+      options:
+        sectionHeader: true
+      type: enum
+      default: All
+      validValues:
+        - All
+        - Inclusive
+        - Exclusive
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+
+    - name: log_include_clusters
+      label: Included Clusters
+      description: Clusters in the project to collect logs from.
+      type: strings
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+        - name: log_filter_mode
+          operator: equals
+          value: Inclusive
+
+    - name: log_exclude_clusters
+      label: Excluded Clusters
+      description: Clusters in the project to excluded from log collection.
+      type: strings
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
+        - name: log_filter_mode
+          operator: equals
+          value: Exclusive
+
+    # Alerts
+    #
+    - name: enable_alerts
+      label: Enable Alerts
+      description: Enable to collect alerts.
+      type: bool
+      options:
+        sectionHeader: true
+      default: false
+
+    - name: alert_collection_mode
+      label: Collection Mode
+      description: Method of collecting alerts. In poll mode alerts are scrapped from the API. In listen mode a sever is setup to listen for incoming alerts.
+      type: enum
+      validValues:
+        - poll
+        - listen
+      default: poll
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+
+    # Poll Options
+    #
+    - name: alert_project_name
+      label: Project Name
+      description: Project to collect alerts from.
+      type: string
+      default: ""
+      required: true
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+        - name: alert_collection_mode
+          operator: equals
+          value: poll
+
+    - name: alert_filter_mode
+      label: Cluster Filtering Mode
+      description: Mode of filtering clusters. Either collect from all clusters or specify an inclusive list or exclusive list.
+      options:
+        sectionHeader: true
+      type: enum
+      default: All
+      validValues:
+        - All
+        - Inclusive
+        - Exclusive
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+        - name: alert_collection_mode
+          operator: equals
+          value: poll
+
+    - name: alert_include_clusters
+      label: Included Clusters
+      description: Clusters in the project to collect alerts from.
+      type: strings
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+        - name: alert_collection_mode
+          operator: equals
+          value: poll
+        - name: alert_filter_mode
+          operator: equals
+          value: Inclusive
+
+    - name: alert_exclude_clusters
+      label: Excluded Clusters
+      description: Clusters in the project to excluded from alert collection.
+      type: strings
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+        - name: alert_collection_mode
+          operator: equals
+          value: poll
+        - name: alert_filter_mode
+          operator: equals
+          value: Exclusive
+
+    - name: alert_poll_interval
+      label: Polling Interval
+      description: How often (seconds) to scrape for alerts.
+      type: int
+      default: 300
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+        - name: alert_collection_mode
+          operator: equals
+          value: poll
+      advancedConfig: true
+
+    - name: page_size
+      label: Page Size
+      description: The number of alerts to collect per API request.
+      type: int
+      default: 100
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+        - name: alert_collection_mode
+          operator: equals
+          value: poll
+      advancedConfig: true
+
+    - name: max_pages
+      label: Max Pages
+      description: The limit of how many pages of alerts will request per project.
+      type: int
+      default: 10
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+        - name: alert_collection_mode
+          operator: equals
+          value: poll
+      advancedConfig: true
+
+    # Listen Options
+    #
+    - name: listen_secret
+      label: API Secret Key
+      description: Secret Key configured for push notifications.
+      type: string
+      default: ""
+      required: true
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+        - name: alert_collection_mode
+          operator: equals
+          value: listen
+
+    - name: listen_endpoint
+      label: Webhook Endpoint
+      description: Local "ip:port" to bind to, to listen for incoming webhooks.
+      type: string
+      default: "0.0.0.0:4396"
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+        - name: alert_collection_mode
+          operator: equals
+          value: listen
+
+    - name: enable_listen_tls
+      label: Enable TLS
+      description: Enable TLS for alert webhook server.
+      type: bool
+      default: false
+      options:
+        sectionHeader: true
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+        - name: alert_collection_mode
+          operator: equals
+          value: listen
+      advancedConfig: true
+
+    - name: listen_tls_key_file
+      label: Key File Location
+      description: Local path to the TLS key file.
+      type: string
+      required: true
+      default: ""
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+        - name: alert_collection_mode
+          operator: equals
+          value: listen
+        - name: enable_listen_tls
+          operator: equals
+          value: true
+      advancedConfig: true
+
+    - name: listen_tls_cert_file
+      label: Cert File Location
+      description: Local path to the TLS cert file.
+      type: string
+      required: true
+      default: ""
+      relevantIf:
+        - name: enable_alerts
+          operator: equals
+          value: true
+        - name: alert_collection_mode
+          operator: equals
+          value: listen
+        - name: enable_listen_tls
+          operator: equals
+          value: true
+      advancedConfig: true
+
+  metrics:
+    receivers: |
+      {{ if .enable_metrics }}
+      - mongodbatlas/metrics:
+          public_key: {{ .public_key }}
+          private_key: {{ .private_key }}
+          collection_interval: "{{ .collection_interval }}s"
+          granularity: {{ .granularity }}
+          metrics:
+            {{ range $m := .disable_metrics }}
+            {{ $m }}:
+              enabled: false
+            {{ end }}
+      {{ end }}
+
+  logs:
+    receivers: |
+      {{ if .enable_logs }}
+      - mongodbatlas/logs:
+          public_key: {{ .public_key }}
+          private_key: {{ .private_key }}
+          logs:
+            enabled: true
+            projects: 
+              - name: {{ .log_project_name }}
+                collect_audit_logs: {{ .collect_audit_logs }}
+                {{ if eq .log_filter_mode "Inclusive" }}
+                include_clusters:
+                  {{ range $c := .log_include_clusters }}
+                   - {{ $c }}
+                  {{ end }}
+                {{ end }}
+                {{ if eq .log_filter_mode "Exclusive" }}
+                exclude_clusters:
+                  {{ range $c := .log_exclude_clusters }}
+                   - {{ $c }}
+                  {{ end }}
+                {{ end }}
+      {{ end }}
+
+      {{ if .enable_alerts }}
+      - mongodbatlas/alerts:
+          {{ if eq .alert_collection_mode "poll" }}
+          public_key: {{ .public_key }}
+          private_key: {{ .private_key }}
+          alerts:
+            enabled: true
+            mode: poll
+            poll_interval: {{ .alert_poll_interval }}
+            page_size: {{ .page_size }}
+            max_pages: {{ .max_pages }}
+            projects:
+              - name: {{ .alert_project_name }}
+                {{ if eq .alert_filter_mode "Inclusive" }}
+                include_clusters:
+                  {{ range $c := .alert_include_clusters }}
+                   - {{ $c }}
+                  {{ end }}
+                {{ end }}
+                {{ if eq .alert_filter_mode "Exclusive" }}
+                exclude_clusters:
+                  {{ range $c := .alert_exclude_clusters }}
+                   - {{ $c }}
+                  {{ end }}
+                {{ end }}
+          {{ end }}
+          {{ if eq .alert_collection_mode "listen" }}
+          alerts:
+            enabled: true
+            mode: listen
+            secret: {{ .listen_secret }}
+            endpoint: {{ .listen_endpoint }}
+            {{ if .enable_listen_tls }}
+            tls:
+              key_file: {{ .listen_tls_key_file }}
+              cert_file: {{ .listen_tls_cert_file }}
+            {{ end }}
+          {{ end }}
+        
+      {{ end }}
