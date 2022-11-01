@@ -193,136 +193,6 @@ service:
 	require.Equal(t, expect, result)
 }
 
-func TestEvalConfigurationMeasure(t *testing.T) {
-	store := newTestResourceStore()
-	config := newTestConfiguration()
-
-	macos := testResource[*SourceType](t, "sourcetype-macos.yaml")
-	store.sourceTypes[macos.Name()] = macos
-
-	cabin := testResource[*Destination](t, "destination-cabin.yaml")
-	store.destinations[cabin.Name()] = cabin
-
-	cabinType := testResource[*DestinationType](t, "destinationtype-cabin.yaml")
-	store.destinationTypes[cabinType.Name()] = cabinType
-
-	agent := &Agent{
-		ID:      "01ARZ3NDEKTSV4RRFFQ69G5FAV",
-		Version: v1_9_2.String(),
-	}
-
-	configuration := testResource[*Configuration](t, "configuration-macos-sources.yaml")
-	result, err := configuration.Render(context.TODO(), agent, config, store)
-	require.NoError(t, err)
-
-	expect := strings.TrimLeft(`
-receivers:
-    plugin/source0__journald:
-        plugin:
-            name: journald
-    plugin/source0__macos:
-        parameters:
-            - name: enable_system_log
-              value: false
-            - name: system_log_path
-              value: /var/log/system.log
-            - name: enable_install_log
-              value: true
-            - name: install_log_path
-              value: /var/log/install.log
-            - name: start_at
-              value: end
-        plugin:
-            name: macos
-    plugin/source1__journald:
-        plugin:
-            name: journald
-    plugin/source1__macos:
-        parameters:
-            - name: enable_system_log
-              value: true
-            - name: system_log_path
-              value: /var/log/system.log
-            - name: enable_install_log
-              value: true
-            - name: install_log_path
-              value: /var/log/install.log
-            - name: start_at
-              value: end
-        plugin:
-            name: macos
-    prometheus/_agent_metrics:
-        config:
-            scrape_configs:
-                - job_name: observiq-otel-collector
-                  metric_relabel_configs:
-                    - action: keep
-                      regex: otelcol_processor_throughputmeasurement_.*
-                      source_labels:
-                        - __name__
-                  scrape_interval: 10s
-                  static_configs:
-                    - labels:
-                        agent: 01ARZ3NDEKTSV4RRFFQ69G5FAV
-                        configuration: macos
-                      targets:
-                        - 0.0.0.0:8888
-processors:
-    batch/_agent_metrics: null
-    batch/cabin-production-logs: null
-    snapshotprocessor: null
-    throughputmeasurement/_d_logs_cabin-production-logs:
-        enabled: true
-        sampling_ratio: 1
-    throughputmeasurement/_s_logs_source0:
-        enabled: true
-        sampling_ratio: 1
-    throughputmeasurement/_s_logs_source1:
-        enabled: true
-        sampling_ratio: 1
-exporters:
-    observiq/cabin-production-logs:
-        endpoint: https://nozzle.app.observiq.com
-        secret_key: 2c088c5e-2afc-483b-be52-e2b657fcff08
-        timeout: 10s
-    otlphttp/_agent_metrics:
-        endpoint: /v1/otlphttp
-service:
-    pipelines:
-        logs/source0__cabin-production-logs:
-            receivers:
-                - plugin/source0__macos
-                - plugin/source0__journald
-            processors:
-                - throughputmeasurement/_s_logs_source0
-                - throughputmeasurement/_d_logs_cabin-production-logs
-                - batch/cabin-production-logs
-                - snapshotprocessor
-            exporters:
-                - observiq/cabin-production-logs
-        logs/source1__cabin-production-logs:
-            receivers:
-                - plugin/source1__macos
-                - plugin/source1__journald
-            processors:
-                - throughputmeasurement/_s_logs_source1
-                - throughputmeasurement/_d_logs_cabin-production-logs
-                - batch/cabin-production-logs
-                - snapshotprocessor
-            exporters:
-                - observiq/cabin-production-logs
-        metrics/_agent_metrics:
-            receivers:
-                - prometheus/_agent_metrics
-            processors:
-                - batch/_agent_metrics
-            exporters:
-                - otlphttp/_agent_metrics
-`, "\n")
-
-	require.Equal(t, expect, result)
-}
-
 func TestEvalConfiguration2(t *testing.T) {
 	store := newTestResourceStore()
 	config := newTestConfiguration()
@@ -942,13 +812,13 @@ processors:
             - from: from.attribute2
               to: to.attribute2
     snapshotprocessor: null
-    throughputmeasurement/_d_logs_cabin-production-logs:
+    throughputmeasurement/_d1_logs_cabin-production-logs:
         enabled: true
         sampling_ratio: 1
-    throughputmeasurement/_d_logs_googlecloud:
+    throughputmeasurement/_d1_logs_googlecloud:
         enabled: true
         sampling_ratio: 1
-    throughputmeasurement/_d_metrics_googlecloud:
+    throughputmeasurement/_d1_metrics_googlecloud:
         enabled: true
         sampling_ratio: 1
     throughputmeasurement/_s0_logs_source0:
@@ -982,7 +852,7 @@ service:
                 - resourceattributetransposer/source0__processor0
                 - resourceattributetransposer/source0__processor1
                 - throughputmeasurement/_s1_logs_source0
-                - throughputmeasurement/_d_logs_cabin-production-logs
+                - throughputmeasurement/_d1_logs_cabin-production-logs
                 - batch/cabin-production-logs
                 - snapshotprocessor
             exporters:
@@ -994,7 +864,7 @@ service:
             processors:
                 - resourceattributetransposer/source0__processor0
                 - resourceattributetransposer/source0__processor1
-                - throughputmeasurement/_d_logs_googlecloud
+                - throughputmeasurement/_d1_logs_googlecloud
                 - batch/googlecloud
                 - snapshotprocessor
             exporters:
@@ -1014,7 +884,7 @@ service:
                 - resourceattributetransposer/source0__processor0
                 - resourceattributetransposer/source0__processor1
                 - throughputmeasurement/_s1_metrics_source0
-                - throughputmeasurement/_d_metrics_googlecloud
+                - throughputmeasurement/_d1_metrics_googlecloud
                 - normalizesums/googlecloud
                 - batch/googlecloud
                 - snapshotprocessor

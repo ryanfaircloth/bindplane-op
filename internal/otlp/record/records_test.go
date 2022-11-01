@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 )
@@ -163,24 +162,4 @@ func TestGetLogMessage(t *testing.T) {
 			assert.Equal(t, tc.expected, getLogMessage(tc.input()))
 		})
 	}
-}
-
-func TestClone(t *testing.T) {
-	src := Metric{
-		Name: "test",
-		Attributes: map[string]any{
-			"attr": "a",
-		},
-	}
-	dest, err := Clone(&src)
-	require.NoError(t, err)
-
-	require.Equal(t, "test", dest.Name)
-	require.Equal(t, "a", src.Attributes["attr"])
-	require.Equal(t, "a", dest.Attributes["attr"])
-
-	dest.Attributes["attr"] = "b"
-	require.Equal(t, "test", dest.Name)
-	require.Equal(t, "a", src.Attributes["attr"])
-	require.Equal(t, "b", dest.Attributes["attr"])
 }

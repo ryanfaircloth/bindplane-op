@@ -113,11 +113,6 @@ func Processor(m *record.Metric) string {
 	return m.AttributeString(ProcessorAttributeName, "")
 }
 
-// SetProcessor sets the value of the metric attribute that corresponds to the processor name
-func SetProcessor(m *record.Metric, processor string) {
-	m.Attributes[ProcessorAttributeName] = processor
-}
-
 // ProcessorParsed returns the individual parts of the processor name parsed out of the processor attribute
 func ProcessorParsed(m *record.Metric) (position string, pipelineType string, name string) {
 	return ParseProcessorName(Processor(m))
