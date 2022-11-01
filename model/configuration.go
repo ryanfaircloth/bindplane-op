@@ -347,10 +347,8 @@ func evalDestination(ctx context.Context, destination *ResourceConfiguration, de
 
 	// destination processors are prepended to the destination
 	partials.Prepend(d1partials)
-	if !destProcessors.Empty() {
-		partials.Prepend(destProcessors)
-		partials.Prepend(d0partials)
-	}
+	partials.Prepend(destProcessors)
+	partials.Prepend(d0partials)
 
 	return destName, partials
 }

@@ -812,6 +812,15 @@ processors:
             - from: from.attribute2
               to: to.attribute2
     snapshotprocessor: null
+    throughputmeasurement/_d0_logs_cabin-production-logs:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_d0_logs_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_d0_metrics_googlecloud:
+        enabled: true
+        sampling_ratio: 1
     throughputmeasurement/_d1_logs_cabin-production-logs:
         enabled: true
         sampling_ratio: 1
@@ -852,6 +861,7 @@ service:
                 - resourceattributetransposer/source0__processor0
                 - resourceattributetransposer/source0__processor1
                 - throughputmeasurement/_s1_logs_source0
+                - throughputmeasurement/_d0_logs_cabin-production-logs
                 - throughputmeasurement/_d1_logs_cabin-production-logs
                 - batch/cabin-production-logs
                 - snapshotprocessor
@@ -864,6 +874,7 @@ service:
             processors:
                 - resourceattributetransposer/source0__processor0
                 - resourceattributetransposer/source0__processor1
+                - throughputmeasurement/_d0_logs_googlecloud
                 - throughputmeasurement/_d1_logs_googlecloud
                 - batch/googlecloud
                 - snapshotprocessor
@@ -884,6 +895,7 @@ service:
                 - resourceattributetransposer/source0__processor0
                 - resourceattributetransposer/source0__processor1
                 - throughputmeasurement/_s1_metrics_source0
+                - throughputmeasurement/_d0_metrics_googlecloud
                 - throughputmeasurement/_d1_metrics_googlecloud
                 - normalizesums/googlecloud
                 - batch/googlecloud
