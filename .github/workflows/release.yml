@@ -94,4 +94,4 @@ jobs:
 
       - uses: readmeio/rdme@7.5.0
         with:
-          rdme: docs ./docs/www --key=${{ secrets.README_API_KEY }} --version=${{ steps.get-tag.outputs.tag }}
+          rdme: docs ./docs/www --key=${{ secrets.README_API_KEY }} --version=${VERSION}
