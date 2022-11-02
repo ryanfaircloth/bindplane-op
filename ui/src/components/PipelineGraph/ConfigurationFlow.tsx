@@ -108,7 +108,7 @@ export const ConfigurationFlow: React.FC<ConfigurationFlowProps> = ({
         fitView={true}
         deleteKeyCode={null}
         zoomOnScroll={false}
-        panOnDrag={false}
+        panOnDrag={true}
         minZoom={0.1}
         onWheel={(event) => {
           window.scrollBy(event.deltaX, event.deltaY);

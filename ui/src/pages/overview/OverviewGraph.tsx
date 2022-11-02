@@ -169,7 +169,7 @@ export const OverviewGraph: React.FC = () => {
           fitView={true}
           deleteKeyCode={null}
           zoomOnScroll={false}
-          panOnDrag={false}
+          panOnDrag={true}
           minZoom={0.1}
           maxZoom={1.75}
           onWheel={(event) => {
