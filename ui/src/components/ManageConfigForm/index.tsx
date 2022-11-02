@@ -100,12 +100,6 @@ export const ManageConfigForm: React.FC<ManageConfigFormProps> = ({
             Click edit to apply another configuration.
           </Typography>
         )}
-
-        <YamlEditor
-          value={agent.configuration?.Collector ?? ""}
-          readOnly
-          limitHeight
-        />
       </>
     );
   };
