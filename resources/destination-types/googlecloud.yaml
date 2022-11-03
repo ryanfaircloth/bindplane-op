@@ -36,8 +36,7 @@ spec:
       default: ""
       options:
         gridColumns: 12
-        # TODO(bug): Resolve issue with multiline JSON in config
-        # multiline: true
+        multiline: true
       relevantIf:
         - name: auth_type
           operator: equals
@@ -63,7 +62,7 @@ spec:
           project: "{{ .project }}"
           {{ if eq .auth_type "json" }}
           credentials: |-
-            {{ .credentials }}
+            {{ .credentials | replace "\n" "" }}
           {{ else if eq .auth_type "file" }}
           credentials_file: "{{ .credentials_file }}"
           {{ end }}
