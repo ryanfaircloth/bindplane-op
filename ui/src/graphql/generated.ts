@@ -587,13 +587,13 @@ export type AgentsTableQueryVariables = Exact<{
 
 export type AgentsTableQuery = { __typename?: 'Query', agents: { __typename?: 'Agents', query?: string | null, latestVersion: string, agents: Array<{ __typename?: 'Agent', id: string, architecture?: string | null, hostName?: string | null, labels?: any | null, platform?: string | null, version?: string | null, name: string, home?: string | null, operatingSystem?: string | null, macAddress?: string | null, type?: string | null, status: number, connectedAt?: any | null, disconnectedAt?: any | null, configurationResource?: { __typename?: 'Configuration', metadata: { __typename?: 'Metadata', name: string } } | null }>, suggestions?: Array<{ __typename?: 'Suggestion', query: string, label: string }> | null } };
 
-export type AgentsTableMetricsQueryVariables = Exact<{
+export type AgentsTableMetricsSubscriptionVariables = Exact<{
   period: Scalars['String'];
   ids?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
 }>;
 
 
-export type AgentsTableMetricsQuery = { __typename?: 'Query', agentMetrics: { __typename?: 'GraphMetrics', metrics: Array<{ __typename?: 'GraphMetric', name: string, nodeID: string, pipelineType: string, value: number, unit: string, agentID?: string | null }> } };
+export type AgentsTableMetricsSubscription = { __typename?: 'Subscription', agentMetrics: { __typename?: 'GraphMetrics', metrics: Array<{ __typename?: 'GraphMetric', name: string, nodeID: string, pipelineType: string, value: number, unit: string, agentID?: string | null }> } };
 
 export type GetDestinationTypeDisplayInfoQueryVariables = Exact<{
   name: Scalars['String'];
@@ -630,12 +630,12 @@ export type ConfigurationChangesSubscriptionVariables = Exact<{
 
 export type ConfigurationChangesSubscription = { __typename?: 'Subscription', configurationChanges: Array<{ __typename?: 'ConfigurationChange', eventType: EventType, configuration: { __typename?: 'Configuration', agentCount?: number | null, metadata: { __typename?: 'Metadata', name: string, description?: string | null, labels?: any | null } } }> };
 
-export type ConfigurationTableMetricsQueryVariables = Exact<{
+export type ConfigurationTableMetricsSubscriptionVariables = Exact<{
   period: Scalars['String'];
 }>;
 
 
-export type ConfigurationTableMetricsQuery = { __typename?: 'Query', overviewMetrics: { __typename?: 'GraphMetrics', metrics: Array<{ __typename?: 'GraphMetric', name: string, nodeID: string, pipelineType: string, value: number, unit: string }> } };
+export type ConfigurationTableMetricsSubscription = { __typename?: 'Subscription', overviewMetrics: { __typename?: 'GraphMetrics', metrics: Array<{ __typename?: 'GraphMetric', name: string, nodeID: string, pipelineType: string, value: number, unit: string }> } };
 
 export type AgentChangesSubscriptionVariables = Exact<{
   selector?: InputMaybe<Scalars['String']>;
@@ -1261,7 +1261,7 @@ export type AgentsTableQueryHookResult = ReturnType<typeof useAgentsTableQuery>;
 export type AgentsTableLazyQueryHookResult = ReturnType<typeof useAgentsTableLazyQuery>;
 export type AgentsTableQueryResult = Apollo.QueryResult<AgentsTableQuery, AgentsTableQueryVariables>;
 export const AgentsTableMetricsDocument = gql`
-    query AgentsTableMetrics($period: String!, $ids: [ID!]) {
+    subscription AgentsTableMetrics($period: String!, $ids: [ID!]) {
   agentMetrics(period: $period, ids: $ids) {
     metrics {
       name
@@ -1276,33 +1276,28 @@ export const AgentsTableMetricsDocument = gql`
     `;
 
 /**
- * __useAgentsTableMetricsQuery__
+ * __useAgentsTableMetricsSubscription__
  *
- * To run a query within a React component, call `useAgentsTableMetricsQuery` and pass it any options that fit your needs.
- * When your component renders, `useAgentsTableMetricsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useAgentsTableMetricsSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useAgentsTableMetricsSubscription` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useAgentsTableMetricsQuery({
+ * const { data, loading, error } = useAgentsTableMetricsSubscription({
  *   variables: {
  *      period: // value for 'period'
  *      ids: // value for 'ids'
  *   },
  * });
  */
-export function useAgentsTableMetricsQuery(baseOptions: Apollo.QueryHookOptions<AgentsTableMetricsQuery, AgentsTableMetricsQueryVariables>) {
+export function useAgentsTableMetricsSubscription(baseOptions: Apollo.SubscriptionHookOptions<AgentsTableMetricsSubscription, AgentsTableMetricsSubscriptionVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AgentsTableMetricsQuery, AgentsTableMetricsQueryVariables>(AgentsTableMetricsDocument, options);
+        return Apollo.useSubscription<AgentsTableMetricsSubscription, AgentsTableMetricsSubscriptionVariables>(AgentsTableMetricsDocument, options);
       }
-export function useAgentsTableMetricsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AgentsTableMetricsQuery, AgentsTableMetricsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AgentsTableMetricsQuery, AgentsTableMetricsQueryVariables>(AgentsTableMetricsDocument, options);
-        }
-export type AgentsTableMetricsQueryHookResult = ReturnType<typeof useAgentsTableMetricsQuery>;
-export type AgentsTableMetricsLazyQueryHookResult = ReturnType<typeof useAgentsTableMetricsLazyQuery>;
-export type AgentsTableMetricsQueryResult = Apollo.QueryResult<AgentsTableMetricsQuery, AgentsTableMetricsQueryVariables>;
+export type AgentsTableMetricsSubscriptionHookResult = ReturnType<typeof useAgentsTableMetricsSubscription>;
+export type AgentsTableMetricsSubscriptionResult = Apollo.SubscriptionResult<AgentsTableMetricsSubscription>;
 export const GetDestinationTypeDisplayInfoDocument = gql`
     query getDestinationTypeDisplayInfo($name: String!) {
   destinationType(name: $name) {
@@ -1518,7 +1513,7 @@ export function useConfigurationChangesSubscription(baseOptions?: Apollo.Subscri
 export type ConfigurationChangesSubscriptionHookResult = ReturnType<typeof useConfigurationChangesSubscription>;
 export type ConfigurationChangesSubscriptionResult = Apollo.SubscriptionResult<ConfigurationChangesSubscription>;
 export const ConfigurationTableMetricsDocument = gql`
-    query ConfigurationTableMetrics($period: String!) {
+    subscription ConfigurationTableMetrics($period: String!) {
   overviewMetrics(period: $period) {
     metrics {
       name
@@ -1532,32 +1527,27 @@ export const ConfigurationTableMetricsDocument = gql`
     `;
 
 /**
- * __useConfigurationTableMetricsQuery__
+ * __useConfigurationTableMetricsSubscription__
  *
- * To run a query within a React component, call `useConfigurationTableMetricsQuery` and pass it any options that fit your needs.
- * When your component renders, `useConfigurationTableMetricsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useConfigurationTableMetricsSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useConfigurationTableMetricsSubscription` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useConfigurationTableMetricsQuery({
+ * const { data, loading, error } = useConfigurationTableMetricsSubscription({
  *   variables: {
  *      period: // value for 'period'
  *   },
  * });
  */
-export function useConfigurationTableMetricsQuery(baseOptions: Apollo.QueryHookOptions<ConfigurationTableMetricsQuery, ConfigurationTableMetricsQueryVariables>) {
+export function useConfigurationTableMetricsSubscription(baseOptions: Apollo.SubscriptionHookOptions<ConfigurationTableMetricsSubscription, ConfigurationTableMetricsSubscriptionVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ConfigurationTableMetricsQuery, ConfigurationTableMetricsQueryVariables>(ConfigurationTableMetricsDocument, options);
+        return Apollo.useSubscription<ConfigurationTableMetricsSubscription, ConfigurationTableMetricsSubscriptionVariables>(ConfigurationTableMetricsDocument, options);
       }
-export function useConfigurationTableMetricsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ConfigurationTableMetricsQuery, ConfigurationTableMetricsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ConfigurationTableMetricsQuery, ConfigurationTableMetricsQueryVariables>(ConfigurationTableMetricsDocument, options);
-        }
-export type ConfigurationTableMetricsQueryHookResult = ReturnType<typeof useConfigurationTableMetricsQuery>;
-export type ConfigurationTableMetricsLazyQueryHookResult = ReturnType<typeof useConfigurationTableMetricsLazyQuery>;
-export type ConfigurationTableMetricsQueryResult = Apollo.QueryResult<ConfigurationTableMetricsQuery, ConfigurationTableMetricsQueryVariables>;
+export type ConfigurationTableMetricsSubscriptionHookResult = ReturnType<typeof useConfigurationTableMetricsSubscription>;
+export type ConfigurationTableMetricsSubscriptionResult = Apollo.SubscriptionResult<ConfigurationTableMetricsSubscription>;
 export const AgentChangesDocument = gql`
     subscription AgentChanges($selector: String, $query: String) {
   agentChanges(selector: $selector, query: $query) {

@@ -12,7 +12,7 @@ import { isFunction } from "lodash";
 import React, { memo } from "react";
 import { Link } from "react-router-dom";
 import {
-  ConfigurationTableMetricsQuery,
+  ConfigurationTableMetricsSubscription,
   GetConfigurationTableQuery,
 } from "../../../graphql/generated";
 import { formatMetric } from "../../../utils/graph/utils";
@@ -39,7 +39,7 @@ interface ConfigurationsDataGridProps {
   density?: GridDensityTypes;
   loading: boolean;
   configurations?: Configurations;
-  configurationMetrics?: ConfigurationTableMetricsQuery;
+  configurationMetrics?: ConfigurationTableMetricsSubscription;
   columnFields?: ConfigurationsTableField[];
 }
 
@@ -157,7 +157,7 @@ function renderAgentCountCell(
 function createMetricRateColumn(
   field: string,
   telemetryType: string,
-  configurationMetrics?: ConfigurationTableMetricsQuery
+  configurationMetrics?: ConfigurationTableMetricsSubscription
 ): GridColumns[0] {
   return {
     field,
@@ -168,7 +168,7 @@ function createMetricRateColumn(
         return "";
       }
       // should probably have a lookup table here rather than interpolate in two places
-      const metricName =  TELEMETRY_SIZE_METRICS[telemetryType];
+      const metricName = TELEMETRY_SIZE_METRICS[telemetryType];
       const configurationName = params.row.metadata.name;
       const metric = configurationMetrics.overviewMetrics.metrics.find(
         (m) =>

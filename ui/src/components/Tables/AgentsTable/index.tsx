@@ -6,8 +6,8 @@ import {
   AgentChangesSubscription,
   AgentsTableQueryResult,
   Suggestion,
+  useAgentsTableMetricsSubscription,
   useAgentsTableQuery,
-  useAgentsTableMetricsQuery,
 } from "../../../graphql/generated";
 import { SearchBar } from "../../SearchBar";
 import { AgentsDataGrid, AgentsTableField } from "./AgentsDataGrid";
@@ -64,7 +64,7 @@ gql`
       latestVersion
     }
   }
-  query AgentsTableMetrics($period: String!, $ids: [ID!]) {
+  subscription AgentsTableMetrics($period: String!, $ids: [ID!]) {
     agentMetrics(period: $period, ids: $ids) {
       metrics {
         name
@@ -114,7 +114,7 @@ const AgentsTableComponent: React.FC<Props> = ({
     fetchPolicy: "network-only",
     nextFetchPolicy: "cache-only",
   });
-  const { data: agentMetrics } = useAgentsTableMetricsQuery({
+  const { data: agentMetrics } = useAgentsTableMetricsSubscription({
     variables: { period: DEFAULT_AGENTS_TABLE_PERIOD },
   });
 

@@ -12,8 +12,7 @@ import {
 import React, { memo, useEffect, useState } from "react";
 import { renderAgentLabels, renderAgentStatus } from "../utils";
 import { Link } from "react-router-dom";
-import { AgentsTableMetricsQuery } from "../../../graphql/generated";
-
+import { AgentsTableMetricsSubscription } from "../../../graphql/generated";
 import { AgentStatus } from "../../../types/agents";
 import { isFunction } from "lodash";
 import { AgentsTableAgent } from ".";
@@ -44,7 +43,7 @@ interface AgentsDataGridProps {
   loading: boolean;
   minHeight?: string;
   agents?: AgentsTableAgent[];
-  agentMetrics?: AgentsTableMetricsQuery;
+  agentMetrics?: AgentsTableMetricsSubscription;
   columnFields?: AgentsTableField[];
 }
 
@@ -191,7 +190,7 @@ function createMetricRateColumn(
   field: string,
   telemetryType: string,
   width: number,
-  agentMetrics?: AgentsTableMetricsQuery
+  agentMetrics?: AgentsTableMetricsSubscription
 ): GridColumns[0] {
   return {
     field,
@@ -202,7 +201,7 @@ function createMetricRateColumn(
         return "";
       }
       // should probably have a lookup table here rather than interpolate in two places
-      const metricName =  TELEMETRY_SIZE_METRICS[telemetryType];
+      const metricName = TELEMETRY_SIZE_METRICS[telemetryType];
       const agentName = params.id;
 
       // need to get all the metrics for this agent?!?
@@ -223,7 +222,7 @@ function createMetricRateColumn(
         return "";
       }
 
-      const metricName =  TELEMETRY_SIZE_METRICS[telemetryType];
+      const metricName = TELEMETRY_SIZE_METRICS[telemetryType];
       const agentName = params.id;
 
       const metrics = agentMetrics?.agentMetrics.metrics.find(

@@ -8,7 +8,7 @@ import {
   ConfigurationChangesSubscription,
   EventType,
   GetConfigurationTableQuery,
-  useConfigurationTableMetricsQuery,
+  useConfigurationTableMetricsSubscription,
   useGetConfigurationTableQuery,
 } from "../../../graphql/generated";
 import mixins from "../../../styles/mixins.module.scss";
@@ -49,7 +49,7 @@ gql`
     }
   }
 
-  query ConfigurationTableMetrics($period: String!) {
+  subscription ConfigurationTableMetrics($period: String!) {
     overviewMetrics(period: $period) {
       metrics {
         name
@@ -108,9 +108,10 @@ export const ConfigurationsTable: React.FC<ConfigurationTableProps> = ({
       nextFetchPolicy: "cache-only",
     });
 
-  const { data: configurationMetrics } = useConfigurationTableMetricsQuery({
-    variables: { period: "1m" },
-  });
+  const { data: configurationMetrics } =
+    useConfigurationTableMetricsSubscription({
+      variables: { period: "1m" },
+    });
 
   // Selected is an array of names of configurations.
   const [selected, setSelected] = useState<GridSelectionModel>([]);
