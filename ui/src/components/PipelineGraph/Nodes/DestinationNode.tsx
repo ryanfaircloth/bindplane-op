@@ -17,9 +17,18 @@ function DestinationNode(params: {
   };
 }): JSX.Element {
   const { id, attributes, metric } = params.data;
-  const { selectedTelemetryType } = usePipelineGraph();
+  const { hoveredSet, setHoveredNodeAndEdgeSet, selectedTelemetryType } = usePipelineGraph();
+  const isDisabled = isNodeDisabled(selectedTelemetryType, attributes);
+  const isNotInHoverSet =
+    hoveredSet.length > 0 &&
+    !hoveredSet.find((elem) => elem === params.data.id);
   return (
-    <>
+    <div
+      onMouseEnter={() => {
+        setHoveredNodeAndEdgeSet(params.data.connectedNodesAndEdges);
+      }}
+      onMouseLeave={() => setHoveredNodeAndEdgeSet([])}
+    >
       {attributes.isInline ? (
         <InlineDestinationCard id={id.replace("destination/", "")} key={id} />
       ) : (
@@ -27,12 +36,12 @@ function DestinationNode(params: {
           key={id}
           enableProcessors
           name={attributes.resourceId}
-          disabled={isNodeDisabled(selectedTelemetryType, attributes)}
+          disabled={isDisabled || isNotInHoverSet}
         />
       )}
       <CardMeasurementContent>{metric}</CardMeasurementContent>
       <Handle type="target" position={Position.Left} />
-    </>
+    </div>
   );
 }
 

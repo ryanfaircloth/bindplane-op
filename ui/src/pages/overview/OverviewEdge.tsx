@@ -5,11 +5,13 @@ import { useOverviewPage } from "./OverviewPageContext";
 import CustomEdge, { CustomEdgeData } from '../../components/PipelineGraph/Nodes/CustomEdge';
 
 const OverviewEdge: React.FC<EdgeProps<CustomEdgeData>> = (props) => {
-  const { hoveredSet } = useOverviewPage();
+  const { hoveredSet, selectedTelemetry } = useOverviewPage();
+
   return CustomEdge({
     ...props,
     hoveredSet: hoveredSet,
     className: 'overview-metric',
+    telemetry: selectedTelemetry,
   });
 }
 

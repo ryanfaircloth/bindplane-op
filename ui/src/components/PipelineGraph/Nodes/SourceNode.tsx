@@ -12,22 +12,34 @@ function SourceNode({
     id: string;
     metric: string;
     attributes: Record<string, any>;
+    connectedNodesAndEdges: string[];
   };
 }) {
   const { id, metric, attributes } = data;
 
-  const { selectedTelemetryType } = usePipelineGraph();
+  const { hoveredSet, setHoveredNodeAndEdgeSet, selectedTelemetryType } = usePipelineGraph();
+  
+  const isDisabled = isNodeDisabled(selectedTelemetryType, attributes);
+  const isNotInHoverSet =
+    hoveredSet.length > 0 &&
+    !hoveredSet.find((elem) => elem === data.id);
 
   return (
-    <>
+     <div
+      onMouseEnter={() => {
+        setHoveredNodeAndEdgeSet(data.connectedNodesAndEdges);
+      }
+      }
+      onMouseLeave={() => setHoveredNodeAndEdgeSet([])}
+    >
       <InlineSourceCard
         id={id.replace("source/", "")}
-        disabled={isNodeDisabled(selectedTelemetryType, attributes)}
+        disabled={isDisabled || isNotInHoverSet}
       />
       <CardMeasurementContent>{metric}</CardMeasurementContent>
 
       <Handle type="source" position={Position.Right} />
-    </>
+    </div>
   );
 }
 

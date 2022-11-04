@@ -1,5 +1,6 @@
 import { EdgeProps, getBezierPath } from "react-flow-renderer";
 import { classes } from '../../../utils/styles';
+import { isNodeDisabled } from "./nodeUtils";
 
 import styles from "./graph.styles.module.scss";
 
@@ -11,11 +12,13 @@ export interface CustomEdgeData {
     textAnchor: string;
   }[];
   active: boolean;
+  attributes: Record<string, any>;
 }
 
 export interface CustomEdgeProps extends EdgeProps<CustomEdgeData> {
   hoveredSet?: string[];
   className?: string;
+  telemetry?: string;
 };
 
 const CustomEdge: React.FC<CustomEdgeProps> = ({
@@ -30,6 +33,7 @@ const CustomEdge: React.FC<CustomEdgeProps> = ({
   markerEnd,
   hoveredSet,
   className,
+  telemetry,
 }) => {
   hoveredSet ||= [];
 
@@ -42,12 +46,13 @@ const CustomEdge: React.FC<CustomEdgeProps> = ({
     targetPosition,
   });
 
+  const inactive = isNodeDisabled(telemetry || "", data?.attributes || {});
   const dimmed = hoveredSet.length > 0 && !hoveredSet.includes(id);
   const highlight = hoveredSet.includes(id);
 
   const metrics: JSX.Element[] = [];
-  const strokeWidth =  highlight ? 1.5 : 1;
-  const strokeOpacity = dimmed ? 0.3 : undefined;
+  const strokeWidth = highlight && !inactive ? 1.5 : 1;
+  const strokeOpacity = dimmed ? 0.3 : (inactive ? 0.2 : undefined);
 
   var index = 0;
   for (const m of data?.metrics || []) {

@@ -168,15 +168,54 @@ export function getNodesAndEdges(
     edges.push(edge);
     nodes.forEach((node) => {
       if (node.id === e.source) {
-        node.data.connectedNodesAndEdges?.push(e.target, e.id);
-      }
-      if (node.id === e.target) {
-        node.data.connectedNodesAndEdges?.push(e.source, e.id);
+        edge.data.attributes = node.data.attributes;
       }
     });
   }
+  
+  // First create a map from node id to all child nodes and edges
+  const nodeMap: NodeMap = {};
+  for (const edge of edges) {
+    if (!nodeMap[edge.source]) {
+      nodeMap[edge.source] = [];
+    }
+    nodeMap[edge.source].push(edge.target, edge.id);
+  }
+  nodes.forEach((node) => {
+    node.data.connectedNodesAndEdges = getConnectedNodesAndEdges(node.id, nodeMap);
+  });
+
+  // Next, create a reverse map
+  const reverseNodeMap: NodeMap = {};
+  for (const edge of edges) {
+    if (!reverseNodeMap[edge.target]) {
+      reverseNodeMap[edge.target] = [];
+    }
+    reverseNodeMap[edge.target].push(edge.source, edge.id);
+  }
+  // Then recursively find all connected nodes and edges
+  nodes.forEach((node) => {
+    node.data.connectedNodesAndEdges.push(...getConnectedNodesAndEdges(node.id, reverseNodeMap));
+  });
 
   return { nodes, edges };
+}
+
+type NodeMap = { [id: string]: string[] };
+function getConnectedNodesAndEdges(
+  nodeID: string,
+  nodeMap: NodeMap
+): string[] {
+  const connectedIDS : string[] = [];
+  if (!nodeMap[nodeID]) {
+    return connectedIDS;
+  }
+  connectedIDS.push(nodeID)
+  nodeMap[nodeID].forEach((id) => {
+    connectedIDS.push(id);
+    connectedIDS.push(...getConnectedNodesAndEdges(id, nodeMap));
+  });
+  return connectedIDS;
 }
 
 /**
