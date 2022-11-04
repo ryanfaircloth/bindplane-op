@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { memo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { ConfirmDeleteResourceDialog } from "../ConfirmDeleteResourceDialog";
 import { EditResourceDialog } from "../ResourceDialog/EditResourceDialog";
 import { useGetDestinationWithTypeQuery } from "../../graphql/generated";
@@ -18,6 +18,8 @@ import { FormValues } from "../ResourceConfigForm";
 import { classes } from "../../utils/styles";
 
 import styles from "./cards.module.scss";
+
+type onDeleteFunc = () => Promise<void>;
 
 gql`
   query getDestinationWithType($name: String!) {
@@ -176,54 +178,63 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
       }
     }
 
-    async function onDelete() {
+    const onDelete: onDeleteFunc | undefined = useMemo(() => {
       if (destinationIndex == null) {
-        enqueueSnackbar("Failed to delete destination.", { variant: "error" });
-        console.error(
-          `Could not find index for destination named ${name} in configuration spec.`,
-          configuration
-        );
-        return;
+        return undefined;
       }
+      return async function onDelete() {
+        const updatedConfig = new BPConfiguration(configuration);
+        updatedConfig.removeDestination(destinationIndex);
 
-      const updatedConfig = new BPConfiguration(configuration);
-      updatedConfig.removeDestination(destinationIndex);
+        try {
+          const update = await updatedConfig.apply();
+          if (update.status === UpdateStatus.INVALID) {
+            console.error("Update: ", update);
+            throw new Error(
+              `failed to remove destination from configuration, configuration invalid`
+            );
+          }
 
-      try {
-        const update = await updatedConfig.apply();
-        if (update.status === UpdateStatus.INVALID) {
-          console.error("Update: ", update);
-          throw new Error(
-            `failed to remove destination from configuration, configuration invalid`
-          );
+          closeEditDialog();
+          closeDeleteDialog();
+          refetchConfiguration();
+          refetchDestination();
+        } catch (err) {
+          enqueueSnackbar("Failed to remove destination.", {
+            variant: "error",
+          });
         }
-
-        closeEditDialog();
-        closeDeleteDialog();
-        refetchConfiguration();
-        refetchDestination();
-      } catch (err) {
-        enqueueSnackbar("Failed to remove destination.", { variant: "error" });
-      }
-    }
+      };
+    }, [
+      configuration,
+      destinationIndex,
+      enqueueSnackbar,
+      refetchConfiguration,
+      refetchDestination,
+    ]);
 
     /**
      * Toggle `disabled` on the destination spec, replace it in the configuration, and save
      */
     async function onTogglePause() {
       const updatedConfig = new BPConfiguration(configuration);
-      const updatedDestination = new BPDestination(data!.destinationWithType!.destination!);
+      const updatedDestination = new BPDestination(
+        data!.destinationWithType!.destination!
+      );
       updatedDestination.toggleDisabled();
 
       const action = updatedDestination.spec.disabled ? "pause" : "resume";
       if (destinationIndex != null) {
-        updatedConfig.replaceDestination({
-          name: updatedDestination.name(),
-          processors: updatedDestination.spec.processors,
-          parameters: updatedDestination.spec.parameters,
-          type: updatedDestination.spec.type,
-          disabled: updatedDestination.spec.disabled,
-        }, destinationIndex);
+        updatedConfig.replaceDestination(
+          {
+            name: updatedDestination.name(),
+            processors: updatedDestination.spec.processors,
+            parameters: updatedDestination.spec.parameters,
+            type: updatedDestination.spec.type,
+            disabled: updatedDestination.spec.disabled,
+          },
+          destinationIndex
+        );
 
         try {
           const update = await updatedConfig.apply();
@@ -248,7 +259,6 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
           );
         }
 
-
         enqueueSnackbar(`Successfully ${action}d destination.`, {
           variant: "success",
         });
@@ -265,6 +275,10 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
 
     function closeDeleteDialog() {
       setDeleteOpen(false);
+    }
+
+    function openDeleteDialog() {
+      setDeleteOpen(true);
     }
 
     // Loading
@@ -288,15 +302,21 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
     }
 
     return (
-      <div className={classes([
-        disabled ? styles.disabled : undefined,
-        data.destinationWithType.destination?.spec.disabled ? styles.paused : undefined,
-      ])}>
+      <div
+        className={classes([
+          disabled ? styles.disabled : undefined,
+          data.destinationWithType.destination?.spec.disabled
+            ? styles.paused
+            : undefined,
+        ])}
+      >
         <Card
           className={classes([
             styles["resource-card"],
             disabled ? styles.disabled : undefined,
-            data.destinationWithType.destination?.spec.disabled ? styles.paused : undefined,
+            data.destinationWithType.destination?.spec.disabled
+              ? styles.paused
+              : undefined,
           ])}
           onClick={() => setEditing(true)}
         >
@@ -313,7 +333,12 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
                   {name}
                 </Typography>
                 {data.destinationWithType.destination?.spec.disabled && (
-                  <Typography component="div" fontWeight={400} fontSize={14} variant="overline">
+                  <Typography
+                    component="div"
+                    fontWeight={400}
+                    fontSize={14}
+                    variant="overline"
+                  >
                     Paused
                   </Typography>
                 )}
@@ -341,23 +366,25 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
           open={editing}
           onClose={closeEditDialog}
           onCancel={closeEditDialog}
-          onDelete={() => setDeleteOpen(true)}
+          onDelete={onDelete && openDeleteDialog}
           onSave={onSave}
           paused={data.destinationWithType.destination?.spec.disabled ?? false}
           onTogglePause={onTogglePause}
         />
 
-        <ConfirmDeleteResourceDialog
-          open={confirmDeleteOpen}
-          onClose={closeDeleteDialog}
-          onCancel={closeDeleteDialog}
-          onDelete={onDelete}
-          action={"remove"}
-        >
-          <Typography>
-            Are you sure you want to remove this destination?
-          </Typography>
-        </ConfirmDeleteResourceDialog>
+        {onDelete && (
+          <ConfirmDeleteResourceDialog
+            open={confirmDeleteOpen}
+            onClose={closeDeleteDialog}
+            onCancel={closeDeleteDialog}
+            onDelete={onDelete}
+            action={"remove"}
+          >
+            <Typography>
+              Are you sure you want to remove this destination?
+            </Typography>
+          </ConfirmDeleteResourceDialog>
+        )}
       </div>
     );
   };
