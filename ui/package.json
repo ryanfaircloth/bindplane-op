@@ -112,7 +112,7 @@
   },
   "overrides": {
     "react-refresh": "0.11.0",
-    "webpack": "^5.52.0"
+    "webpack": "^5.75.0"
   },
   "resolutions": {
     "react/jsx-dev-runtime": "react/jsx-dev-runtime.js",
