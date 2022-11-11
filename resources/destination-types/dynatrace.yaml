@@ -16,19 +16,30 @@ spec:
         Required if OneAgent is not running on the host.
       type: string
       default: ""
+      options:
+        gridColumns: 12
       documentation:
         - text: Read more
           url: https://www.dynatrace.com/support/help/dynatrace-api/environment-api/metric-v2/post-ingest-metrics
 
     - name: api_token
-      label: API Token
-      description: API Token that is restricted to 'Ingest metrics' scope. Required if Endpoint is specified
+      label: Access Token
+      description: Access Token that is restricted to 'Ingest metrics' scope. Required if Endpoint is specified
       type: string
+      options:
+        gridColumns: 12
       documentation:
         - text: Read more
           url: https://www.dynatrace.com/support/help/dynatrace-api/basics/dynatrace-api-authentication
       default: ""
       # TODO when relevantIf supports 'not equals' add relevant if endpoint != ""
+
+    - name: resource_to_telemetry_conversion
+      label: Preserve Resource Attributes
+      description: Whether to include resource attributes as metric dimensions in Dynatrace.
+      type: bool
+      default: true
+      advancedConfig: true
 
     - name: prefix
       label: Metric Prefix
@@ -104,6 +115,8 @@ spec:
           {{ if .prefix }}
           prefix: {{ .prefix }}
           {{ end }}
+          resource_to_telemetry_conversion:
+            enabled: {{ .resource_to_telemetry_conversion }}
           tls:
             {{ if .enable_tls }}
             insecure: false
