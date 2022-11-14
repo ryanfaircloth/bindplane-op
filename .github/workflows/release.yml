@@ -81,17 +81,9 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v3
 
-      - name: "Get Tag From Environment"
-        id: get-tag
-        run: |
-          REF="${GITHUB_REF##*/}"
-          VERSION="${REF:1}"
-          echo "Setting version as: ${VERSION}"
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-
-      - name: "Print version"
-        run: echo $VERSION
-
+      # Always publish to 1.0, as creating a new version
+      # will cause IDs to change.
       - uses: readmeio/rdme@7.5.0
+        name: Publish Docs to Readme
         with:
-          rdme: docs ./docs/www --key=${{ secrets.README_API_KEY }} --version=${VERSION}
+          rdme: docs ./docs/www --key=${{ secrets.README_API_KEY }} --version 1.0

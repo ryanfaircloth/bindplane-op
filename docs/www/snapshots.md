@@ -1,7 +1,7 @@
 ---
 title: Snapshots
 excerpt: Utilize Snapshots in BindPlane OP
-category: 633dd7654359a20031653088
+category: 636c08d51eb043000f8ce20e
 slug: snapshots
 hidden: false
 ---
