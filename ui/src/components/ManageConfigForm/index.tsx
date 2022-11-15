@@ -1,14 +1,10 @@
 import { Button, Typography } from "@mui/material";
-import { useState } from "react";
 import { GetAgentAndConfigurationsQuery } from "../../graphql/generated";
 import { classes } from "../../utils/styles";
-import { YamlEditor } from "../YamlEditor";
 import { patchConfigLabel } from "../../utils/patch-config-label";
 import { Link } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { Config } from "./types";
-import { ConfigurationSelect } from "./ConfigurationSelect";
-import { filterConfigsByPlatform } from "./util";
 
 import mixins from "../../styles/mixins.module.scss";
 import styles from "./apply-config-form.module.scss";
@@ -17,26 +13,24 @@ interface ManageConfigFormProps {
   agent: NonNullable<GetAgentAndConfigurationsQuery["agent"]>;
   configurations: Config[];
   onImport: () => void;
+  editing: boolean;
+  setEditing: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedConfig: Config | undefined;
+  setSelectedConfig: React.Dispatch<React.SetStateAction<Config | undefined>>;
 }
 
 export const ManageConfigForm: React.FC<ManageConfigFormProps> = ({
   agent,
   configurations,
   onImport,
+  editing,
+  setEditing,
+  selectedConfig,
+  setSelectedConfig,
 }) => {
   const snackbar = useSnackbar();
 
   const configResourceName = agent?.configurationResource?.metadata.name;
-
-  const [editing, setEditing] = useState(false);
-  const [selectedConfig, setSelectedConfig] = useState<Config | undefined>(
-    configurations.find((c) => c.metadata.name === configResourceName)
-  );
-
-  const matchingConfigs = filterConfigsByPlatform(
-    configurations,
-    agent.platform
-  );
 
   async function onApplyConfiguration() {
     try {
@@ -58,33 +52,14 @@ export const ManageConfigForm: React.FC<ManageConfigFormProps> = ({
     );
   }
 
-  const EditConfiguration: React.FC = () => {
-    return (
-      <>
-        <ConfigurationSelect
-          agent={agent}
-          setSelectedConfig={setSelectedConfig}
-          selectedConfig={selectedConfig}
-          configurations={configurations}
-        />
-
-        {selectedConfig?.spec.raw && (
-          <YamlEditor value={selectedConfig.spec?.raw ?? ""} readOnly />
-        )}
-      </>
-    );
-  };
-
   const ShowConfiguration: React.FC = () => {
     return (
       <>
         {configResourceName ? (
           <>
-            <Typography classes={{ root: mixins["mb-2"] }}>
-              <Link to={`/configurations/${configResourceName}`}>
-                {configResourceName}
-              </Link>
-            </Typography>
+            <Link to={`/configurations/${configResourceName}`}>
+              {configResourceName}
+            </Link>
           </>
         ) : (
           <>
@@ -94,11 +69,6 @@ export const ManageConfigForm: React.FC<ManageConfigFormProps> = ({
               managed configuration.
             </Typography>
           </>
-        )}
-        {matchingConfigs.length > 0 && (
-          <Typography variant={"body2"} classes={{ root: mixins["mb-2"] }}>
-            Click edit to apply another configuration.
-          </Typography>
         )}
       </>
     );
@@ -113,7 +83,10 @@ export const ManageConfigForm: React.FC<ManageConfigFormProps> = ({
           mixins["mb-3"],
         ])}
       >
-        <Typography variant="h6">Configuration</Typography>
+        <Typography variant="h6">
+          Configuration - {editing ? <></> : <ShowConfiguration />}
+        </Typography>
+
         <div className={styles["title-button-group"]}>
           {editing ? (
             <>
@@ -139,19 +112,17 @@ export const ManageConfigForm: React.FC<ManageConfigFormProps> = ({
               )}
               {configurations.length > 0 && (
                 <Button
-                  classes={{ root: mixins["ml-2"] }}
-                  variant="outlined"
+                  className={classes([mixins["ml-2"], styles["choose-button"]])}
+                  variant="text"
                   onClick={() => setEditing(true)}
                 >
-                  Edit
+                  Choose Another Configuration
                 </Button>
               )}
             </>
           )}
         </div>
       </div>
-
-      {editing ? <EditConfiguration /> : <ShowConfiguration />}
     </>
   );
 };

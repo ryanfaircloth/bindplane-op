@@ -9,13 +9,20 @@ import {
   AlertTitle,
   Button,
   Tooltip,
+  Box,
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CardContainer } from "../../components/CardContainer";
+import {
+  BorderlessCardContainer,
+  CardContainer,
+} from "../../components/CardContainer";
 import { ManageConfigForm } from "../../components/ManageConfigForm";
 import { AgentTable } from "../../components/Tables/AgentTable";
-import { useGetAgentAndConfigurationsQuery } from "../../graphql/generated";
+import {
+  useGetAgentAndConfigurationsQuery,
+  useGetConfigurationQuery,
+} from "../../graphql/generated";
 import { useAgentChangesContext } from "../../hooks/useAgentChanges";
 import { RawConfigWizard } from "../configurations/wizards/RawConfigWizard";
 import { useSnackbar } from "notistack";
@@ -31,7 +38,14 @@ import { withNavBar } from "../../components/NavBar";
 import { AgentChangesProvider } from "../../contexts/AgentChanges";
 import { RecentTelemetryDialog } from "../../components/RecentTelemetryDialog/RecentTelemetryDialog";
 
+import { PipelineGraph } from "../../components/PipelineGraph/PipelineGraph";
+import { renderAgentStatus } from "../../components/Tables/utils";
+
 import mixins from "../../styles/mixins.module.scss";
+import { RawOrTopologyControl } from "../../components/PipelineGraph/RawOrTopologyControl";
+import { Config } from "../../components/ManageConfigForm/types";
+import { ConfigurationSelect } from "../../components/ManageConfigForm/ConfigurationSelect";
+import { classes } from "../../utils/styles";
 
 gql`
   query GetAgentAndConfigurations($agentId: ID!) {
@@ -141,6 +155,42 @@ const AgentPageContent: React.FC = () => {
     );
   }, [data?.agent, data?.configurations]);
 
+  const currentConfigName = useMemo(() => {
+    if (data?.agent == null || data?.configurations == null) {
+      return null;
+    }
+
+    const configName = data.agent.configurationResource?.metadata.name;
+    if (configName == null) {
+      return null;
+    }
+    return configName;
+  }, [data?.agent, data?.configurations]);
+
+  // Get Configuration Data
+
+  const configQuery = useGetConfigurationQuery({
+    variables: { name: currentConfigName ?? "" },
+    fetchPolicy: "cache-and-network",
+  });
+  const configGraph = configQuery.data?.configuration;
+  const [rawOrTopology, setTopologyOrRaw] =
+    useState<"topology" | "raw">("topology");
+  const [editing, setEditing] = useState(false);
+
+  const [selectedConfig, setSelectedConfig] = useState<Config | undefined>(
+    data?.configurations.configurations.find(
+      (c) =>
+        c.metadata.name === data?.agent?.configurationResource?.metadata.name
+    )
+  );
+
+  const isRaw =
+    configGraph?.spec?.raw != null && configGraph?.spec?.raw.length > 0;
+  useEffect(() => {
+    setTopologyOrRaw(isRaw ? "raw" : "topology");
+  }, [isRaw]);
+
   const viewTelemetryButton = useMemo(() => {
     if (currentConfig?.spec.raw !== "") {
       return null;
@@ -176,7 +226,6 @@ const AgentPageContent: React.FC = () => {
               variant="contained"
               size="large"
               onClick={() => setRecentTelemetryOpen(true)}
-              sx={{ marginTop: 3 }}
               disabled
             >
               View Recent Telemetry
@@ -190,7 +239,6 @@ const AgentPageContent: React.FC = () => {
           variant="contained"
           size="large"
           onClick={() => setRecentTelemetryOpen(true)}
-          sx={{ marginTop: 3 }}
         >
           View Recent Telemetry
         </Button>
@@ -210,38 +258,110 @@ const AgentPageContent: React.FC = () => {
     return null;
   }
 
+  const EditConfiguration: React.FC = () => {
+    return (
+      <>
+        <ConfigurationSelect
+          agent={data?.agent!}
+          setSelectedConfig={setSelectedConfig}
+          selectedConfig={selectedConfig}
+          configurations={data.configurations?.configurations}
+        />
+      </>
+    );
+  };
   return (
     <>
-      <CardContainer>
-        <Typography variant="h5" marginRight={3}>
-          Agent - {data.agent.name}
-        </Typography>
-
-        <Grid container spacing={5}>
-          <Grid item xs={12} lg={6}>
-            <Typography variant="h6" classes={{ root: mixins["mb-2"] }}>
-              Details
-            </Typography>
-
-            <AgentTable agent={data.agent} />
-
-            {data.agent.errorMessage && (
-              <Alert severity="error" classes={{ root: mixins["mt-3"] }}>
-                <AlertTitle>Error</AlertTitle>
-                {data.agent.errorMessage}
-              </Alert>
-            )}
-
+      <BorderlessCardContainer>
+        <Grid container spacing={1} alignItems="center">
+          <Grid item xs="auto" lg="auto">
+            <Typography variant="h5">Agent - {data.agent.name}</Typography>
+          </Grid>
+          <Grid item xs="auto" lg="auto" alignItems="center">
+            {renderAgentStatus(data.agent.status)}
+          </Grid>
+          <Grid item style={{ flex: 1 }} />
+          <Grid item xs="auto" lg="auto">
             {viewTelemetryButton}
           </Grid>
-          <Grid item xs={12} lg={6}>
-            <ManageConfigForm
-              agent={data.agent}
-              configurations={data.configurations.configurations ?? []}
-              onImport={() => setImportOpen(true)}
-            />
+        </Grid>
+      </BorderlessCardContainer>
+
+      <CardContainer>
+        <Grid container spacing={5}>
+          <Grid item xs={12} lg={12}>
+            <Box
+              sx={{ borderBottom: 1, ml: -3, mr: -3, borderColor: "divider" }}
+            >
+              <Box sx={{ ml: 3, mr: 3 }}>
+                <Typography variant="h6" classes={{ root: mixins["mb-3"] }}>
+                  Details
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
+          <Grid item xs={12} lg={12}>
+            <AgentTable agent={data.agent} />
           </Grid>
         </Grid>
+      </CardContainer>
+
+      <CardContainer>
+        <Stack spacing={2}>
+          {/* Edit configuration */}
+          <Box
+            sx={{
+              borderBottom: 1,
+              ml: -3,
+              mr: -3,
+              borderColor: "divider",
+            }}
+          >
+            <Box sx={{ ml: 3, mr: 3 }}>
+              <ManageConfigForm
+                agent={data.agent}
+                configurations={data.configurations.configurations ?? []}
+                onImport={() => setImportOpen(true)}
+                editing={editing}
+                setEditing={setEditing}
+                selectedConfig={selectedConfig}
+                setSelectedConfig={setSelectedConfig}
+              />
+            </Box>
+          </Box>
+          {editing && (
+            <>
+              <EditConfiguration />
+              <Box sx={{ minHeight: 400 }}></Box>
+            </>
+          )}
+          {/* Toggle topology/raw */}
+          {configGraph && !editing && !isRaw && (
+            <RawOrTopologyControl
+              rawOrTopology={rawOrTopology}
+              setTopologyOrRaw={setTopologyOrRaw}
+            />
+          )}
+          {data.agent.errorMessage && !editing && (
+            <Alert
+              severity="error"
+              className={classes([mixins["mt-5"], mixins["mb-0"]])}
+            >
+              <AlertTitle>Error</AlertTitle>
+              {data.agent.errorMessage}
+            </Alert>
+          )}
+          {/* Graph or YAML */}
+          {configGraph && !editing && (
+            <PipelineGraph
+              configuration={configGraph}
+              refetchConfiguration={configQuery.refetch}
+              agent={data.agent?.id}
+              yamlValue={data.agent.configuration?.Collector || ""}
+              rawOrTopology={rawOrTopology}
+            />
+          )}
+        </Stack>
       </CardContainer>
 
       {/** Raw Config wizard for importing an agents config */}

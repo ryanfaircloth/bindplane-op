@@ -20,12 +20,16 @@ import {
   useGetOverviewPageQuery,
   useOverviewMetricsSubscription,
 } from "../../graphql/generated";
-import { getNodesAndEdges, Page, updateMetricData } from "../../utils/graph/utils";
+import {
+  getNodesAndEdges,
+  Page,
+  updateMetricData,
+} from "../../utils/graph/utils";
 import { OverviewDestinationNode, ConfigurationNode } from "./nodes";
 import OverviewEdge from "./OverviewEdge";
 import { useOverviewPage } from "./OverviewPageContext";
 
-import styles from "./overview.styles.module.scss";
+import global from "../../styles/global.module.scss";
 
 gql`
   query getOverviewPage {
@@ -139,7 +143,13 @@ export const OverviewGraph: React.FC = () => {
     data.overviewPage.graph.sources.length > 0 &&
     data.overviewPage.graph.targets.length > 0;
 
-  const { nodes, edges } = getNodesAndEdges(Page.Overview, data!.overviewPage.graph, 500);
+  const { nodes, edges } = getNodesAndEdges(
+    Page.Overview,
+    data!.overviewPage.graph,
+    500,
+    null,
+    () => {}
+  );
   updateMetricData(
     Page.Overview,
     nodes,
@@ -165,7 +175,7 @@ export const OverviewGraph: React.FC = () => {
           edgeTypes={edgeTypes}
           nodesConnectable={false}
           nodesDraggable={false}
-          proOptions={{account: 'paid-pro', hideAttribution: true}}
+          proOptions={{ account: "paid-pro", hideAttribution: true }}
           fitView={true}
           deleteKeyCode={null}
           zoomOnScroll={false}
@@ -176,7 +186,7 @@ export const OverviewGraph: React.FC = () => {
             window.scrollBy(event.deltaX, event.deltaY);
           }}
           onNodesChange={onNodesChange}
-          className={styles["overview-graph"]}
+          className={global["graph"]}
         >
           <Controls showZoom={false} showInteractive={false} />
         </ReactFlow>

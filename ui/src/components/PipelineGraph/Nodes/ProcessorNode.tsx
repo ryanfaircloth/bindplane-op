@@ -1,8 +1,8 @@
 import { isNumber } from "lodash";
 import { Handle, Position } from "react-flow-renderer";
-import { useConfigurationPage } from "../../../pages/configurations/configuration/ConfigurationPageContext";
 import { CardMeasurementContent } from "../../CardMeasurementContent/CardMeasurementContent";
 import { ProcessorCard } from "../../Cards/ProcessorCard";
+import { MinimumRequiredConfig } from "../PipelineGraph";
 
 export function ProcessorNode({
   data,
@@ -12,18 +12,18 @@ export function ProcessorNode({
     id: string;
     metric: string;
     attributes: Record<string, any>;
+    configuration: MinimumRequiredConfig;
   };
 }) {
-  const { id, metric } = data;
-  const { configuration } = useConfigurationPage();
+  const { id, metric, configuration } = data;
 
   let processorCount = 0;
 
   if (isSourceID(id)) {
-    const source = configuration.spec.sources![getSourceIndex(id)];
+    const source = configuration?.spec?.sources![getSourceIndex(id)];
     processorCount = source?.processors?.length ?? 0;
   } else {
-    const destination = configuration.spec.destinations?.find(
+    const destination = configuration?.spec?.destinations?.find(
       (d) => d.name === getDestinationName(id)
     );
     processorCount = destination?.processors?.length ?? 0;

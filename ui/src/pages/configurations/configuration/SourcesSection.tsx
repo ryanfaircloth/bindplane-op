@@ -79,7 +79,14 @@ const SourcesSectionComponent: React.FC<{
 
         <Stack direction="row" spacing={2}>
           {sources.map((source, ix) => {
-            return <InlineSourceCard key={`source${ix}`} id={`source${ix}`} />;
+            return (
+              <InlineSourceCard
+                key={`source${ix}`}
+                id={`source${ix}`}
+                configuration={configuration}
+                refetchConfiguration={refetch}
+              />
+            );
           })}
         </Stack>
       </CardContainer>

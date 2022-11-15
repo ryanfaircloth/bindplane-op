@@ -95,6 +95,7 @@ export type Configuration = {
   graph?: Maybe<Graph>;
   kind: Scalars['String'];
   metadata: Metadata;
+  rendered?: Maybe<Scalars['String']>;
   spec: ConfigurationSpec;
 };
 
@@ -503,6 +504,7 @@ export type SubscriptionConfigurationChangesArgs = {
 
 
 export type SubscriptionConfigurationMetricsArgs = {
+  agent?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   period: Scalars['String'];
 };
@@ -554,6 +556,7 @@ export type GetDestinationWithTypeQuery = { __typename?: 'Query', destinationWit
 export type ConfigurationMetricsSubscriptionVariables = Exact<{
   period: Scalars['String'];
   name: Scalars['String'];
+  agent?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -662,7 +665,7 @@ export type GetConfigurationQueryVariables = Exact<{
 }>;
 
 
-export type GetConfigurationQuery = { __typename?: 'Query', configuration?: { __typename?: 'Configuration', metadata: { __typename?: 'Metadata', id: string, name: string, description?: string | null, labels?: any | null }, spec: { __typename?: 'ConfigurationSpec', raw?: string | null, sources?: Array<{ __typename?: 'ResourceConfiguration', type?: string | null, name?: string | null, disabled: boolean, parameters?: Array<{ __typename?: 'Parameter', name: string, value: any }> | null, processors?: Array<{ __typename?: 'ResourceConfiguration', type?: string | null, disabled: boolean, parameters?: Array<{ __typename?: 'Parameter', name: string, value: any }> | null }> | null }> | null, destinations?: Array<{ __typename?: 'ResourceConfiguration', type?: string | null, name?: string | null, disabled: boolean, parameters?: Array<{ __typename?: 'Parameter', name: string, value: any }> | null, processors?: Array<{ __typename?: 'ResourceConfiguration', type?: string | null, disabled: boolean, parameters?: Array<{ __typename?: 'Parameter', name: string, value: any }> | null }> | null }> | null, selector?: { __typename?: 'AgentSelector', matchLabels?: any | null } | null }, graph?: { __typename?: 'Graph', attributes: any, sources: Array<{ __typename?: 'Node', id: string, type: string, label: string, attributes: any }>, intermediates: Array<{ __typename?: 'Node', id: string, type: string, label: string, attributes: any }>, targets: Array<{ __typename?: 'Node', id: string, type: string, label: string, attributes: any }>, edges: Array<{ __typename?: 'Edge', id: string, source: string, target: string }> } | null } | null };
+export type GetConfigurationQuery = { __typename?: 'Query', configuration?: { __typename?: 'Configuration', rendered?: string | null, metadata: { __typename?: 'Metadata', id: string, name: string, description?: string | null, labels?: any | null }, spec: { __typename?: 'ConfigurationSpec', raw?: string | null, sources?: Array<{ __typename?: 'ResourceConfiguration', type?: string | null, name?: string | null, disabled: boolean, parameters?: Array<{ __typename?: 'Parameter', name: string, value: any }> | null, processors?: Array<{ __typename?: 'ResourceConfiguration', type?: string | null, disabled: boolean, parameters?: Array<{ __typename?: 'Parameter', name: string, value: any }> | null }> | null }> | null, destinations?: Array<{ __typename?: 'ResourceConfiguration', type?: string | null, name?: string | null, disabled: boolean, parameters?: Array<{ __typename?: 'Parameter', name: string, value: any }> | null, processors?: Array<{ __typename?: 'ResourceConfiguration', type?: string | null, disabled: boolean, parameters?: Array<{ __typename?: 'Parameter', name: string, value: any }> | null }> | null }> | null, selector?: { __typename?: 'AgentSelector', matchLabels?: any | null } | null }, graph?: { __typename?: 'Graph', attributes: any, sources: Array<{ __typename?: 'Node', id: string, type: string, label: string, attributes: any }>, intermediates: Array<{ __typename?: 'Node', id: string, type: string, label: string, attributes: any }>, targets: Array<{ __typename?: 'Node', id: string, type: string, label: string, attributes: any }>, edges: Array<{ __typename?: 'Edge', id: string, source: string, target: string }> } | null } | null };
 
 export type DestinationsAndTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -941,8 +944,8 @@ export type GetDestinationWithTypeQueryHookResult = ReturnType<typeof useGetDest
 export type GetDestinationWithTypeLazyQueryHookResult = ReturnType<typeof useGetDestinationWithTypeLazyQuery>;
 export type GetDestinationWithTypeQueryResult = Apollo.QueryResult<GetDestinationWithTypeQuery, GetDestinationWithTypeQueryVariables>;
 export const ConfigurationMetricsDocument = gql`
-    subscription ConfigurationMetrics($period: String!, $name: String!) {
-  configurationMetrics(period: $period, name: $name) {
+    subscription ConfigurationMetrics($period: String!, $name: String!, $agent: String) {
+  configurationMetrics(period: $period, name: $name, agent: $agent) {
     metrics {
       name
       nodeID
@@ -968,6 +971,7 @@ export const ConfigurationMetricsDocument = gql`
  *   variables: {
  *      period: // value for 'period'
  *      name: // value for 'name'
+ *      agent: // value for 'agent'
  *   },
  * });
  */
@@ -1792,6 +1796,7 @@ export const GetConfigurationDocument = gql`
         target
       }
     }
+    rendered
   }
 }
     `;

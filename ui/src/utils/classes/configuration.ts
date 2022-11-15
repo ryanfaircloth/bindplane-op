@@ -1,4 +1,5 @@
 import { cloneDeep } from "lodash";
+import { MinimumRequiredConfig } from "../../components/PipelineGraph/PipelineGraph";
 import {
   Configuration,
   ConfigurationSpec,
@@ -17,15 +18,15 @@ export class BPConfiguration implements Configuration {
   kind: string;
   spec: ConfigurationSpec;
   metadata: Metadata;
-  constructor(configuration: Partial<Configuration>) {
+  constructor(configuration: MinimumRequiredConfig) {
     this.apiVersion = APIVersion.V1;
     this.kind = ResourceKind.CONFIGURATION;
-    this.spec = configuration.spec ?? {
+    this.spec = configuration?.spec ?? {
       raw: "",
       sources: [],
       destinations: [],
     };
-    this.metadata = configuration.metadata ?? {
+    this.metadata = configuration?.metadata ?? {
       name: "",
       id: "",
     };

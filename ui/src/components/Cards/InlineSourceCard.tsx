@@ -12,10 +12,10 @@ import { useState } from "react";
 import { ConfirmDeleteResourceDialog } from "../ConfirmDeleteResourceDialog";
 import { EditResourceDialog } from "../ResourceDialog/EditResourceDialog";
 import { useSourceTypeQuery } from "../../graphql/generated";
-import { useConfigurationPage } from "../../pages/configurations/configuration/ConfigurationPageContext";
 import { UpdateStatus } from "../../types/resources";
 import { BPConfiguration, BPResourceConfiguration } from "../../utils/classes";
 import { classes } from "../../utils/styles";
+import { MinimumRequiredConfig } from "../PipelineGraph/PipelineGraph";
 
 import styles from "./cards.module.scss";
 
@@ -73,11 +73,12 @@ export const InlineSourceCard: React.FC<{
   // For inline sources this is expected to be in the form source0, source1, etc
   id: string;
   disabled?: boolean;
-}> = ({ id, disabled }) => {
+  configuration: MinimumRequiredConfig;
+  refetchConfiguration: () => void;
+}> = ({ id, disabled, configuration, refetchConfiguration }) => {
   const sourceIndex = getSourceIndex(id);
-  const { configuration, refetchConfiguration } = useConfigurationPage();
 
-  const source = configuration.spec?.sources![sourceIndex];
+  const source = configuration?.spec?.sources![sourceIndex];
   const name = source?.type || "";
 
   const { data } = useSourceTypeQuery({
@@ -140,7 +141,7 @@ export const InlineSourceCard: React.FC<{
   async function onTogglePause() {
     const updatedConfig = new BPConfiguration(configuration);
     const updatedSource = new BPResourceConfiguration(source);
-    updatedSource.disabled = !source.disabled;
+    updatedSource.disabled = !source?.disabled;
     updatedConfig.replaceSource(updatedSource, sourceIndex);
 
     const action = updatedSource.disabled ? "pause" : "resume";
@@ -193,7 +194,7 @@ export const InlineSourceCard: React.FC<{
         className={classes([
           styles["resource-card"],
           disabled ? styles.disabled : undefined,
-          source.disabled ? styles.paused : undefined,
+          source?.disabled ? styles.paused : undefined,
         ])}
         onClick={() => setEditing(true)}
       >
@@ -204,12 +205,22 @@ export const InlineSourceCard: React.FC<{
                 className={styles.icon}
                 style={{ backgroundImage: `url(${icon})` }}
               />
-              <Typography component="div" fontWeight={600} fontSize={fontSize} gutterBottom>
+              <Typography
+                component="div"
+                fontWeight={600}
+                fontSize={fontSize}
+                gutterBottom
+              >
                 {displayName}
               </Typography>
               {/* TODO: horizontal line separating displayName from Paused */}
-              {source.disabled && (
-                <Typography component="div" fontWeight={400} fontSize={14} variant="overline">
+              {source?.disabled && (
+                <Typography
+                  component="div"
+                  fontWeight={400}
+                  fontSize={14}
+                  variant="overline"
+                >
                   Paused
                 </Typography>
               )}
@@ -223,15 +234,15 @@ export const InlineSourceCard: React.FC<{
         description={data?.sourceType?.metadata.description ?? ""}
         kind="source"
         enableProcessors
-        processors={source.processors}
-        parameters={source.parameters ?? []}
+        processors={source?.processors}
+        parameters={source?.parameters ?? []}
         parameterDefinitions={data.sourceType.spec.parameters}
         open={editing}
         onClose={closeEditDialog}
         onCancel={closeEditDialog}
         onDelete={() => setDeleteOpen(true)}
         onSave={onSave}
-        paused={source.disabled}
+        paused={source?.disabled}
         onTogglePause={onTogglePause}
       />
 
@@ -242,9 +253,7 @@ export const InlineSourceCard: React.FC<{
         onDelete={onDelete}
         action={"remove"}
       >
-        <Typography>
-          Are you sure you want to remove this source?
-        </Typography>
+        <Typography>Are you sure you want to remove this source?</Typography>
       </ConfirmDeleteResourceDialog>
     </>
   );

@@ -10,44 +10,66 @@ import {
 import { ConfigurationFlow } from "./ConfigurationFlow";
 import { PipelineGraphProvider } from "./PipelineGraphContext";
 
-import styles from "./pipeline-graph.module.scss";
 import { firstActiveTelemetry } from "./Nodes/nodeUtils";
+import { YamlEditor } from "../YamlEditor";
 
-export type MinimumRequiredConfig = NonNullable<ShowPageConfig>;
+import styles from "./pipeline-graph.module.scss";
 
+export type MinimumRequiredConfig = Partial<ShowPageConfig>;
 interface PipelineGraphProps {
   configuration: MinimumRequiredConfig;
+  refetchConfiguration: () => void;
+  agent: string;
+  yamlValue: string;
+  rawOrTopology: string;
 }
 
 export const PipelineGraph: React.FC<PipelineGraphProps> = ({
   configuration,
+  refetchConfiguration,
+  agent,
+  yamlValue,
+  rawOrTopology,
 }) => {
   const [selectedTelemetry, setTelemetry] = useState(
-    firstActiveTelemetry(configuration.graph?.attributes) ??
+    firstActiveTelemetry(configuration?.graph?.attributes) ??
       DEFAULT_TELEMETRY_TYPE
   );
   const [selectedPeriod, setPeriod] = useState(DEFAULT_PERIOD);
 
-  return (
-    <PipelineGraphProvider selectedTelemetryType={selectedTelemetry}>
-      <GraphContainer>
-        <Card style={{ border: 0 }}>
-          <MeasurementControlBar
-            telemetry={selectedTelemetry}
-            onTelemetryTypeChange={(t: string) => setTelemetry(t)}
-            period={selectedPeriod}
-            onPeriodChange={(r: string) => setPeriod(r)}
-          />
-          <ReactFlowProvider>
-            <ConfigurationFlow
+  if (rawOrTopology === "topology") {
+    return (
+      <PipelineGraphProvider selectedTelemetryType={selectedTelemetry}>
+        <GraphContainer>
+          <Card style={{ border: 0 }}>
+            <MeasurementControlBar
+              telemetry={selectedTelemetry}
+              onTelemetryTypeChange={(t: string) => setTelemetry(t)}
               period={selectedPeriod}
-              selectedTelemetry={selectedTelemetry}
+              onPeriodChange={(r: string) => setPeriod(r)}
             />
-          </ReactFlowProvider>
-        </Card>
-      </GraphContainer>
-    </PipelineGraphProvider>
-  );
+            <ReactFlowProvider>
+              <ConfigurationFlow
+                period={selectedPeriod}
+                selectedTelemetry={selectedTelemetry}
+                configuration={configuration}
+                refetchConfiguration={refetchConfiguration}
+                agent={agent}
+              />
+            </ReactFlowProvider>
+          </Card>
+        </GraphContainer>
+      </PipelineGraphProvider>
+    );
+  } else {
+    return (
+      <YamlEditor
+        value={yamlValue === "" ? "Raw configuration unavailable" : yamlValue}
+        readOnly
+        limitHeight
+      />
+    );
+  }
 };
 
 const GraphContainer: React.FC = ({ children }) => {

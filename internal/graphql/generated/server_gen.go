@@ -127,6 +127,7 @@ type ComplexityRoot struct {
 		Graph      func(childComplexity int) int
 		Kind       func(childComplexity int) int
 		Metadata   func(childComplexity int) int
+		Rendered   func(childComplexity int) int
 		Spec       func(childComplexity int) int
 	}
 
@@ -370,7 +371,7 @@ type ComplexityRoot struct {
 		AgentChanges         func(childComplexity int, selector *string, query *string) int
 		AgentMetrics         func(childComplexity int, period string, ids []string) int
 		ConfigurationChanges func(childComplexity int, selector *string, query *string) int
-		ConfigurationMetrics func(childComplexity int, period string, name *string) int
+		ConfigurationMetrics func(childComplexity int, period string, name *string, agent *string) int
 		OverviewMetrics      func(childComplexity int, period string) int
 	}
 
@@ -413,6 +414,7 @@ type ConfigurationResolver interface {
 
 	AgentCount(ctx context.Context, obj *model.Configuration) (*int, error)
 	Graph(ctx context.Context, obj *model.Configuration) (*graph.Graph, error)
+	Rendered(ctx context.Context, obj *model.Configuration) (*string, error)
 }
 type DestinationResolver interface {
 	Kind(ctx context.Context, obj *model.Destination) (string, error)
@@ -470,7 +472,7 @@ type SubscriptionResolver interface {
 	AgentChanges(ctx context.Context, selector *string, query *string) (<-chan []*model1.AgentChange, error)
 	ConfigurationChanges(ctx context.Context, selector *string, query *string) (<-chan []*model1.ConfigurationChange, error)
 	AgentMetrics(ctx context.Context, period string, ids []string) (<-chan *model1.GraphMetrics, error)
-	ConfigurationMetrics(ctx context.Context, period string, name *string) (<-chan *model1.GraphMetrics, error)
+	ConfigurationMetrics(ctx context.Context, period string, name *string, agent *string) (<-chan *model1.GraphMetrics, error)
 	OverviewMetrics(ctx context.Context, period string) (<-chan *model1.GraphMetrics, error)
 }
 
@@ -775,6 +777,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Configuration.Metadata(childComplexity), true
+
+	case "Configuration.rendered":
+		if e.complexity.Configuration.Rendered == nil {
+			break
+		}
+
+		return e.complexity.Configuration.Rendered(childComplexity), true
 
 	case "Configuration.spec":
 		if e.complexity.Configuration.Spec == nil {
@@ -1905,7 +1914,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Subscription.ConfigurationMetrics(childComplexity, args["period"].(string), args["name"].(*string)), true
+		return e.complexity.Subscription.ConfigurationMetrics(childComplexity, args["period"].(string), args["name"].(*string), args["agent"].(*string)), true
 
 	case "Subscription.overviewMetrics":
 		if e.complexity.Subscription.OverviewMetrics == nil {
@@ -2148,6 +2157,9 @@ type Configuration {
   agentCount: Int
 
   graph: Graph
+
+  # the rendered yaml of a managed configuration
+  rendered: String
 }
 
 type ConfigurationSpec {
@@ -2507,7 +2519,7 @@ type Subscription {
   configurationChanges(selector: String, query: String): [ConfigurationChange!]!
 
   agentMetrics(period: String!, ids: [ID!]): GraphMetrics!
-  configurationMetrics(period: String!, name: String): GraphMetrics!
+  configurationMetrics(period: String!, name: String, agent: String): GraphMetrics!
   overviewMetrics(period: String!): GraphMetrics!
 }
 `, BuiltIn: false},
@@ -2896,6 +2908,15 @@ func (ec *executionContext) field_Subscription_configurationMetrics_args(ctx con
 		}
 	}
 	args["name"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["agent"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("agent"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["agent"] = arg2
 	return args, nil
 }
 
@@ -3714,6 +3735,8 @@ func (ec *executionContext) fieldContext_Agent_configurationResource(ctx context
 				return ec.fieldContext_Configuration_agentCount(ctx, field)
 			case "graph":
 				return ec.fieldContext_Configuration_graph(ctx, field)
+			case "rendered":
+				return ec.fieldContext_Configuration_rendered(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Configuration", field.Name)
 		},
@@ -4904,6 +4927,47 @@ func (ec *executionContext) fieldContext_Configuration_graph(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Configuration_rendered(ctx context.Context, field graphql.CollectedField, obj *model.Configuration) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Configuration_rendered(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Configuration().Rendered(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Configuration_rendered(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Configuration",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ConfigurationChange_configuration(ctx context.Context, field graphql.CollectedField, obj *model1.ConfigurationChange) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ConfigurationChange_configuration(ctx, field)
 	if err != nil {
@@ -4955,6 +5019,8 @@ func (ec *executionContext) fieldContext_ConfigurationChange_configuration(ctx c
 				return ec.fieldContext_Configuration_agentCount(ctx, field)
 			case "graph":
 				return ec.fieldContext_Configuration_graph(ctx, field)
+			case "rendered":
+				return ec.fieldContext_Configuration_rendered(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Configuration", field.Name)
 		},
@@ -5331,6 +5397,8 @@ func (ec *executionContext) fieldContext_Configurations_configurations(ctx conte
 				return ec.fieldContext_Configuration_agentCount(ctx, field)
 			case "graph":
 				return ec.fieldContext_Configuration_graph(ctx, field)
+			case "rendered":
+				return ec.fieldContext_Configuration_rendered(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Configuration", field.Name)
 		},
@@ -9673,6 +9741,8 @@ func (ec *executionContext) fieldContext_Query_configuration(ctx context.Context
 				return ec.fieldContext_Configuration_agentCount(ctx, field)
 			case "graph":
 				return ec.fieldContext_Configuration_graph(ctx, field)
+			case "rendered":
+				return ec.fieldContext_Configuration_rendered(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Configuration", field.Name)
 		},
@@ -12240,7 +12310,7 @@ func (ec *executionContext) _Subscription_configurationMetrics(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().ConfigurationMetrics(rctx, fc.Args["period"].(string), fc.Args["name"].(*string))
+		return ec.resolvers.Subscription().ConfigurationMetrics(rctx, fc.Args["period"].(string), fc.Args["name"].(*string), fc.Args["agent"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -15078,6 +15148,23 @@ func (ec *executionContext) _Configuration(ctx context.Context, sel ast.Selectio
 					}
 				}()
 				res = ec._Configuration_graph(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "rendered":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Configuration_rendered(ctx, field, obj)
 				return res
 			}
 

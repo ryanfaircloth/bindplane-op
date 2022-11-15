@@ -1,6 +1,7 @@
 import { Edge, Position, MarkerType, Node } from "react-flow-renderer";
 import { TELEMETRY_SIZE_METRICS } from "../../components/MeasurementControlBar/MeasurementControlBar";
 import { isSourceID } from "../../components/PipelineGraph/Nodes/ProcessorNode";
+import { MinimumRequiredConfig } from "../../components/PipelineGraph/PipelineGraph";
 import { Graph, GraphMetric } from "../../graphql/generated";
 
 export const GRAPH_NODE_OFFSET = 160;
@@ -22,7 +23,9 @@ export const enum MetricPosition {
 export function getNodesAndEdges(
   page: Page,
   graph: Graph,
-  targetOffsetMultiplier: number
+  targetOffsetMultiplier: number,
+  configuration: MinimumRequiredConfig,
+  refetchConfiguration: () => void
 ): {
   nodes: Node[];
   edges: Edge[];
@@ -57,6 +60,8 @@ export function getNodesAndEdges(
         label: n.label,
         attributes: n.attributes,
         connectedNodesAndEdges: [n.id],
+        configuration: configuration,
+        refetchConfiguration: refetchConfiguration,
       },
       position: { x, y },
       sourcePosition: Position.Right,
@@ -80,6 +85,8 @@ export function getNodesAndEdges(
         data: {
           id: n.id,
           attributes: n.attributes,
+          configuration: configuration,
+          refetchConfiguration: refetchConfiguration,
         },
         position: { x, y: y + processorYoffset },
         type: n.type,
@@ -104,6 +111,8 @@ export function getNodesAndEdges(
         data: {
           id: n.id,
           attributes: n.attributes,
+          configuration: configuration,
+          refetchConfiguration: refetchConfiguration,
         },
         position: { x, y: y + processorYoffset },
         type: n.type,
@@ -129,6 +138,8 @@ export function getNodesAndEdges(
         label: n.label,
         attributes: n.attributes,
         connectedNodesAndEdges: [n.id],
+        configuration: configuration,
+        refetchConfiguration: refetchConfiguration,
       },
       position: { x, y },
       targetPosition: Position.Left,
@@ -172,7 +183,7 @@ export function getNodesAndEdges(
       }
     });
   }
-  
+
   // First create a map from node id to all child nodes and edges
   const nodeMap: NodeMap = {};
   for (const edge of edges) {
@@ -182,7 +193,10 @@ export function getNodesAndEdges(
     nodeMap[edge.source].push(edge.target, edge.id);
   }
   nodes.forEach((node) => {
-    node.data.connectedNodesAndEdges = getConnectedNodesAndEdges(node.id, nodeMap);
+    node.data.connectedNodesAndEdges = getConnectedNodesAndEdges(
+      node.id,
+      nodeMap
+    );
   });
 
   // Next, create a reverse map
@@ -195,22 +209,21 @@ export function getNodesAndEdges(
   }
   // Then recursively find all connected nodes and edges
   nodes.forEach((node) => {
-    node.data.connectedNodesAndEdges.push(...getConnectedNodesAndEdges(node.id, reverseNodeMap));
+    node.data.connectedNodesAndEdges.push(
+      ...getConnectedNodesAndEdges(node.id, reverseNodeMap)
+    );
   });
 
   return { nodes, edges };
 }
 
 type NodeMap = { [id: string]: string[] };
-function getConnectedNodesAndEdges(
-  nodeID: string,
-  nodeMap: NodeMap
-): string[] {
-  const connectedIDS : string[] = [];
+function getConnectedNodesAndEdges(nodeID: string, nodeMap: NodeMap): string[] {
+  const connectedIDS: string[] = [];
   if (!nodeMap[nodeID]) {
     return connectedIDS;
   }
-  connectedIDS.push(nodeID)
+  connectedIDS.push(nodeID);
   nodeMap[nodeID].forEach((id) => {
     connectedIDS.push(id);
     connectedIDS.push(...getConnectedNodesAndEdges(id, nodeMap));

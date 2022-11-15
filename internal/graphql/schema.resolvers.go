@@ -124,6 +124,15 @@ func (r *configurationResolver) Graph(ctx context.Context, obj *model.Configurat
 	return obj.Graph(ctx, r.bindplane.Store())
 }
 
+// Rendered is the resolver for the rendered field.
+func (r *configurationResolver) Rendered(ctx context.Context, obj *model.Configuration) (*string, error) {
+	rendered, err := obj.Render(ctx, nil, r.bindplane.Config(), r.bindplane.Store())
+	if err != nil {
+		return nil, err
+	}
+	return &rendered, nil
+}
+
 // Kind is the resolver for the kind field.
 func (r *destinationResolver) Kind(ctx context.Context, obj *model.Destination) (string, error) {
 	return string(obj.GetKind()), nil
@@ -557,16 +566,25 @@ func (r *subscriptionResolver) AgentMetrics(ctx context.Context, period string, 
 }
 
 // ConfigurationMetricsSubscription is the resolver for the configurationMetricsSubscription field.
-func (r *subscriptionResolver) ConfigurationMetrics(ctx context.Context, period string, name *string) (<-chan *model1.GraphMetrics, error) {
+func (r *subscriptionResolver) ConfigurationMetrics(ctx context.Context, period string, name *string, agent *string) (<-chan *model1.GraphMetrics, error) {
 	channel := make(chan *model1.GraphMetrics)
 
 	updateTicker := time.NewTicker(configurationMetricsUpdateInterval)
 
 	sendMetrics := func() {
-		if metrics, err := configurationMetrics(ctx, r.bindplane, period, name); err != nil {
-			r.bindplane.Logger().Error("failed to get configurationMetrics", zap.Error(err))
+		if agent != nil && *agent != "" {
+			ids := []string{*agent}
+			if metrics, err := agentMetrics(ctx, r.bindplane, period, ids); err != nil {
+				r.bindplane.Logger().Error("failed to get agentMetrics", zap.Error(err))
+			} else {
+				channel <- metrics
+			}
 		} else {
-			channel <- metrics
+			if metrics, err := configurationMetrics(ctx, r.bindplane, period, name); err != nil {
+				r.bindplane.Logger().Error("failed to get configurationMetrics", zap.Error(err))
+			} else {
+				channel <- metrics
+			}
 		}
 	}
 

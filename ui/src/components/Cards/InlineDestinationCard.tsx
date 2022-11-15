@@ -77,11 +77,11 @@ export const InlineDestinationCard: React.FC<{
 }> = ({ id }) => {
   const { configuration, refetchConfiguration } = useConfigurationPage();
   const destinationIndex = getDestinatonIndex(id);
-  const destination = configuration.spec?.destinations![destinationIndex];
+  const destination = configuration?.spec?.destinations![destinationIndex];
 
   // We can count on the type existing for an inline Resource
   const { data } = useDestinationTypeQuery({
-    variables: { name: destination.type! },
+    variables: { name: destination?.type! },
   });
   const { enqueueSnackbar } = useSnackbar();
 
@@ -152,7 +152,7 @@ export const InlineDestinationCard: React.FC<{
   async function onTogglePause() {
     const updatedConfig = new BPConfiguration(configuration);
     const updatedDestination = new BPResourceConfiguration(destination);
-    updatedDestination.disabled = !destination.disabled;
+    updatedDestination.disabled = !destination?.disabled;
 
     updatedConfig.replaceDestination(updatedDestination, destinationIndex);
 
@@ -191,7 +191,7 @@ export const InlineDestinationCard: React.FC<{
       <Card
         className={classes([
           styles["resource-card"],
-          destination.disabled ? styles.paused : undefined,
+          destination?.disabled ? styles.paused : undefined,
         ])}
         onClick={() => setEditing(true)}
       >
@@ -205,7 +205,7 @@ export const InlineDestinationCard: React.FC<{
               <Typography component="div" fontWeight={600}>
                 {displayName}
               </Typography>
-              {destination.disabled && (
+              {destination?.disabled && (
                 <Typography component="div" fontWeight={400} fontSize={14} variant="overline">
                   Paused
                 </Typography>
@@ -221,14 +221,14 @@ export const InlineDestinationCard: React.FC<{
         kind="destination"
         fullWidth
         maxWidth="sm"
-        parameters={destination.parameters ?? []}
+        parameters={destination?.parameters ?? []}
         parameterDefinitions={data.destinationType.spec.parameters}
         open={editing}
         onClose={closeEditDialog}
         onCancel={closeEditDialog}
         onDelete={() => setDeleteOpen(true)}
         onSave={onSave}
-        paused={destination.disabled}
+        paused={destination?.disabled}
         onTogglePause={onTogglePause}
       />
 

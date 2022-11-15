@@ -18,7 +18,7 @@ export const AddProcessorCard: React.FC<AddProcessorCardProps> = ({
   refetchConfiguration,
 }) => {
   const [open, setOpen] = useState(false);
-  const sourceType = configuration.spec.sources![sourceIndex].type;
+  const sourceType = configuration?.spec?.sources![sourceIndex].type;
 
   const { enqueueSnackbar } = useSnackbar();
 

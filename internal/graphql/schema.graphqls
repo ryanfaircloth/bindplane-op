@@ -88,6 +88,9 @@ type Configuration {
   agentCount: Int
 
   graph: Graph
+
+  # the rendered yaml of a managed configuration
+  rendered: String
 }
 
 type ConfigurationSpec {
@@ -447,6 +450,6 @@ type Subscription {
   configurationChanges(selector: String, query: String): [ConfigurationChange!]!
 
   agentMetrics(period: String!, ids: [ID!]): GraphMetrics!
-  configurationMetrics(period: String!, name: String): GraphMetrics!
+  configurationMetrics(period: String!, name: String, agent: String): GraphMetrics!
   overviewMetrics(period: String!): GraphMetrics!
 }

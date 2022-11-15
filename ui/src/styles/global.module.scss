@@ -1,0 +1,14 @@
+@use "./colors";
+
+.expand-button {
+  border: 1px solid colors.$bahama-blue;
+  color: colors.$bahama-blue;
+  background-color: colors.$white;
+  &:hover {
+    background-color: colors.$white;
+  }
+}
+
+.graph {
+  background: colors.$background-grey;
+}

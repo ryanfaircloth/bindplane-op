@@ -3,11 +3,12 @@ import "@uiw/react-textarea-code-editor/dist.css";
 import CodeEditor from "@uiw/react-textarea-code-editor";
 import { ChevronDown, ChevronUp } from "../Icons";
 import { classes } from "../../utils/styles";
-import { Button } from "@mui/material";
+import { Button, Stack } from "@mui/material";
 import { useRef } from "react";
 import { useEffect } from "react";
 
 import styles from "./yaml-editor.module.scss";
+import globals from "../../styles/global.module.scss";
 
 interface YamlEditorProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -51,30 +52,31 @@ export const YamlEditor: React.FC<YamlEditorProps> = ({
 
   return (
     <div>
-      <CodeEditor
-        {...rest}
-        data-testid="yaml-editor"
-        className={classes(classNames)}
-        readOnly={readOnly}
-        value={value}
-        ref={ref}
-        language="yaml"
-        onChange={onValueChange}
-        padding={15}
-        style={{
-          backgroundColor: readOnly ? "#f5f5f5" : "#fff",
-          fontFamily:
-            "ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace",
-          fontSize: 12,
-          border: readOnly ? "1px solid #f5f5f5 " : "1px solid #aaa",
-        }}
-      />
-
+      <Stack spacing={2} >
+        <CodeEditor
+          {...rest}
+          data-testid="yaml-editor"
+          className={classes(classNames)}
+          readOnly={readOnly}
+          value={value}
+          ref={ref}
+          language="yaml"
+          onChange={onValueChange}
+          padding={15}
+          style={{
+            backgroundColor: readOnly ? "#f5f5f5" : "#fff",
+            fontFamily:
+              "ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace",
+            fontSize: 12,
+            border: readOnly ? "1px solid #f5f5f5 " : "1px solid #aaa",
+          }}
+        />
       {/* Allow expand and collapse in readOnly mode, if height is over 300 and the limitHeight prop was passed */}
       {expandable && readOnly && limitHeight && (
-        <span className={styles["button-row"]}>
+        <Stack alignItems="center">
           {!expanded && (
             <Button
+              className={globals["expand-button"]}
               variant="contained"
               color="secondary"
               size="small"
@@ -86,6 +88,7 @@ export const YamlEditor: React.FC<YamlEditorProps> = ({
           )}
           {expanded && (
             <Button
+              className={globals["expand-button"]}
               variant="contained"
               color="secondary"
               size="small"
@@ -95,8 +98,9 @@ export const YamlEditor: React.FC<YamlEditorProps> = ({
               Show less
             </Button>
           )}
-        </span>
+       </Stack>
       )}
+      </Stack>
     </div>
   );
 };

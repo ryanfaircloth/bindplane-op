@@ -107,13 +107,13 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
         fetchPolicy: "cache-and-network",
       });
 
-    const destinationIndex = configuration.spec.destinations?.findIndex(
+    const destinationIndex = configuration?.spec?.destinations?.findIndex(
       (d) => d.name === name
     );
 
     const processors =
       destinationIndex !== -1 && destinationIndex != null
-        ? configuration.spec.destinations?.[destinationIndex].processors
+        ? configuration?.spec?.destinations?.[destinationIndex].processors
         : [];
 
     function closeEditDialog() {

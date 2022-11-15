@@ -1,3 +1,9 @@
+@use '../../styles/colors';
+
 .title-button-group {
   margin-left: auto;
+}
+
+.choose-button {
+  color: colors.$bahama-blue;
 }

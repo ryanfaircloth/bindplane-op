@@ -620,114 +620,118 @@ exports[`YamlParameter renders correctly 1`] = `
     </label>
     <div>
       <div
-        className="w-tc-editor code-container expanded"
-        style={
-          Object {
-            "backgroundColor": "#fff",
-            "border": "1px solid #aaa",
-            "boxSizing": "border-box",
-            "fontFamily": "ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace",
-            "fontSize": 12,
-            "overflow": "hidden",
-            "padding": 0,
-            "position": "relative",
-            "textAlign": "left",
-          }
-        }
+        className="css-1p5q5e5-MuiStack-root"
       >
-        <textarea
-          autoCapitalize="off"
-          autoComplete="off"
-          autoCorrect="off"
-          className="w-tc-editor-text"
-          data-testid="yaml-editor"
-          name="yaml_type_param"
-          onBlur={[Function]}
-          onChange={[Function]}
-          onFocus={[Function]}
-          onKeyDown={[Function]}
-          required={true}
-          spellCheck="false"
-          style={
-            Object {
-              "MozOsxFontSmoothing": "grayscale",
-              "WebkitFontSmoothing": "antialiased",
-              "WebkitTextFillColor": "transparent",
-              "background": "none",
-              "border": 0,
-              "boxSizing": "inherit",
-              "color": "inherit",
-              "display": "inherit",
-              "fontFamily": "inherit",
-              "fontSize": "inherit",
-              "fontStyle": "inherit",
-              "fontVariantLigatures": "inherit",
-              "fontWeight": "inherit",
-              "height": "100%",
-              "left": 0,
-              "letterSpacing": "inherit",
-              "lineHeight": "inherit",
-              "margin": 0,
-              "minHeight": 200,
-              "opacity": 0.8,
-              "outline": 0,
-              "overflow": "hidden",
-              "overflowWrap": "break-word",
-              "paddingBottom": 15,
-              "paddingLeft": 15,
-              "paddingRight": 15,
-              "paddingTop": 15,
-              "position": "absolute",
-              "resize": "none",
-              "tabSize": "inherit",
-              "textIndent": "inherit",
-              "textRendering": "inherit",
-              "textTransform": "inherit",
-              "top": 0,
-              "whiteSpace": "pre-wrap",
-              "width": "100%",
-              "wordBreak": "keep-all",
-            }
-          }
-          value=""
-        />
         <div
-          className="w-tc-editor-preview language-yaml"
-          dangerouslySetInnerHTML={
-            Object {
-              "__html": "<pre aria-hidden=\\"true\\"><code class=\\"code-highlight\\"></code><br></pre>",
-            }
-          }
+          className="w-tc-editor code-container expanded"
           style={
             Object {
-              "background": "none",
-              "border": 0,
-              "boxSizing": "inherit",
-              "display": "inherit",
-              "fontFamily": "inherit",
-              "fontSize": "inherit",
-              "fontStyle": "inherit",
-              "fontVariantLigatures": "inherit",
-              "fontWeight": "inherit",
-              "letterSpacing": "inherit",
-              "lineHeight": "inherit",
-              "margin": 0,
-              "minHeight": 200,
-              "outline": 0,
-              "overflowWrap": "break-word",
-              "paddingBottom": 15,
-              "paddingLeft": 15,
-              "paddingRight": 15,
-              "paddingTop": 15,
-              "tabSize": "inherit",
-              "textIndent": "inherit",
-              "textRendering": "inherit",
-              "textTransform": "inherit",
-              "whiteSpace": "pre-wrap",
-              "wordBreak": "keep-all",
+              "backgroundColor": "#fff",
+              "border": "1px solid #aaa",
+              "boxSizing": "border-box",
+              "fontFamily": "ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace",
+              "fontSize": 12,
+              "overflow": "hidden",
+              "padding": 0,
+              "position": "relative",
+              "textAlign": "left",
             }
           }
-        />
+        >
+          <textarea
+            autoCapitalize="off"
+            autoComplete="off"
+            autoCorrect="off"
+            className="w-tc-editor-text"
+            data-testid="yaml-editor"
+            name="yaml_type_param"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            required={true}
+            spellCheck="false"
+            style={
+              Object {
+                "MozOsxFontSmoothing": "grayscale",
+                "WebkitFontSmoothing": "antialiased",
+                "WebkitTextFillColor": "transparent",
+                "background": "none",
+                "border": 0,
+                "boxSizing": "inherit",
+                "color": "inherit",
+                "display": "inherit",
+                "fontFamily": "inherit",
+                "fontSize": "inherit",
+                "fontStyle": "inherit",
+                "fontVariantLigatures": "inherit",
+                "fontWeight": "inherit",
+                "height": "100%",
+                "left": 0,
+                "letterSpacing": "inherit",
+                "lineHeight": "inherit",
+                "margin": 0,
+                "minHeight": 200,
+                "opacity": 0.8,
+                "outline": 0,
+                "overflow": "hidden",
+                "overflowWrap": "break-word",
+                "paddingBottom": 15,
+                "paddingLeft": 15,
+                "paddingRight": 15,
+                "paddingTop": 15,
+                "position": "absolute",
+                "resize": "none",
+                "tabSize": "inherit",
+                "textIndent": "inherit",
+                "textRendering": "inherit",
+                "textTransform": "inherit",
+                "top": 0,
+                "whiteSpace": "pre-wrap",
+                "width": "100%",
+                "wordBreak": "keep-all",
+              }
+            }
+            value=""
+          />
+          <div
+            className="w-tc-editor-preview language-yaml"
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "<pre aria-hidden=\\"true\\"><code class=\\"code-highlight\\"></code><br></pre>",
+              }
+            }
+            style={
+              Object {
+                "background": "none",
+                "border": 0,
+                "boxSizing": "inherit",
+                "display": "inherit",
+                "fontFamily": "inherit",
+                "fontSize": "inherit",
+                "fontStyle": "inherit",
+                "fontVariantLigatures": "inherit",
+                "fontWeight": "inherit",
+                "letterSpacing": "inherit",
+                "lineHeight": "inherit",
+                "margin": 0,
+                "minHeight": 200,
+                "outline": 0,
+                "overflowWrap": "break-word",
+                "paddingBottom": 15,
+                "paddingLeft": 15,
+                "paddingRight": 15,
+                "paddingTop": 15,
+                "tabSize": "inherit",
+                "textIndent": "inherit",
+                "textRendering": "inherit",
+                "textTransform": "inherit",
+                "whiteSpace": "pre-wrap",
+                "wordBreak": "keep-all",
+              }
+            }
+          />
+        </div>
       </div>
     </div>
     <p

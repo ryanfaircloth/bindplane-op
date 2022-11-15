@@ -59,7 +59,7 @@ export const NewProcessorDialogComponent: React.FC<NewProcessorDialogProps> = ({
 
       // Copy the source we're editing
       const editedSource = new BPResourceConfiguration(
-        configuration.spec.sources![sourceIndex]
+        configuration?.spec?.sources![sourceIndex]
       );
 
       // initialize a new processor

@@ -1,5 +1,5 @@
 import { gql } from "@apollo/client";
-import { IconButton, Typography } from "@mui/material";
+import { IconButton, Stack, Typography } from "@mui/material";
 import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CardContainer } from "../../../components/CardContainer";
@@ -24,6 +24,7 @@ import { PipelineGraph } from "../../../components/PipelineGraph/PipelineGraph";
 import { ConfigurationPageContextProvider } from "./ConfigurationPageContext";
 
 import styles from "./configuration-page.module.scss";
+import { RawOrTopologyControl } from "../../../components/PipelineGraph/RawOrTopologyControl";
 
 gql`
   query GetConfiguration($name: String!) {
@@ -100,6 +101,7 @@ gql`
           target
         }
       }
+      rendered
     }
   }
 `;
@@ -122,6 +124,8 @@ const ConfigPageContent: React.FC = () => {
   const [showApplyDialog, setShowApply] = useState(false);
   const [addSourceDialogOpen, setAddSourceDialogOpen] = useState(false);
   const [addDestDialogOpen, setAddDestDialogOpen] = useState(false);
+  const [rawOrTopology, setTopologyOrRaw] =
+    useState<"topology" | "raw">("topology");
 
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
@@ -199,9 +203,21 @@ const ConfigPageContent: React.FC = () => {
       )}
 
       {!isRaw && hasPipeline && (
-        <section>
-          <PipelineGraph configuration={data.configuration} />
-        </section>
+        <CardContainer>
+          <Stack spacing={2}>
+            <RawOrTopologyControl
+              rawOrTopology={rawOrTopology}
+              setTopologyOrRaw={setTopologyOrRaw}
+            />
+            <PipelineGraph
+              configuration={data.configuration}
+              refetchConfiguration={refetch}
+              agent={""}
+              rawOrTopology={rawOrTopology}
+              yamlValue={data.configuration.rendered ?? ""}
+            />
+          </Stack>
+        </CardContainer>
       )}
 
       {!isRaw && (
