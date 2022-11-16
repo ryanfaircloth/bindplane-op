@@ -109,7 +109,7 @@ spec:
     receivers: |
       {{ if .enable_metrics }}
       - hostmetrics:
-          host_collection_interval: {{ .collection_interval }}s
+          collection_interval: {{ .collection_interval }}s
           scrapers:
             load:
             filesystem:
