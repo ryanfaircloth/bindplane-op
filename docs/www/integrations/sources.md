@@ -49,6 +49,7 @@ hidden: false
 | [Redis](doc:redis)                               | ✓       | ✓    |        |
 | [SAP HANA](doc:sap-hana)                         |         | ✓    |        |
 | [Solr](doc:solr)                                 | ✓       | ✓    |        |
+| [StatsD](doc:statsd)                             | ✓       |      |        |
 | [Syslog](doc:syslog)                             |         | ✓    |        |
 | [TCP](doc:tcp)                                   |         | ✓    |        |
 | [Tomcat](doc:tomcat)                             | ✓       | ✓    |        |

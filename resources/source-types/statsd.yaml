@@ -1,0 +1,59 @@
+apiVersion: bindplane.observiq.com/v1
+kind: SourceType
+metadata:
+  name: statd
+  displayName: StatsD
+  icon: /icons/sources/statsd.svg
+  description: Receive metrics from StatsD clients.
+spec:
+  version: 0.0.1
+  supported_platforms:
+    - macos
+    - linux
+    - windows
+  parameters:
+    - name: listen_ip
+      label: Listen Address
+      description: IP Address to listen on.
+      type: string
+      default: "0.0.0.0"
+
+    - name: listen_port
+      label: Listen Port
+      description: Port to listen on and receive metrics from statsd clients.
+      type: int
+      default: 8125
+
+    - name: aggregation_interval
+      label: Aggregation Interval
+      description: The aggregation time in seconds that the receiver aggregates the metrics.
+      type: int
+      default: 60
+
+    - name: enable_metric_type
+      label: Enable Metric Type
+      description: Enable the statsd receiver to be able to emit the metric type as a label.
+      type: bool
+      default: false
+      advancedConfig: true
+
+    - name: is_monotonic_counter
+      label: Set to Monotonic Counter
+      description: Set all counter-type metrics the statsd receiver received as monotonic.
+      type: bool
+      default: false
+      advancedConfig: true
+
+  metrics:
+    receivers: |
+      - statsd:
+          endpoint: "{{ .listen_ip }}:{{ .listen_port }}"
+          aggregation_interval: "{{ .aggregation_interval }}s"
+          enable_metric_type: {{ .enable_metric_type }}
+          is_monotonic_counter: {{ .is_monotonic_counter }}
+
+    processors: |
+      - resourcedetection:
+          detectors: ["system"]
+          system:
+            hostname_sources: ["os"]
