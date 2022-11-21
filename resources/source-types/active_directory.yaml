@@ -54,7 +54,7 @@ spec:
     - name: enable_file_replication
       label: File Replication Logs
       type: bool
-      default: true
+      default: false
       relevantIf:
         - name: enable_logs
           operator: equals
