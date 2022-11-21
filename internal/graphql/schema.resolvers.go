@@ -160,7 +160,6 @@ func (r *parameterDefinitionResolver) Type(ctx context.Context, obj *model.Param
 
 	case "string":
 		return model1.ParameterTypeString, nil
-
 	case "enum":
 		return model1.ParameterTypeEnum, nil
 
@@ -184,6 +183,9 @@ func (r *parameterDefinitionResolver) Type(ctx context.Context, obj *model.Param
 
 	case "metrics":
 		return model1.ParameterTypeMetrics, nil
+
+	case "awsCloudwatchNamedField":
+		return model1.ParameterTypeAwsCloudwatchNamedField, nil
 
 	default:
 		return "", errors.New("unknown parameter type")

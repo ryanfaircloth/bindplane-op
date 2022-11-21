@@ -14,6 +14,7 @@ import {
 } from ".";
 import { ParameterDefinition, ParameterType } from "../../../graphql/generated";
 import { useResourceFormValues } from "../ResourceFormContext";
+import { AWSCloudwatchInput } from "./AWSCloudwatchFieldInput";
 
 export interface ParamInputProps<T> {
   definition: ParameterDefinition;
@@ -123,6 +124,17 @@ export const ParameterInput: React.FC<{ definition: ParameterDefinition }> = ({
             onValueChange={onValueChange}
           />
         );
+
+      case ParameterType.AwsCloudwatchNamedField:
+        return (
+          <>
+            <AWSCloudwatchInput
+              definition={definition}
+              value={formValues[definition.name]}
+              onValueChange={onValueChange}
+            />
+          </>
+        );
     }
   }, [definition, formValues, onValueChange]);
 
@@ -136,6 +148,10 @@ export const ParameterInput: React.FC<{ definition: ParameterDefinition }> = ({
     }
 
     if (isSectionHeader(definition)) {
+      return 12;
+    }
+
+    if (isAWSCloudwatch(definition)) {
       return 12;
     }
 
@@ -161,4 +177,8 @@ function isSectionHeader(definition: ParameterDefinition) {
 
 function isMetricsType(definition: ParameterDefinition) {
   return definition.type === "metrics";
+}
+
+function isAWSCloudwatch(definition: ParameterDefinition) {
+  return definition.type === "awsCloudwatchNamedField";
 }

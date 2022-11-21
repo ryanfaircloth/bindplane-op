@@ -7,6 +7,7 @@ import {
 } from "../../graphql/generated";
 import { validateNameField } from "../../utils/forms/validate-name-field";
 import {
+  validateAWSNamedField,
   validateIntField,
   validateMapField,
   validateStringField,
@@ -96,6 +97,13 @@ export function initFormErrors(
           definition,
           initValues[definition.name]
         );
+        break;
+
+      case ParameterType.AwsCloudwatchNamedField:
+        initErrors[definition.name] = validateAWSNamedField(
+          initValues[definition.name]
+        );
+
         break;
 
       default:

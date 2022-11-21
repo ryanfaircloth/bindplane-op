@@ -22,22 +22,24 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/mitchellh/mapstructure"
 	"github.com/observiq/bindplane-op/model/validation"
 	"github.com/observiq/stanza/errors"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	stringType   = "string"
-	boolType     = "bool"
-	intType      = "int"
-	stringsType  = "strings"
-	enumType     = "enum"
-	enumsType    = "enums"
-	yamlType     = "yaml"
-	mapType      = "map"
-	timezoneType = "timezone"
-	metricsType  = "metrics"
+	stringType                  = "string"
+	boolType                    = "bool"
+	intType                     = "int"
+	stringsType                 = "strings"
+	enumType                    = "enum"
+	enumsType                   = "enums"
+	yamlType                    = "yaml"
+	mapType                     = "map"
+	timezoneType                = "timezone"
+	metricsType                 = "metrics"
+	awsCloudwatchNamedFieldType = "awsCloudwatchNamedField"
 )
 
 // ParameterDefinition is a basic description of a definition's parameter. This implementation comes directly from
@@ -247,7 +249,7 @@ func (p ParameterDefinition) validateType() error {
 		)
 	}
 	switch p.Type {
-	case stringType, intType, boolType, stringsType, enumType, enumsType, mapType, yamlType, timezoneType, metricsType: // ok
+	case stringType, intType, boolType, stringsType, enumType, enumsType, mapType, yamlType, timezoneType, metricsType, awsCloudwatchNamedFieldType: // ok
 	default:
 		return errors.NewError(
 			fmt.Sprintf("invalid type '%s' for '%s'", p.Type, p.Name),
@@ -368,6 +370,8 @@ func (p ParameterDefinition) validateValidValues() error {
 			)
 		}
 	}
+
+	// TODO(dave+mitch): (validate mapToSubForm type)
 	return nil
 }
 
@@ -416,6 +420,8 @@ func (p ParameterDefinition) validateValueType(fieldType parameterFieldType, val
 		return p.validateTimezoneType(fieldType, value)
 	case metricsType:
 		return p.validateMetricsType(fieldType, value)
+	case awsCloudwatchNamedFieldType:
+		return p.validateAwsCloudwatchNamedFieldType(fieldType, value)
 	default:
 		return errors.NewError(
 			"invalid type for parameter",
@@ -612,6 +618,63 @@ func (p ParameterDefinition) validateMapValue(fieldType parameterFieldType, valu
 			}
 		}
 	}
+	return nil
+}
+
+// CloudWatchNamedFieldValue is type for storing multiple instances of named log groups
+type CloudWatchNamedFieldValue []AwsCloudWatchNamedFieldItem
+
+
+// AwsCloudWatchNamedFieldItem is the specified log group name which holds custom stream prefix and name filters
+type AwsCloudWatchNamedFieldItem struct {
+	ID       string   `mapstructure:"id" yaml:"id,omitempty"`
+	Names    []string `mapstructure:"names" yaml:"names,omitempty"`
+	Prefixes []string `mapstructure:"prefixes" yaml:"prefixes,omitempty"`
+}
+
+func (p ParameterDefinition) validateAwsCloudwatchNamedFieldType(fieldType parameterFieldType, value any) error {
+	reflectValue := reflect.ValueOf(value)
+	kind := reflectValue.Kind()
+	fmt.Println(kind)
+	if kind != reflect.Slice {
+		fmt.Println("failed reflect slice")
+		return errors.NewError("malformed value for parameter of type awsCloudwatchNamedField",
+			"value should be in the form of AwsCloudWatchNamedFieldValue struct",
+		)
+	}
+
+	for i := 0; i < reflectValue.Len(); i++ {
+		item := reflectValue.Index(i)
+
+		result := map[string]interface{}{}
+		err := mapstructure.Decode(item.Interface(), &result)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		for s, n := range result {
+			switch strings.ToLower(s) {
+			case "id":
+				_, ok := n.(string)
+				if !ok {
+					return errors.NewError("incorrect type included in 'id' field",
+						"awsCloudwatchNamedField"+s+"should be of type string")
+				}
+
+			case "names", "prefixes":
+				_, ok := n.([]interface{})
+				if !ok {
+					return errors.NewError("incorrect type included in "+ s +" field",
+						"awsCloudwatchNamedField"+s+"should be of type []string")
+				}
+			default:
+				return errors.NewError("unexpected field " + s +" included in struct",
+					s+"should not be an included field in awsCloudWatchNamedField")
+
+			}
+		}
+	}
+
 	return nil
 }
 

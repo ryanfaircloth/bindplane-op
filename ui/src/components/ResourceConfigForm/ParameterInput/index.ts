@@ -1,3 +1,4 @@
+export { AWSCloudwatchInput } from "./AWSCloudwatchFieldInput";
 export { ParameterInput } from "./ParameterInput";
 export { TimezoneParamInput } from "./TimezoneParamInput";
 export { StringParamInput } from "./StringParamInput";

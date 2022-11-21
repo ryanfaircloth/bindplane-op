@@ -275,6 +275,7 @@ export type ParameterOptions = {
 };
 
 export enum ParameterType {
+  AwsCloudwatchNamedField = 'awsCloudwatchNamedField',
   Bool = 'bool',
   Enum = 'enum',
   Enums = 'enums',

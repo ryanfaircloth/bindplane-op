@@ -65,6 +65,20 @@ export function validateMapField(
   return null;
 }
 
+export function validateAWSNamedField(value: any): string | null {
+  if (value?.length < 1) {
+    return "At least one log group must be specified.";
+  }
+
+  for (const subField of value) {
+    if (isEmpty(subField.id)) {
+      return "All log group IDs must be set.";
+    }
+  }
+
+  return null;
+}
+
 export function validateIntField(
   definition: ParameterDefinition,
   value?: number

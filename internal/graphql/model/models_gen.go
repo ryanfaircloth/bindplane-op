@@ -164,16 +164,17 @@ func (e EventType) MarshalGQL(w io.Writer) {
 type ParameterType string
 
 const (
-	ParameterTypeString   ParameterType = "string"
-	ParameterTypeStrings  ParameterType = "strings"
-	ParameterTypeInt      ParameterType = "int"
-	ParameterTypeBool     ParameterType = "bool"
-	ParameterTypeEnum     ParameterType = "enum"
-	ParameterTypeEnums    ParameterType = "enums"
-	ParameterTypeMap      ParameterType = "map"
-	ParameterTypeYaml     ParameterType = "yaml"
-	ParameterTypeTimezone ParameterType = "timezone"
-	ParameterTypeMetrics  ParameterType = "metrics"
+	ParameterTypeString                  ParameterType = "string"
+	ParameterTypeStrings                 ParameterType = "strings"
+	ParameterTypeInt                     ParameterType = "int"
+	ParameterTypeBool                    ParameterType = "bool"
+	ParameterTypeEnum                    ParameterType = "enum"
+	ParameterTypeEnums                   ParameterType = "enums"
+	ParameterTypeMap                     ParameterType = "map"
+	ParameterTypeYaml                    ParameterType = "yaml"
+	ParameterTypeTimezone                ParameterType = "timezone"
+	ParameterTypeMetrics                 ParameterType = "metrics"
+	ParameterTypeAwsCloudwatchNamedField ParameterType = "awsCloudwatchNamedField"
 )
 
 var AllParameterType = []ParameterType{
@@ -187,11 +188,12 @@ var AllParameterType = []ParameterType{
 	ParameterTypeYaml,
 	ParameterTypeTimezone,
 	ParameterTypeMetrics,
+	ParameterTypeAwsCloudwatchNamedField,
 }
 
 func (e ParameterType) IsValid() bool {
 	switch e {
-	case ParameterTypeString, ParameterTypeStrings, ParameterTypeInt, ParameterTypeBool, ParameterTypeEnum, ParameterTypeEnums, ParameterTypeMap, ParameterTypeYaml, ParameterTypeTimezone, ParameterTypeMetrics:
+	case ParameterTypeString, ParameterTypeStrings, ParameterTypeInt, ParameterTypeBool, ParameterTypeEnum, ParameterTypeEnums, ParameterTypeMap, ParameterTypeYaml, ParameterTypeTimezone, ParameterTypeMetrics, ParameterTypeAwsCloudwatchNamedField:
 		return true
 	}
 	return false

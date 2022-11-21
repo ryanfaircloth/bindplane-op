@@ -246,6 +246,17 @@ func TestValidateOptions(t *testing.T) {
 				},
 			},
 		},
+		{
+			"Non MapToSubForm TrackUnchecked Error",
+			true,
+			"1 error occurred:\n\t* trackUnchecked is true for parameter of type `map`\n\n",
+			ParameterDefinition{
+				Type: "map",
+				Options: ParameterOptions{
+					TrackUnchecked: true,
+				},
+			},
+		},
 	}
 
 	for _, test := range testCases {
@@ -621,5 +632,107 @@ func TestValidateMetricCategory(t *testing.T) {
 		} else {
 			require.NoError(t, errs.Result())
 		}
+	}
+}
+
+func TestValidateAwsCloudwatchNamedFieldType(t *testing.T) {
+	tests := []struct {
+		description   string
+		parameterType ParameterDefinition
+		value         any
+		wantErr       string
+	}{
+		{
+			"bad value type int",
+			ParameterDefinition{
+				Type: awsCloudwatchNamedFieldType,
+			},
+			4,
+			"malformed value for parameter of type awsCloudwatchNamedField",
+		},
+		{
+			"malformed slice item 'prefixes'",
+			ParameterDefinition{
+				Type: awsCloudwatchNamedFieldType,
+			},
+			[]struct {
+				ID       string `mapstructure:"id"`
+				Names    []interface{}
+			    Prefixes string
+			}{
+				{
+					"id",
+					[]interface{}{"one", "two", "three"},
+					"foo",
+				},
+			},
+			"incorrect type included in Prefixes field",
+		},
+		{
+			"malformed slice item 'id'",
+			ParameterDefinition{
+				Type: awsCloudwatchNamedFieldType,
+			},
+			[]struct {
+				ID       int
+				Names    []interface{}
+				Prefixes []interface{}
+			}{
+				{
+					4,
+					[]interface{}{"one", "two", "three"},
+					[]interface{}{"one", "two", "three"},
+				},
+			},
+			"incorrect type included in 'id' field",
+		},
+		{
+			"malformed slice item 'names'",
+			ParameterDefinition{
+				Type: awsCloudwatchNamedFieldType,
+			},
+			[]struct {
+				ID       string `mapstructure:"id"`
+				Names    string
+				Prefixes []interface{}
+			}{
+				{
+					"id",
+					"blah",
+					[]interface{}{"one", "two", "three"},
+				},
+			},
+			"incorrect type included in Names field",
+		},
+		{
+			"ok value",
+			ParameterDefinition{
+				Type: awsCloudwatchNamedFieldType,
+			},
+			[]struct {
+				ID       string
+				Names    []interface{}
+				Prefixes []interface{}
+			}{
+				{
+					 "id",
+					 make([]interface{}, 0),
+					 make([]interface{}, 0),
+				},
+			},
+			"",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			gotErr := test.parameterType.validateAwsCloudwatchNamedFieldType(awsCloudwatchNamedFieldType, test.value)
+			if test.wantErr != "" {
+				require.Equal(t, test.wantErr, gotErr.Error())
+			} else {
+				require.NoError(t, gotErr)
+			}
+
+		})
 	}
 }

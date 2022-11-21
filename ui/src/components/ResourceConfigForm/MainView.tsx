@@ -197,20 +197,22 @@ export const MainViewComponent: React.FC<MainProps> = ({
 
       <Stack direction="row">
         <DialogActions>
-          {paused != null && (paused ?
-            (
-              <Button disabled={true} startIcon={<PauseIcon />}>Paused</Button>
-            ) :
-            (
-              <Button disabled={true} startIcon={<PlayIcon />}>Running</Button>
-            )
-          )}
+          {paused != null &&
+            (paused ? (
+              <Button disabled={true} startIcon={<PauseIcon />}>
+                Paused
+              </Button>
+            ) : (
+              <Button disabled={true} startIcon={<PlayIcon />}>
+                Running
+              </Button>
+            ))}
           {togglePauseButton}
         </DialogActions>
 
         <DialogActions
           sx={{
-            marginLeft: 'auto'
+            marginLeft: "auto",
           }}
         >
           {deleteButton}

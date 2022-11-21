@@ -2309,6 +2309,7 @@ enum ParameterType {
   yaml
   timezone
   metrics
+  awsCloudwatchNamedField
 }
 
 type ParameterDefinition {

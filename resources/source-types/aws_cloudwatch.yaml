@@ -1,0 +1,216 @@
+apiVersion: bindplane.observiq.com/v1
+kind: SourceType
+metadata:
+  name: awscloudwatch
+  displayName: AWS Cloudwatch
+  icon: /icons/sources/aws_cloudwatch.svg
+  description: Collect logs from AWS Cloudwatch.
+spec:
+  version: 0.0.1
+  supported_platforms:
+    - linux
+    - windows
+    - macos
+  parameters:
+    #Top Level Parameters
+    - name: region
+      label: Region
+      description: The AWS recognized region string.
+      type: enum
+      default: us-east-1
+      validValues:
+        [
+          us-east-1,
+          us-east-2,
+          us-west-1,
+          us-west-2,
+          af-south-1,
+          ap-east-1,
+          ap-southeast-3,
+          ap-south-1,
+          ap-northeast-3,
+          ap-northeast-2,
+          ap-southeast-1,
+          ap-southeast-2,
+          ap-northeast-1,
+          ca-central-1,
+          eu-central-1,
+          eu-west-1,
+          eu-west-2,
+          eu-south-1,
+          eu-west-3,
+          eu-north-1,
+          eu-central-2,
+          me-south-1,
+          me-central-1,
+          sa-east-1,
+          us-gov-east-1,
+          us-gov-west-1,
+        ]
+      required: true
+
+    - name: credential_type
+      label: Credential Type
+      description: "Determines whether to pull credentials from a credentials file or use environment variables for authentication."
+      type: enum
+      validValues:
+        - profile
+        - environment
+      default: profile
+
+    # Group Parameters
+    - name: discovery_type
+      label: Discovery Type
+      description: Configuration for Log Groups, by default all Log Groups and Log Streams will be collected.
+      type: enum
+      validValues:
+        - AutoDiscover
+        - Named
+      default: AutoDiscover
+
+    - name: profile
+      label: Profile
+      description: The AWS profile used to authenticate, if none is specified the default is chosen from the list of profiles.
+      type: string
+      required: true
+      default: "default"
+      relevantIf:
+        - name: credential_type
+          operator: equals
+          value: profile
+
+    - name: limit
+      label: Limit
+      description: Limits the number of discovered log groups.
+      type: int
+      default: 50
+      relevantIf:
+        - name: discovery_type
+          operator: equals
+          value: AutoDiscover
+
+    - name: prefix
+      label: Prefix
+      description: A prefix for log groups to limit the number of log groups discovered.
+      type: string
+      relevantIf:
+        - name: discovery_type
+          operator: equals
+          value: AutoDiscover
+      default: ""
+
+    - name: names
+      label: Names
+      description: A list of full log stream names to filter the discovered log groups to collect from.
+      type: strings
+      relevantIf:
+        - name: discovery_type
+          operator: equals
+          value: AutoDiscover
+      default: []
+
+    - name: prefixes
+      label: Prefixes
+      description: A list of prefixes to filter the discovered log groups to collect from.
+      type: strings
+      relevantIf:
+        - name: discovery_type
+          operator: equals
+          value: AutoDiscover
+      default: []
+
+    - name: named_groups
+      label: Groups
+      description: Configuration for Log Groups, by default all Log Groups and Log Streams will be collected.
+      type: awsCloudwatchNamedField
+      default: []
+      relevantIf:
+        - name: discovery_type
+          operator: equals
+          value: Named
+
+    # Advanced Parameters
+    - name: imds_endpoint
+      label: IMDS Endpoint
+      description: A way of specifying a custom URL to be used by the EC2 IMDS client to validate the session.
+      type: string
+      default: ""
+      advancedConfig: true
+
+    - name: poll_interval
+      label: Poll Interval
+      description: The duration waiting in between requests (minutes).
+      type: int
+      default: 1
+      advancedConfig: true
+
+    - name: max_events_per_request
+      label: Max Events Per Request
+      description: The maximum number of events to process per request to Cloudwatch
+      type: int
+      default: 50
+      advancedConfig: true
+
+  logs:
+    receivers: |
+      - awscloudwatch:
+          region: {{ .region }}
+          {{ if eq .credential_type "profile"}}
+          profile: '{{ .profile }}'
+          {{ end }}
+          logs:
+            poll_interval: {{ .poll_interval }}m
+            {{ if eq .discovery_type "AutoDiscover" }}
+            groups:
+              autodiscover:
+                {{ if .limit }}
+                limit: {{ .limit }}
+                {{ end}}
+                {{ if .prefix }}
+                prefix: {{ .prefix }}
+                {{ end }}
+
+                # Checking that names and prefixes parameters are appropriately configured
+                {{ $var := len .names }}
+                {{ $tmp := len .prefixes }}
+                {{ $streams := false}}
+                {{ if or (gt $tmp 0) (gt $var 0)}}
+                 {{ $streams = true}}
+                {{ end }}
+                {{ if $streams }}
+                streams:
+                  {{ if .names }}
+                    names: 
+                    {{ range $n := .names }}
+                      - {{$n}}
+                    {{ end }}
+                  {{ end }}
+                  
+                  {{ if .prefixes }}
+                    prefixes:
+                    {{ range $p := .prefixes}}
+                      - {{$p}}
+                    {{ end }}
+                  {{ end }}
+                {{ end }}
+                
+            {{ else if eq .discovery_type "Named"}}
+            groups:
+              named:
+              {{ range $s := .named_groups }}
+                {{ $s.id }}:
+                  {{ if $s.names }}
+                    names: 
+                    {{ range $n := $s.names }}
+                      - {{ $n }}
+                    {{ end }}
+                  {{ end }}
+                  
+                  {{ if $s.prefixes }}
+                    prefixes: 
+                    {{ range $p := $s.prefixes}}
+                      - {{ $p }}
+                    {{ end }}
+                  {{ end }}
+              {{ end }}
+            {{ end }}
