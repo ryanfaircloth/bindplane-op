@@ -294,7 +294,6 @@ jobs:
       # Push container images to dockerhub for use in other steps.
       # It is safe to push development images with the github sha tag.
       - name: Login to DockerHub
-        if: ${{ github.actor != 'dependabot[bot]' }}
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -308,7 +307,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push Container Images to Dockerhub
-        if: ${{ github.actor != 'dependabot[bot]' }}
         run: |
           docker push observiq/bindplane-amd64:${{ env.GITHUB_SHA_SHORT }}
           docker push observiq/bindplane-arm64:${{ env.GITHUB_SHA_SHORT }}
@@ -318,7 +316,6 @@ jobs:
           docker manifest push "observiq/bindplane:${{ env.GITHUB_SHA_SHORT }}"
 
       - name: Push Container Images to Github Container Registry
-        if: ${{ github.actor != 'dependabot[bot]' }}
         run: |
           docker push ghcr.io/observiq/bindplane-amd64:${{ env.GITHUB_SHA_SHORT }}
           docker push ghcr.io/observiq/bindplane-arm64:${{ env.GITHUB_SHA_SHORT }}
