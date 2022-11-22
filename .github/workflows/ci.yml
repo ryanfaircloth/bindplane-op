@@ -300,6 +300,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to Github Container Registry
+        if: ${{ github.actor != 'dependabot[bot]' }}
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
@@ -316,6 +317,7 @@ jobs:
           docker manifest push "observiq/bindplane:${{ env.GITHUB_SHA_SHORT }}"
 
       - name: Push Container Images to Github Container Registry
+        if: ${{ github.actor != 'dependabot[bot]' }}
         run: |
           docker push ghcr.io/observiq/bindplane-amd64:${{ env.GITHUB_SHA_SHORT }}
           docker push ghcr.io/observiq/bindplane-arm64:${{ env.GITHUB_SHA_SHORT }}
