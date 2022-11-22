@@ -29,7 +29,7 @@ Category IDs can be found using queries outlined [here](https://docs.readme.com/
 | Integrations | 636c08e1212e49001e7a3032 |
 | Support | 636c08eb959f7600841f16c8 |
 
-Documentation is sync'd using GitHub actions on every tagged release, with new documentation version numbers being set to the BindPlane OP release number.
+Documentation is sync'd using GitHub actions on every tagged release.
 
 ## Add New Integration
 
@@ -39,7 +39,7 @@ the `parentDoc` header.
 In this example, the category id `636c08e1212e49001e7a3032` points to the Integrations section. The `636c0a0c46142d00a50b384d`
 parent doc ID points to the `sources` page.
 
-```
+```yaml
 ---
 title: "Test Source"
 category: 636c08e1212e49001e7a3032
@@ -57,3 +57,13 @@ nested documentation
 | Sources       | `636c0a0c46142d00a50b384d` |
 | Processors    | `636c0a0cddea2a005d14423a` |
 | Destinations  | `636c0a0cd9f114009de9ba78` |
+
+## Adding Images
+
+BindPlane OP hosts doc images externally in Google Cloud. When including any images in doc pages, use the following format:
+
+```html
+<img src="placeholder.url" width="1000px" alt="file.name">
+```
+
+When creating the pull request, add a note that there are images required and the BindPlane OP team can get in contact to review and upload those images and add the proper links to the placeholders in the PR.
