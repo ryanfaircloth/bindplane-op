@@ -204,12 +204,14 @@ function createMetricRateColumn(
       const metricName = TELEMETRY_SIZE_METRICS[telemetryType];
       const agentName = params.id;
 
-      // need to get all the metrics for this agent?!?
+      // get all metrics for this agent that match the pattern /^destination\/\w+$/
+      // those are metrics for data received by a destination, ignoring values before the processors
       const metrics = agentMetrics.agentMetrics.metrics.filter(
         (m) =>
           m.name === metricName &&
           m.agentID! === agentName &&
-          m.nodeID.startsWith("destination")
+          m.nodeID.startsWith("destination/") &&
+          !m.nodeID.endsWith("/processors")
       );
       if (metrics == null) {
         return 0;
