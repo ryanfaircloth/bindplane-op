@@ -433,7 +433,8 @@ export type RelevantIfCondition = {
 };
 
 export enum RelevantIfOperatorType {
-  Equals = 'equals'
+  Equals = 'equals',
+  NotEquals = 'notEquals'
 }
 
 export type ResourceConfiguration = {

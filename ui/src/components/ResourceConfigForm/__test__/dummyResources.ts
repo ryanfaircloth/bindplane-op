@@ -153,6 +153,35 @@ export const relevantIfDef: ParameterDefinition = {
   validValues: null,
 };
 
+export const relevantIfNotEqualDef: ParameterDefinition = {
+  name: "int_name",
+  label: "Number Input",
+  description: "Here is the description.",
+  advancedConfig: false,
+  required: false,
+  options: {
+    creatable: null,
+    trackUnchecked: null,
+    sectionHeader: null,
+    gridColumns: null,
+    metricCategories: null,
+    multiline: null,
+  },
+
+  type: ParameterType.Int,
+
+  relevantIf: [
+    {
+      name: "string_name",
+      operator: RelevantIfOperatorType.NotEquals,
+      value: "default-value",
+    },
+  ],
+
+  documentation: null,
+  validValues: null,
+};
+
 /* ----------------------------- Resource Types ----------------------------- */
 
 export const ResourceType1: SourceType = {
@@ -194,6 +223,25 @@ export const ResourceType2: SourceType = {
   spec: {
     version: "0.0.0",
     parameters: [boolDefaultFalseDef, relevantIfDef],
+
+    supportedPlatforms: ["linux", "macos", "windows"],
+    telemetryTypes: [],
+  },
+};
+
+export const ResourceType3: SourceType = {
+  apiVersion: APIVersion.V1,
+  kind: "ResourceType",
+  metadata: {
+    id: "resource-type-3",
+    name: "resource-type-3",
+    displayName: "ResourceType Three",
+    description: "A description for resource type three.",
+    icon: "/icons/destinations/otlp.svg",
+  },
+  spec: {
+    version: "0.0.0",
+    parameters: [stringDef, relevantIfNotEqualDef],
 
     supportedPlatforms: ["linux", "macos", "windows"],
     telemetryTypes: [],

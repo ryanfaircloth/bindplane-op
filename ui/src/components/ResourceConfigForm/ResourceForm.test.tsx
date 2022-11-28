@@ -21,6 +21,7 @@ import {
   ProcessorTypeSeverity,
   ResourceType1,
   ResourceType2,
+  ResourceType3,
 } from "./__test__/dummyResources";
 import renderer from "react-test-renderer";
 import { MockedProvider, MockedResponse } from "@apollo/client/testing";
@@ -31,6 +32,7 @@ describe("satisfiesRelevantIf", () => {
     one: true,
     two: "bar",
     three: 25,
+    four: "",
   };
 
   const param1: ParameterDefinition = {
@@ -70,12 +72,33 @@ describe("satisfiesRelevantIf", () => {
     default: "default-value",
   };
 
+  const param3: ParameterDefinition = {
+    name: "string_name",
+    label: "String Input",
+    description: "Here is the description.",
+    required: false,
+    options: {},
+
+    type: ParameterType.String,
+    relevantIf: [
+      {
+        name: "four",
+        operator: RelevantIfOperatorType.NotEquals,
+        value: "",
+      },
+    ],
+  };
+
   it("param1 matches", () => {
     const got = satisfiesRelevantIf(formValues, param1);
     expect(got).toEqual(true);
   });
   it("param2 does not match", () => {
     const got = satisfiesRelevantIf(formValues, param2);
+    expect(got).toEqual(false);
+  });
+  it("param3 does match", () => {
+    const got = satisfiesRelevantIf(formValues, param3);
     expect(got).toEqual(false);
   });
 });
@@ -109,6 +132,19 @@ describe("ResourceForm component", () => {
     screen.getByRole("checkbox").click();
     stringInput = screen.getByLabelText("String Input");
     expect(stringInput).toBeInTheDocument();
+  });
+
+  it("does not display field if notEquals relevantIf isn't satisfied", () => {
+    render(
+      <ResourceConfigForm
+        kind="destination"
+        displayName={ResourceType3.metadata.displayName!}
+        description={ResourceType3.metadata.description!}
+        parameterDefinitions={ResourceType3.spec.parameters}
+      />
+    );
+    const stringInput = screen.queryByText("Number Input");
+    expect(stringInput).toBeNull();
   });
 
   it("maintains stateful formValues as correctType", async () => {

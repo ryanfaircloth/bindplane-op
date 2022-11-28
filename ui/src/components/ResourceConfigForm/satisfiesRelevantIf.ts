@@ -1,21 +1,31 @@
 import { isEqual } from "lodash";
-import { ParameterDefinition } from "../../graphql/generated";
+import { ParameterDefinition, RelevantIfOperatorType } from "../../graphql/generated";
 
+/**
+ * Check if form values satisfy the relevantIf conditions of a ParameterDefinition,
+ * if any.
+ */
 export function satisfiesRelevantIf(
   formValues: { [name: string]: any },
   definition: ParameterDefinition
 ): boolean {
-  if (definition.relevantIf == null) {
+  const relevantIf = definition.relevantIf;
+  if (relevantIf == null) {
     return true;
   }
 
-  const relevantIf = definition.relevantIf;
-
   for (const condition of relevantIf) {
-    // TODO (dsvanlani) Right now we only support and expect the "equals" operator
-    // Add a capability to satisfy other operators like "less than" or "greater than".
-    if (!isEqual(formValues[condition.name], condition.value)) {
-      return false;
+    switch (condition.operator) {
+      case RelevantIfOperatorType.Equals:
+        if (!isEqual(formValues[condition.name], condition.value)) {
+          return false;
+        }
+        break;
+      case RelevantIfOperatorType.NotEquals:
+        if (isEqual(formValues[condition.name], condition.value)) {
+          return false;
+        }
+        break;
     }
   }
 

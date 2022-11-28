@@ -103,8 +103,8 @@ exports[`EnumParameter renders creatable enum correctly 1`] = `
     <label
       className="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary Mui-required MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-sizeSmall MuiInputLabel-outlined css-1pysi21-MuiFormLabel-root-MuiInputLabel-root"
       data-shrink={false}
-      htmlFor="mui-22"
-      id="mui-22-label"
+      htmlFor="mui-23"
+      id="mui-23-label"
     >
       Label
       <span
@@ -120,12 +120,12 @@ exports[`EnumParameter renders creatable enum correctly 1`] = `
       onClick={[Function]}
     >
       <select
-        aria-describedby="mui-22-helper-text"
+        aria-describedby="mui-23-helper-text"
         aria-invalid={false}
         autoFocus={false}
         className="MuiNativeSelect-select MuiNativeSelect-outlined MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputSizeSmall css-12ogz78-MuiNativeSelect-select-MuiInputBase-input-MuiOutlinedInput-input"
         disabled={false}
-        id="mui-22"
+        id="mui-23"
         multiple={false}
         name="yaml_type_param"
         onAnimationStart={[Function]}
@@ -179,7 +179,7 @@ exports[`EnumParameter renders creatable enum correctly 1`] = `
     </div>
     <p
       className="MuiFormHelperText-root MuiFormHelperText-sizeSmall MuiFormHelperText-contained Mui-required css-k4qjio-MuiFormHelperText-root"
-      id="mui-22-helper-text"
+      id="mui-23-helper-text"
     >
       <span
         className="MuiTypography-root MuiTypography-body1 css-1uz5ads-MuiTypography-root"
