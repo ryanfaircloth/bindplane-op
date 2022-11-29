@@ -9,7 +9,7 @@ require (
 	github.com/mgechev/revive v1.2.1
 	github.com/ory/go-acc v0.2.8
 	github.com/securego/gosec/v2 v2.13.1
-	github.com/swaggo/swag v1.8.6
+	github.com/swaggo/swag v1.8.8
 	github.com/uw-labs/lichen v0.1.7
 	honnef.co/go/tools v0.3.3
 )
