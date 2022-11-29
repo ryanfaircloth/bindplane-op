@@ -225,6 +225,8 @@ var _ BindPlane = (*bindplaneClient)(nil)
 // NewBindPlane takes a client configuration, logger and returns a new BindPlane.
 func NewBindPlane(config *common.Client, logger *zap.Logger) (BindPlane, error) {
 	client := resty.New()
+	// Don't log warning if using HTTP
+	client.SetDisableWarn(true)
 	client.SetTimeout(time.Second * 20)
 	client.SetBasicAuth(config.Username, config.Password)
 	client.SetBaseURL(fmt.Sprintf("%s/v1", config.BindPlaneURL()))
