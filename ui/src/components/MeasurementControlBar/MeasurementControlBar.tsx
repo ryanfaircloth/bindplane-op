@@ -4,14 +4,15 @@ import { classes } from "../../utils/styles";
 import styles from "./measurement-control-bar.module.scss";
 
 export const PERIODS: { [period: string]: string } = {
+  "10s": "10s",
   "1m": "1m",
   "5m": "5m",
   "1h": "1h",
   "24h": "24h",
 };
-export const DEFAULT_PERIOD = "1m";
-export const DEFAULT_AGENTS_TABLE_PERIOD = "1m";
-export const DEFAULT_CONFIGURATION_TABLE_PERIOD = "1m";
+export const DEFAULT_PERIOD = "10s";
+export const DEFAULT_AGENTS_TABLE_PERIOD = "10s";
+export const DEFAULT_CONFIGURATION_TABLE_PERIOD = "10s";
 export const TELEMETRY_TYPES: { [telemetryType: string]: string } = {
   logs: "Logs",
   metrics: "Metrics",
