@@ -624,7 +624,6 @@ func (p ParameterDefinition) validateMapValue(fieldType parameterFieldType, valu
 // CloudWatchNamedFieldValue is type for storing multiple instances of named log groups
 type CloudWatchNamedFieldValue []AwsCloudWatchNamedFieldItem
 
-
 // AwsCloudWatchNamedFieldItem is the specified log group name which holds custom stream prefix and name filters
 type AwsCloudWatchNamedFieldItem struct {
 	ID       string   `mapstructure:"id" yaml:"id,omitempty"`
@@ -635,9 +634,7 @@ type AwsCloudWatchNamedFieldItem struct {
 func (p ParameterDefinition) validateAwsCloudwatchNamedFieldType(fieldType parameterFieldType, value any) error {
 	reflectValue := reflect.ValueOf(value)
 	kind := reflectValue.Kind()
-	fmt.Println(kind)
 	if kind != reflect.Slice {
-		fmt.Println("failed reflect slice")
 		return errors.NewError("malformed value for parameter of type awsCloudwatchNamedField",
 			"value should be in the form of AwsCloudWatchNamedFieldValue struct",
 		)
@@ -649,7 +646,9 @@ func (p ParameterDefinition) validateAwsCloudwatchNamedFieldType(fieldType param
 		result := map[string]interface{}{}
 		err := mapstructure.Decode(item.Interface(), &result)
 		if err != nil {
-			fmt.Println(err)
+			return errors.NewError("malformed value for parameter of type awsCloudwatchNamedField",
+				"value should be in the form of AwsCloudWatchNamedFieldValue struct",
+			)
 		}
 
 		for s, n := range result {
