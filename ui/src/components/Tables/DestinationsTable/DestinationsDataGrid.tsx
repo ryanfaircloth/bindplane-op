@@ -8,27 +8,27 @@ import {
   GridValueGetterParams,
 } from "@mui/x-data-grid";
 import { isFunction } from "lodash";
-import { ComponentsQuery } from "../../../graphql/generated";
-import { DestinationTypeCell, SourceTypeCell } from "./cells";
+import { DestinationsQuery } from "../../../graphql/generated";
+import { DestinationTypeCell } from "./cells";
 
 import styles from "./cells.module.scss";
 
-export enum ComponentsTableField {
+export enum DestinationsTableField {
   NAME = "name",
   KIND = "kind",
   TYPE = "type",
 }
 
-interface ComponentsDataGridProps
+interface DestinationsDataGridProps
   extends Omit<DataGridProps, "columns" | "rows"> {
-  onComponentsSelected?: (names: GridSelectionModel) => void;
+  onDestinationsSelected?: (names: GridSelectionModel) => void;
   onEditDestination: (name: string) => void;
-  queryData: ComponentsQuery;
+  queryData: DestinationsQuery;
   loading: boolean;
 }
 
-export const ComponentsDataGrid: React.FC<ComponentsDataGridProps> = ({
-  onComponentsSelected,
+export const DestinationsDataGrid: React.FC<DestinationsDataGridProps> = ({
+  onDestinationsSelected,
   queryData,
   onEditDestination,
   ...dataGridProps
@@ -50,21 +50,22 @@ export const ComponentsDataGrid: React.FC<ComponentsDataGridProps> = ({
 
   const columns: GridColumns = [
     {
-      field: ComponentsTableField.NAME,
+      field: DestinationsTableField.NAME,
       flex: 1,
       headerName: "Name",
       valueGetter: (params: GridValueGetterParams) => params.row.metadata.name,
       renderCell: renderNameCell,
     },
+    // TODO removing this column breaks the tests in an inscrutable way.
     {
-      field: ComponentsTableField.KIND,
+      field: DestinationsTableField.KIND,
       flex: 1,
       headerName: "Kind",
       valueGetter: (params: GridValueGetterParams) => params.row.kind,
       renderCell: renderStringCell,
     },
     {
-      field: ComponentsTableField.TYPE,
+      field: DestinationsTableField.TYPE,
       flex: 1,
       headerName: "Type",
       valueGetter: (params: GridValueGetterParams) => params.row.spec.type,
@@ -73,10 +74,10 @@ export const ComponentsDataGrid: React.FC<ComponentsDataGridProps> = ({
   ];
 
   function handleSelect(s: GridSelectionModel) {
-    isFunction(onComponentsSelected) && onComponentsSelected(s);
+    isFunction(onDestinationsSelected) && onDestinationsSelected(s);
   }
 
-  const rows = [...queryData.destinations, ...queryData.sources];
+  const rows = [...queryData.destinations];
 
   return (
     <DataGrid
@@ -99,11 +100,7 @@ export const ComponentsDataGrid: React.FC<ComponentsDataGridProps> = ({
 };
 
 function renderTypeCell(cellParams: GridCellParams<string>): JSX.Element {
-  return cellParams.row.kind === "Source" ? (
-    <SourceTypeCell type={cellParams.value ?? ""} />
-  ) : (
-    <DestinationTypeCell type={cellParams.value ?? ""} />
-  );
+  return <DestinationTypeCell type={cellParams.value ?? ""} />;
 }
 
 function renderStringCell(cellParams: GridCellParams<string>): JSX.Element {

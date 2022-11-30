@@ -98,10 +98,10 @@ export const NavBar: React.FC = () => {
                   ? classes([styles["nav-link"], styles["active"]])
                   : styles["nav-link"]
               }
-              to="/components"
+              to="/destinations"
             >
               <SquareIcon className={styles.icon} />
-              Components
+              Destinations
             </NavLink>
           </div>
 

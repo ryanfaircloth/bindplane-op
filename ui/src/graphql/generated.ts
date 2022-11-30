@@ -600,25 +600,6 @@ export type AgentsTableMetricsSubscriptionVariables = Exact<{
 
 export type AgentsTableMetricsSubscription = { __typename?: 'Subscription', agentMetrics: { __typename?: 'GraphMetrics', metrics: Array<{ __typename?: 'GraphMetric', name: string, nodeID: string, pipelineType: string, value: number, unit: string, agentID?: string | null }> } };
 
-export type GetDestinationTypeDisplayInfoQueryVariables = Exact<{
-  name: Scalars['String'];
-}>;
-
-
-export type GetDestinationTypeDisplayInfoQuery = { __typename?: 'Query', destinationType?: { __typename?: 'DestinationType', metadata: { __typename?: 'Metadata', displayName?: string | null, icon?: string | null, name: string } } | null };
-
-export type GetSourceTypeDisplayInfoQueryVariables = Exact<{
-  name: Scalars['String'];
-}>;
-
-
-export type GetSourceTypeDisplayInfoQuery = { __typename?: 'Query', sourceType?: { __typename?: 'SourceType', metadata: { __typename?: 'Metadata', displayName?: string | null, icon?: string | null, name: string } } | null };
-
-export type ComponentsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type ComponentsQuery = { __typename?: 'Query', sources: Array<{ __typename?: 'Source', kind: string, metadata: { __typename?: 'Metadata', name: string }, spec: { __typename?: 'ParameterizedSpec', type: string } }>, destinations: Array<{ __typename?: 'Destination', kind: string, metadata: { __typename?: 'Metadata', name: string }, spec: { __typename?: 'ParameterizedSpec', type: string } }> };
-
 export type GetConfigurationTableQueryVariables = Exact<{
   selector?: InputMaybe<Scalars['String']>;
   query?: InputMaybe<Scalars['String']>;
@@ -641,6 +622,20 @@ export type ConfigurationTableMetricsSubscriptionVariables = Exact<{
 
 
 export type ConfigurationTableMetricsSubscription = { __typename?: 'Subscription', overviewMetrics: { __typename?: 'GraphMetrics', metrics: Array<{ __typename?: 'GraphMetric', name: string, nodeID: string, pipelineType: string, value: number, unit: string }> } };
+
+export type GetDestinationTypeDisplayInfoQueryVariables = Exact<{
+  name: Scalars['String'];
+}>;
+
+
+export type GetDestinationTypeDisplayInfoQuery = { __typename?: 'Query', destinationType?: { __typename?: 'DestinationType', metadata: { __typename?: 'Metadata', displayName?: string | null, icon?: string | null, name: string } } | null };
+
+export type GetSourceTypeDisplayInfoQueryVariables = Exact<{
+  name: Scalars['String'];
+}>;
+
+
+export type GetSourceTypeDisplayInfoQuery = { __typename?: 'Query', sourceType?: { __typename?: 'SourceType', metadata: { __typename?: 'Metadata', displayName?: string | null, icon?: string | null, name: string } } | null };
 
 export type AgentChangesSubscriptionVariables = Exact<{
   selector?: InputMaybe<Scalars['String']>;
@@ -683,6 +678,11 @@ export type GetConfigNamesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetConfigNamesQuery = { __typename?: 'Query', configurations: { __typename?: 'Configurations', configurations: Array<{ __typename?: 'Configuration', metadata: { __typename?: 'Metadata', name: string } }> } };
+
+export type DestinationsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type DestinationsQuery = { __typename?: 'Query', destinations: Array<{ __typename?: 'Destination', kind: string, metadata: { __typename?: 'Metadata', name: string }, spec: { __typename?: 'ParameterizedSpec', type: string } }> };
 
 export type GetOverviewPageQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1304,133 +1304,6 @@ export function useAgentsTableMetricsSubscription(baseOptions: Apollo.Subscripti
       }
 export type AgentsTableMetricsSubscriptionHookResult = ReturnType<typeof useAgentsTableMetricsSubscription>;
 export type AgentsTableMetricsSubscriptionResult = Apollo.SubscriptionResult<AgentsTableMetricsSubscription>;
-export const GetDestinationTypeDisplayInfoDocument = gql`
-    query getDestinationTypeDisplayInfo($name: String!) {
-  destinationType(name: $name) {
-    metadata {
-      displayName
-      icon
-      name
-    }
-  }
-}
-    `;
-
-/**
- * __useGetDestinationTypeDisplayInfoQuery__
- *
- * To run a query within a React component, call `useGetDestinationTypeDisplayInfoQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetDestinationTypeDisplayInfoQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetDestinationTypeDisplayInfoQuery({
- *   variables: {
- *      name: // value for 'name'
- *   },
- * });
- */
-export function useGetDestinationTypeDisplayInfoQuery(baseOptions: Apollo.QueryHookOptions<GetDestinationTypeDisplayInfoQuery, GetDestinationTypeDisplayInfoQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetDestinationTypeDisplayInfoQuery, GetDestinationTypeDisplayInfoQueryVariables>(GetDestinationTypeDisplayInfoDocument, options);
-      }
-export function useGetDestinationTypeDisplayInfoLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetDestinationTypeDisplayInfoQuery, GetDestinationTypeDisplayInfoQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetDestinationTypeDisplayInfoQuery, GetDestinationTypeDisplayInfoQueryVariables>(GetDestinationTypeDisplayInfoDocument, options);
-        }
-export type GetDestinationTypeDisplayInfoQueryHookResult = ReturnType<typeof useGetDestinationTypeDisplayInfoQuery>;
-export type GetDestinationTypeDisplayInfoLazyQueryHookResult = ReturnType<typeof useGetDestinationTypeDisplayInfoLazyQuery>;
-export type GetDestinationTypeDisplayInfoQueryResult = Apollo.QueryResult<GetDestinationTypeDisplayInfoQuery, GetDestinationTypeDisplayInfoQueryVariables>;
-export const GetSourceTypeDisplayInfoDocument = gql`
-    query getSourceTypeDisplayInfo($name: String!) {
-  sourceType(name: $name) {
-    metadata {
-      displayName
-      icon
-      name
-    }
-  }
-}
-    `;
-
-/**
- * __useGetSourceTypeDisplayInfoQuery__
- *
- * To run a query within a React component, call `useGetSourceTypeDisplayInfoQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetSourceTypeDisplayInfoQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetSourceTypeDisplayInfoQuery({
- *   variables: {
- *      name: // value for 'name'
- *   },
- * });
- */
-export function useGetSourceTypeDisplayInfoQuery(baseOptions: Apollo.QueryHookOptions<GetSourceTypeDisplayInfoQuery, GetSourceTypeDisplayInfoQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetSourceTypeDisplayInfoQuery, GetSourceTypeDisplayInfoQueryVariables>(GetSourceTypeDisplayInfoDocument, options);
-      }
-export function useGetSourceTypeDisplayInfoLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSourceTypeDisplayInfoQuery, GetSourceTypeDisplayInfoQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetSourceTypeDisplayInfoQuery, GetSourceTypeDisplayInfoQueryVariables>(GetSourceTypeDisplayInfoDocument, options);
-        }
-export type GetSourceTypeDisplayInfoQueryHookResult = ReturnType<typeof useGetSourceTypeDisplayInfoQuery>;
-export type GetSourceTypeDisplayInfoLazyQueryHookResult = ReturnType<typeof useGetSourceTypeDisplayInfoLazyQuery>;
-export type GetSourceTypeDisplayInfoQueryResult = Apollo.QueryResult<GetSourceTypeDisplayInfoQuery, GetSourceTypeDisplayInfoQueryVariables>;
-export const ComponentsDocument = gql`
-    query Components {
-  sources {
-    kind
-    metadata {
-      name
-    }
-    spec {
-      type
-    }
-  }
-  destinations {
-    kind
-    metadata {
-      name
-    }
-    spec {
-      type
-    }
-  }
-}
-    `;
-
-/**
- * __useComponentsQuery__
- *
- * To run a query within a React component, call `useComponentsQuery` and pass it any options that fit your needs.
- * When your component renders, `useComponentsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useComponentsQuery({
- *   variables: {
- *   },
- * });
- */
-export function useComponentsQuery(baseOptions?: Apollo.QueryHookOptions<ComponentsQuery, ComponentsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ComponentsQuery, ComponentsQueryVariables>(ComponentsDocument, options);
-      }
-export function useComponentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ComponentsQuery, ComponentsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ComponentsQuery, ComponentsQueryVariables>(ComponentsDocument, options);
-        }
-export type ComponentsQueryHookResult = ReturnType<typeof useComponentsQuery>;
-export type ComponentsLazyQueryHookResult = ReturnType<typeof useComponentsLazyQuery>;
-export type ComponentsQueryResult = Apollo.QueryResult<ComponentsQuery, ComponentsQueryVariables>;
 export const GetConfigurationTableDocument = gql`
     query GetConfigurationTable($selector: String, $query: String) {
   configurations(selector: $selector, query: $query) {
@@ -1554,6 +1427,84 @@ export function useConfigurationTableMetricsSubscription(baseOptions: Apollo.Sub
       }
 export type ConfigurationTableMetricsSubscriptionHookResult = ReturnType<typeof useConfigurationTableMetricsSubscription>;
 export type ConfigurationTableMetricsSubscriptionResult = Apollo.SubscriptionResult<ConfigurationTableMetricsSubscription>;
+export const GetDestinationTypeDisplayInfoDocument = gql`
+    query getDestinationTypeDisplayInfo($name: String!) {
+  destinationType(name: $name) {
+    metadata {
+      displayName
+      icon
+      name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetDestinationTypeDisplayInfoQuery__
+ *
+ * To run a query within a React component, call `useGetDestinationTypeDisplayInfoQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetDestinationTypeDisplayInfoQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetDestinationTypeDisplayInfoQuery({
+ *   variables: {
+ *      name: // value for 'name'
+ *   },
+ * });
+ */
+export function useGetDestinationTypeDisplayInfoQuery(baseOptions: Apollo.QueryHookOptions<GetDestinationTypeDisplayInfoQuery, GetDestinationTypeDisplayInfoQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetDestinationTypeDisplayInfoQuery, GetDestinationTypeDisplayInfoQueryVariables>(GetDestinationTypeDisplayInfoDocument, options);
+      }
+export function useGetDestinationTypeDisplayInfoLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetDestinationTypeDisplayInfoQuery, GetDestinationTypeDisplayInfoQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetDestinationTypeDisplayInfoQuery, GetDestinationTypeDisplayInfoQueryVariables>(GetDestinationTypeDisplayInfoDocument, options);
+        }
+export type GetDestinationTypeDisplayInfoQueryHookResult = ReturnType<typeof useGetDestinationTypeDisplayInfoQuery>;
+export type GetDestinationTypeDisplayInfoLazyQueryHookResult = ReturnType<typeof useGetDestinationTypeDisplayInfoLazyQuery>;
+export type GetDestinationTypeDisplayInfoQueryResult = Apollo.QueryResult<GetDestinationTypeDisplayInfoQuery, GetDestinationTypeDisplayInfoQueryVariables>;
+export const GetSourceTypeDisplayInfoDocument = gql`
+    query getSourceTypeDisplayInfo($name: String!) {
+  sourceType(name: $name) {
+    metadata {
+      displayName
+      icon
+      name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSourceTypeDisplayInfoQuery__
+ *
+ * To run a query within a React component, call `useGetSourceTypeDisplayInfoQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSourceTypeDisplayInfoQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSourceTypeDisplayInfoQuery({
+ *   variables: {
+ *      name: // value for 'name'
+ *   },
+ * });
+ */
+export function useGetSourceTypeDisplayInfoQuery(baseOptions: Apollo.QueryHookOptions<GetSourceTypeDisplayInfoQuery, GetSourceTypeDisplayInfoQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetSourceTypeDisplayInfoQuery, GetSourceTypeDisplayInfoQueryVariables>(GetSourceTypeDisplayInfoDocument, options);
+      }
+export function useGetSourceTypeDisplayInfoLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSourceTypeDisplayInfoQuery, GetSourceTypeDisplayInfoQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetSourceTypeDisplayInfoQuery, GetSourceTypeDisplayInfoQueryVariables>(GetSourceTypeDisplayInfoDocument, options);
+        }
+export type GetSourceTypeDisplayInfoQueryHookResult = ReturnType<typeof useGetSourceTypeDisplayInfoQuery>;
+export type GetSourceTypeDisplayInfoLazyQueryHookResult = ReturnType<typeof useGetSourceTypeDisplayInfoLazyQuery>;
+export type GetSourceTypeDisplayInfoQueryResult = Apollo.QueryResult<GetSourceTypeDisplayInfoQuery, GetSourceTypeDisplayInfoQueryVariables>;
 export const AgentChangesDocument = gql`
     subscription AgentChanges($selector: String, $query: String) {
   agentChanges(selector: $selector, query: $query) {
@@ -2045,6 +1996,46 @@ export function useGetConfigNamesLazyQuery(baseOptions?: Apollo.LazyQueryHookOpt
 export type GetConfigNamesQueryHookResult = ReturnType<typeof useGetConfigNamesQuery>;
 export type GetConfigNamesLazyQueryHookResult = ReturnType<typeof useGetConfigNamesLazyQuery>;
 export type GetConfigNamesQueryResult = Apollo.QueryResult<GetConfigNamesQuery, GetConfigNamesQueryVariables>;
+export const DestinationsDocument = gql`
+    query Destinations {
+  destinations {
+    kind
+    metadata {
+      name
+    }
+    spec {
+      type
+    }
+  }
+}
+    `;
+
+/**
+ * __useDestinationsQuery__
+ *
+ * To run a query within a React component, call `useDestinationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDestinationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDestinationsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useDestinationsQuery(baseOptions?: Apollo.QueryHookOptions<DestinationsQuery, DestinationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DestinationsQuery, DestinationsQueryVariables>(DestinationsDocument, options);
+      }
+export function useDestinationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DestinationsQuery, DestinationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DestinationsQuery, DestinationsQueryVariables>(DestinationsDocument, options);
+        }
+export type DestinationsQueryHookResult = ReturnType<typeof useDestinationsQuery>;
+export type DestinationsLazyQueryHookResult = ReturnType<typeof useDestinationsLazyQuery>;
+export type DestinationsQueryResult = Apollo.QueryResult<DestinationsQuery, DestinationsQueryVariables>;
 export const GetOverviewPageDocument = gql`
     query getOverviewPage {
   overviewPage {

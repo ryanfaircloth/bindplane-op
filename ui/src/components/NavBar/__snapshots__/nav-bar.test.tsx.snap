@@ -241,7 +241,7 @@ exports[`NavBar renders correctly 1`] = `
       </a>
       <a
         className="nav-link"
-        href="/components"
+        href="/destinations"
         onClick={[Function]}
       >
         <svg
@@ -265,7 +265,7 @@ exports[`NavBar renders correctly 1`] = `
             y="3"
           />
         </svg>
-        Components
+        Destinations
       </a>
     </div>
     <div

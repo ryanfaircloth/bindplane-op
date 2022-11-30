@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Handle, Position } from "react-flow-renderer";
 import { CardMeasurementContent } from "../../../components/CardMeasurementContent/CardMeasurementContent";
 import { InlineDestinationCard } from "../../../components/Cards/InlineDestinationCard";
-import { ResourceDestinationCard } from "../../../components/Cards/ResourceDestinationCard";
+import { OverviewDestinationCard } from "../../../components/Cards/OverviewDestinationCard";
 import { isNodeDisabled } from "../../../components/PipelineGraph/Nodes/nodeUtils";
 import { useOverviewPage } from "../OverviewPageContext";
 
@@ -32,7 +32,7 @@ export function OverviewDestinationNode(params: {
       {attributes.isInline ? (
         <InlineDestinationCard id={id.replace("destination/", "")} key={id} />
       ) : (
-        <ResourceDestinationCard
+        <OverviewDestinationCard
           name={attributes.resourceId}
           disabled={isDisabled || isNotInHoverSet}
           key={id}

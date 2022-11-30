@@ -1,32 +1,26 @@
 import { gql } from "@apollo/client";
-import { GridSelectionModel } from "@mui/x-data-grid";
-import { useComponentsQuery } from "../../../graphql/generated";
-import { ComponentsDataGrid } from "./ComponentsDataGrid";
 import { Typography, FormControl, Button } from "@mui/material";
-import { useEffect, useState } from "react";
-import { ConfirmDeleteResourceDialog } from "../../ConfirmDeleteResourceDialog";
+import { GridSelectionModel } from "@mui/x-data-grid";
 import { useSnackbar } from "notistack";
+import { useState, useEffect } from "react";
+import { CardContainer } from "../../components/CardContainer";
+import { ConfirmDeleteResourceDialog } from "../../components/ConfirmDeleteResourceDialog";
+import { withNavBar } from "../../components/NavBar";
+import { DestinationsDataGrid } from "../../components/Tables/DestinationsTable/DestinationsDataGrid";
+import { EditDestinationDialog } from "../../components/Tables/DestinationsTable/EditDestinationDialog";
+import { FailedDeleteDialog } from "../../components/Tables/DestinationsTable/FailedDeleteDialog";
+import { withRequireLogin } from "../../contexts/RequireLogin";
+import { useDestinationsQuery } from "../../graphql/generated";
+import { ResourceStatus, ResourceKind } from "../../types/resources";
 import {
   deleteResources,
   MinimumDeleteResource,
-} from "../../../utils/rest/delete-resources";
-import { ResourceKind, ResourceStatus } from "../../../types/resources";
-import { FailedDeleteDialog } from "./FailedDeleteDialog";
-import { EditDestinationDialog } from "./EditDestinationDialog";
+} from "../../utils/rest/delete-resources";
 
-import mixins from "../../../styles/mixins.module.scss";
+import mixins from "../../styles/mixins.module.scss";
 
 gql`
-  query Components {
-    sources {
-      kind
-      metadata {
-        name
-      }
-      spec {
-        type
-      }
-    }
+  query Destinations {
     destinations {
       kind
       metadata {
@@ -39,8 +33,8 @@ gql`
   }
 `;
 
-export const ComponentsTable: React.FC = () => {
-  // Selected is an array of names of components in the form
+export const DestinationsPageContent: React.FC = () => {
+  // Selected is an array of names of destinations in the form
   // <Kind>|<Name>
   const [selected, setSelected] = useState<GridSelectionModel>([]);
 
@@ -55,7 +49,7 @@ export const ComponentsTable: React.FC = () => {
 
   const { enqueueSnackbar } = useSnackbar();
 
-  const { data, loading, refetch, error } = useComponentsQuery({
+  const { data, loading, refetch, error } = useDestinationsQuery({
     fetchPolicy: "network-only",
   });
 
@@ -73,7 +67,7 @@ export const ComponentsTable: React.FC = () => {
     }
   }, [failedDeletes, setFailedDeletesOpen]);
 
-  function onComponentsSelected(s: GridSelectionModel) {
+  function onDestinationsSelected(s: GridSelectionModel) {
     setSelected(s);
   }
 
@@ -103,10 +97,10 @@ export const ComponentsTable: React.FC = () => {
   }
 
   return (
-    <>
+    <CardContainer>
       <div className={mixins.flex}>
         <Typography variant="h5" className={mixins["mb-5"]}>
-          Components
+          Destinations
         </Typography>
         {selected.length > 0 && (
           <FormControl classes={{ root: mixins["ml-5"] }}>
@@ -121,10 +115,10 @@ export const ComponentsTable: React.FC = () => {
           </FormControl>
         )}
       </div>
-      <ComponentsDataGrid
+      <DestinationsDataGrid
         loading={loading}
-        queryData={data ?? { destinations: [], sources: [] }}
-        onComponentsSelected={onComponentsSelected}
+        queryData={data ?? { destinations: [] }}
+        onDestinationsSelected={onDestinationsSelected}
         disableSelectionOnClick
         checkboxSelection
         onEditDestination={(name: string) => setEditingDestination(name)}
@@ -156,7 +150,7 @@ export const ComponentsTable: React.FC = () => {
           onSaveSuccess={handleEditSaveSuccess}
         />
       )}
-    </>
+    </CardContainer>
   );
 };
 
@@ -175,20 +169,11 @@ export function resourcesFromSelected(
       return prev;
     }
 
-    let resourceKind: ResourceKind;
-    switch (kind) {
-      case ResourceKind.DESTINATION:
-        resourceKind = ResourceKind.DESTINATION;
-        break;
-      case ResourceKind.SOURCE:
-        resourceKind = ResourceKind.SOURCE;
-        break;
-      default:
-        console.error(`Unexpected ResourceKind parsed from GridRowId: ${cur}.`);
-        return prev;
-    }
-
-    prev.push({ kind: resourceKind, metadata: { name } });
+    prev.push({ kind: ResourceKind.DESTINATION, metadata: { name } });
     return prev;
   }, []);
 }
+
+export const DestinationsPage = withRequireLogin(
+  withNavBar(DestinationsPageContent)
+);

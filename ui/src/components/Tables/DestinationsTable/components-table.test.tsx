@@ -1,29 +1,18 @@
 import { GridSelectionModel } from "@mui/x-data-grid";
 import { render, screen, waitFor } from "@testing-library/react";
-import { resourcesFromSelected } from ".";
+import { resourcesFromSelected } from "../../../pages/destinations/DestinationsPage";
+
 import {
   Destination1,
   Destination2,
 } from "../../ResourceConfigForm/__test__/dummyResources";
-import { ComponentsDataGrid } from "./ComponentsDataGrid";
+import { DestinationsDataGrid } from "./DestinationsDataGrid";
 
 describe("resourcesFromSelected", () => {
-  it("Source|blah, Source|source-name, Destination|gcp", () => {
-    const selected = ["Source|blah", "Source|source-name", "Destination|gcp"];
+  it("Destination|gcp", () => {
+    const selected = ["Destination|gcp"];
 
     const want = [
-      {
-        kind: "Source",
-        metadata: {
-          name: "blah",
-        },
-      },
-      {
-        kind: "Source",
-        metadata: {
-          name: "source-name",
-        },
-      },
       {
         kind: "Destination",
         metadata: {
@@ -38,15 +27,15 @@ describe("resourcesFromSelected", () => {
   });
 });
 
-describe("ComponentsDataGrid", () => {
+describe("DestinationsDataGrid", () => {
   const destinationData = [Destination1, Destination2];
 
   it("renders without error", () => {
     render(
-      <ComponentsDataGrid
+      <DestinationsDataGrid
         loading={false}
-        queryData={{ destinations: destinationData, sources: [] }}
-        onComponentsSelected={() => {}}
+        queryData={{ destinations: destinationData }}
+        onDestinationsSelected={() => {}}
         disableSelectionOnClick
         checkboxSelection
         onEditDestination={() => {}}
@@ -56,10 +45,10 @@ describe("ComponentsDataGrid", () => {
 
   it("displays destinations", () => {
     render(
-      <ComponentsDataGrid
+      <DestinationsDataGrid
         loading={false}
-        queryData={{ destinations: destinationData, sources: [] }}
-        onComponentsSelected={() => {}}
+        queryData={{ destinations: destinationData }}
+        onDestinationsSelected={() => {}}
         disableSelectionOnClick
         checkboxSelection
         onEditDestination={() => {}}
@@ -71,17 +60,17 @@ describe("ComponentsDataGrid", () => {
   });
 
   it("uses the expected GridSelectionModel", () => {
-    function onComponentsSelected(m: GridSelectionModel) {
+    function onDestinationsSelected(m: GridSelectionModel) {
       expect(m).toEqual([
         `Destination|${Destination1.metadata.name}`,
         `Destination|${Destination2.metadata.name}`,
       ]);
     }
     render(
-      <ComponentsDataGrid
+      <DestinationsDataGrid
         loading={false}
-        queryData={{ destinations: destinationData, sources: [] }}
-        onComponentsSelected={onComponentsSelected}
+        queryData={{ destinations: destinationData }}
+        onDestinationsSelected={onDestinationsSelected}
         disableSelectionOnClick
         checkboxSelection
         onEditDestination={() => {}}
@@ -97,10 +86,10 @@ describe("ComponentsDataGrid", () => {
       editCalled = true;
     }
     render(
-      <ComponentsDataGrid
+      <DestinationsDataGrid
         loading={false}
-        queryData={{ destinations: destinationData, sources: [] }}
-        onComponentsSelected={() => {}}
+        queryData={{ destinations: destinationData }}
+        onDestinationsSelected={() => {}}
         disableSelectionOnClick
         checkboxSelection
         onEditDestination={onEditDestination}

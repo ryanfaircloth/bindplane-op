@@ -14,7 +14,7 @@ import { StyledEngineProvider, ThemeProvider } from "@mui/material";
 import { ViewConfiguration } from "./pages/configurations/configuration";
 import { NewRawConfigurationPage } from "./pages/configurations/new-raw";
 import { SnackbarProvider } from "notistack";
-import { ComponentsPage } from "./pages/components";
+import { DestinationsPage } from"./pages/destinations/DestinationsPage";
 import { Version } from "./components/Version";
 import { LoginPage } from "./pages/login";
 import { OverviewPage } from "./pages/overview/OverviewPage";
@@ -46,8 +46,8 @@ export const App: React.FC = () => {
                   <Route path="new" element={<NewConfigurationPage />} />
                   <Route path=":name" element={<ViewConfiguration />} />
                 </Route>
-                <Route path="components">
-                  <Route index element={<ComponentsPage />} />
+                <Route path="destinations">
+                  <Route index element={<DestinationsPage />} />
                 </Route>
               </Routes>
 
