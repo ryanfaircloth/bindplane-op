@@ -67,6 +67,21 @@ using an environment variable in the systemd service configuration.
 Log files are rotated and gzip compressed, and cleaned up automatically by BindPlane. Log files have a max size of 100mb
 and up to 10 rotates or 30 days of age, whichever comes first. Using an external utility such as `logrotate` is not recommended.
 
+**Tracing**
+
+Bindplane supports configuration to enable tracing. `traceType` can be set to `google` or `otlp`.
+
+| Option    | Flag         | Environment Variable        | Default |
+| --------- | ------------ | --------------------------- | ------- |
+| traceType | --trace-type | BINDPLANE_CONFIG_TRACE_TYPE |         |
+
+When `traceType` is set to `otlp`, some more configuration is possible.
+
+| Option                   | Flag                        | Environment Variable                       | Default |
+| ------------------------ | --------------------------- | ------------------------------------------ | ------- |
+| otlpTracing.endpoint     | --otlp-tracing-endpoint     | BINDPLANE_CONFIG_OTLP_TRACING_ENDPOINT     |         |
+| otlpTracing.tls.insecure | --otlp-tracing-insecure-tls | BINDPLANE_CONFIG_OTLP_TRACING_INSECURE_TLS | `FALSE` |
+
 **TLS**
 
 BindPlane supports server side TLS and mutual TLS. See [the tls examples](./configuration.md#example-configurations)

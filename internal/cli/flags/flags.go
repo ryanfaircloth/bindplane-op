@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // Global adds global flags
@@ -36,6 +37,16 @@ func Global(cmd *cobra.Command) {
 	pf.Bool("tls-skip-verify", false, "Whether to verify the server's certificate chain and host name when making client requests")
 	pf.String("log-file-path", "", "full path of the BindPlane log file, defaults to $HOME/.bindplane/bindplane.log")
 	pf.String("log-output", "", "output of the log. One of: file|stdout")
+	pf.String("trace-type", "", "type of trace to use for tracing requests, either 'otlp' or 'google'")
+	pf.String("otlp-tracing-endpoint", "", "endpoint to send OTLP traces to")
+	pf.Bool("otlp-tracing-insecure-tls", false, "set true to allow insecure TLS")
+
+	// Custom handling for some flags.
+	_ = viper.BindPFlag("otlpTracing.endpoint", pf.set.Lookup("otlp-tracing-endpoint"))
+	_ = viper.BindEnv("otlpTracing.endpoint", "BINDPLANE_CONFIG_OTLP_TRACING_ENDPOINT")
+
+	_ = viper.BindPFlag("otlpTracing.tls.insecure", pf.set.Lookup("otlp-tracing-insecure-tls"))
+	_ = viper.BindEnv("otlpTracing.tls.insecure", "BINDPLANE_CONFIG_OTLP_TRACING_INSECURE_TLS")
 }
 
 // Serve adds flags for the serve command

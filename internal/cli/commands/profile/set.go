@@ -187,6 +187,21 @@ func registerModifiers() *profileSettingModifiers {
 		return nil
 	})
 
+	p.register("trace-type", func(name string, f *pflag.Flag, profile *model.Profile) error {
+		profile.Spec.Server.TraceType = f.Value.String()
+		return nil
+	})
+
+	p.register("otlp-tracing-endpoint", func(name string, f *pflag.Flag, profile *model.Profile) error {
+		profile.Spec.Server.OpenTelemetryTracing.Endpoint = f.Value.String()
+		return nil
+	})
+
+	p.register("otlp-tracing-insecure-tls", func(name string, f *pflag.Flag, profile *model.Profile) error {
+		profile.Spec.Server.OpenTelemetryTracing.TLS.Insecure = f.Value.String() == "true"
+		return nil
+	})
+
 	return p
 }
 
