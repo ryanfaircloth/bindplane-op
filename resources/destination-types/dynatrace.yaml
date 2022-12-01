@@ -32,7 +32,10 @@ spec:
         - text: Read more
           url: https://www.dynatrace.com/support/help/dynatrace-api/basics/dynatrace-api-authentication
       default: ""
-      # TODO when relevantIf supports 'not equals' add relevant if endpoint != ""
+      relevantIf:
+        - name: metric_ingest_endpoint
+          operator: notEquals
+          value: ""
 
     - name: resource_to_telemetry_conversion
       label: Preserve Resource Attributes
