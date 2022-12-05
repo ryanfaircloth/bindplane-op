@@ -1,0 +1,166 @@
+apiVersion: bindplane.observiq.com/v1
+kind: DestinationType
+metadata:
+  name: coralogix
+  displayName: Coralogix
+  icon: /icons/destinations/coralogix.svg
+  description: Send metrics, traces, and logs to Coralogix.
+spec:
+  parameters:
+    # Base Parameters
+    - name: private_key
+      label: API Private Key
+      type: string
+      required: true
+      default: ""
+      documentation:
+        - text: Read more
+          url: https://coralogix.com/docs/private-key/
+
+    - name: application_name
+      label: Application Name
+      description: Objects are tagged in Coralogix with this Application name
+      required: true
+      type: string
+      default: ""
+      documentation:
+        - text: Read more
+          url: https://coralogix.com/docs/application-and-subsystem-names/
+
+    - name: region
+      lable: Region
+      description: Region of your account. Determines where to send telemetry data.
+      required: true
+      type: enum
+      validValues:
+        - USA1
+        - APAC1
+        - APAC2
+        - EUROPE1
+        - EUROPE2
+      default: EUROPE1
+
+    # Metric Enable
+    - name: enable_metrics
+      label: Enable Metrics
+      type: bool
+      default: true
+
+    # Logs Enable
+    - name: enable_logs
+      label: Enable Logs
+      type: bool
+      default: true
+
+    # Traces Enable
+    - name: enable_traces
+      label: Enable Traces
+      type: bool
+      default: true
+
+    # Advanced Configuration
+    - name: subsystem_name
+      label: Subsystem Name
+      description: Objects are tagged in Coralogix with this Subsystem name
+      type: string
+      default: ""
+      advancedConfig: true
+      documentation:
+        - text: Read more
+          url: https://coralogix.com/docs/application-and-subsystem-names/
+
+    - name: timeout
+      label: Timeout (seconds)
+      description: Timeout (seconds) for every attempt to send data to the backend.
+      type: int
+      default: 5
+      advancedConfig: true
+
+    - name: resource_attributes
+      label: Resource Attributes
+      type: bool
+      default: false
+      options:
+        sectionHeader: true
+      advancedConfig: true
+
+    - name: application_name_attributes
+      label: Application Name Resource Attributes
+      description: Ordered list of resource attributes that are used for Coralogix AppName
+      type: strings
+      default: []
+      advancedConfig: true
+      relevantIf:
+        - name: resource_attributes
+          operator: equals
+          value: true
+
+    - name: subsystem_name_attributes
+      label: SubSystem Resource Attributes
+      description: Ordered list of resource attributes that are used for Coralogix SubSystem
+      type: strings
+      default: []
+      advancedConfig: true
+      relevantIf:
+        - name: resource_attributes
+          operator: equals
+          value: true
+
+  logs+metrics+traces:
+    exporters: |
+      - coralogix:
+          {{ $url_suffix := "coralogix.com:443" }}
+
+          {{ if eq .region "USA1" }}
+            {{ $url_suffix = "coralogix.us:443" }}
+          {{ end }}
+          {{ if eq .region "APAC1" }}
+            {{ $url_suffix = "app.coralogix.in:443" }}
+          {{ end }}
+          {{ if eq .region "APAC2" }}
+            {{ $url_suffix = "coralogixsg.com:443" }}
+          {{ end }}
+          {{ if eq .region "EUROPE2" }}
+            {{ $url_suffix = "eu2.coralogix.com:443" }}
+          {{ end }}
+
+          {{ if .enable_metrics }}
+          metrics:
+            endpoint: otel-metrics.{{ $url_suffix }}
+          {{ end }}
+          {{ if .enable_traces }}
+          traces:
+            endpoint: otel-traces.{{ $url_suffix }}
+          {{ end }}
+          {{ if .enable_logs }}
+          logs:
+            endpoint: otel-logs.{{ $url_suffix }}
+          {{ end }}
+
+          private_key: {{ .private_key }}
+
+          application_name: {{ .application_name }}
+
+          {{ if ne .subsystem_name "" }}
+          subsystem_name: {{ .subsystem_name }}
+          {{ end }}
+
+          {{ if .resource_attributes }}
+
+          {{ $length := len .application_name_attributes }} {{ if ne $length 0 }}
+          application_name_attributes:
+            {{ range $a := .application_name_attributes }}
+            - {{ $a }}
+            {{ end }}
+          {{ end }}
+
+          {{ $length := len .subsystem_name_attributes }} {{ if ne $length 0 }}
+          subsystem_name_attributes:
+            {{ range $a := .subsystem_name_attributes }}
+            - {{ $a }}
+            {{ end }}
+          {{ end }}
+
+          {{ end }}
+
+          timeout: {{ .timeout }}s
