@@ -89,6 +89,21 @@ describe("satisfiesRelevantIf", () => {
     ],
   };
 
+  const enumsParam: ParameterDefinition = {
+    name: "enums_name",
+    label: "Enums Input",
+    description: "Here is the description.",
+    required: false,
+    options: {},
+
+    type: ParameterType.Enums,
+    validValues: [
+      "first option",
+      "second option",
+      "last option",
+    ],
+  };
+
   it("param1 matches", () => {
     const got = satisfiesRelevantIf(formValues, param1);
     expect(got).toEqual(true);
@@ -100,6 +115,31 @@ describe("satisfiesRelevantIf", () => {
   it("param3 does match", () => {
     const got = satisfiesRelevantIf(formValues, param3);
     expect(got).toEqual(false);
+  });
+
+  it("matches lists", () => {
+    const param: ParameterDefinition = {
+      description: "description",
+      relevantIf: [{
+        name: enumsParam.name,
+        operator: RelevantIfOperatorType.ContainsAny,
+        value: ["last option"],
+      }],
+    } as ParameterDefinition;
+
+    expect(satisfiesRelevantIf({
+      [enumsParam.name]: ["first option", "second option"],
+    }, param)).toEqual(false);
+    expect(satisfiesRelevantIf({
+      [enumsParam.name]: ["last option", "second option"],
+    }, param)).toEqual(true);
+    expect(satisfiesRelevantIf({
+      [enumsParam.name]: ["Last option", "second option"],
+    }, param)).toEqual(false);
+    expect(satisfiesRelevantIf({
+      [enumsParam.name]: ["first option", "second option", "last option"],
+    }, param)).toEqual(true);
+    expect(satisfiesRelevantIf({}, param)).toEqual(true);
   });
 });
 

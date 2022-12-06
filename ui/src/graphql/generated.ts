@@ -433,6 +433,7 @@ export type RelevantIfCondition = {
 };
 
 export enum RelevantIfOperatorType {
+  ContainsAny = 'containsAny',
   Equals = 'equals',
   NotEquals = 'notEquals'
 }

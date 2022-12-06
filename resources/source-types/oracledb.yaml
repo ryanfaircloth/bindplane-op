@@ -4,20 +4,139 @@ metadata:
   name: oracledb
   displayName: Oracle Database
   icon: /icons/sources/oracledb.svg
-  description: Collect logs from Oracle Database.
+  description: Collect metrics and logs from Oracle Database.
 spec:
-  version: 0.0.1
+  version: 0.1.0
   supported_platforms:
     - macos
     - linux
     - windows
   parameters:
+    - name: enable_metrics
+      label: Enable Metrics
+      description: Enable to collect metrics.
+      type: bool
+      default: true
+
+    - name: host
+      label: Host
+      description: Host to scrape metrics from.
+      type: string
+      default: localhost
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
+    - name: port
+      label: Port
+      description: Port of host to scrape metrics from.
+      type: int
+      default: 1521
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
+    - name: username
+      label: Username
+      description: Database user to run metric queries with.
+      type: string
+      required: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
+    - name: password
+      label: Password
+      description: Password for user.
+      type: string
+      default: ""
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
+    - name: database_identification
+      label: Database Identification
+      description: Use Site Identifier and/or Service Name to identify the database to scrape.
+      type: enums
+      validValues:
+        - "SID"
+        - "Service Name"
+      default: ["SID"]
+      options:
+        gridColumns: 12
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
+    - name: sid
+      label: SID
+      description: OracleDB Site Identifier.
+      type: string
+      required: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+        - name: database_identification
+          operator: containsAny
+          value: ["SID"]
+
+    - name: service_name
+      label: Service Name
+      description: OracleDB Service Name.
+      type: string
+      required: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+        - name: database_identification
+          operator: containsAny
+          value: ["Service Name"]
+
+    - name: collection_interval
+      label: Collection Interval
+      description: How often (seconds) to scrape for metrics.
+      type: int
+      default: 60
+      advancedConfig: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
+    - name: wallet
+      label: Wallet
+      description: OracleDB Wallet file location (must be URL encoded).
+      type: string
+      default: ""
+      advancedConfig: true
+      relevantIf:
+        - name: enable_metrics
+          operator: equals
+          value: true
+
+    - name: enable_logs
+      label: Enable Logs
+      description: Enable to collect logs.
+      type: bool
+      default: true
+
     - name: enable_audit_log
       label: Audit Logs
       type: bool
       default: true
       options:
         sectionHeader: true
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
 
     - name: audit_log_path
       label: Audit Log Path(s)
@@ -32,6 +151,9 @@ spec:
         - name: enable_audit_log
           operator: equals
           value: true
+        - name: enable_logs
+          operator: equals
+          value: true
 
     - name: enable_alert_log
       label: Alert Logs
@@ -39,6 +161,10 @@ spec:
       default: true
       options:
         sectionHeader: true
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
 
     - name: alert_log_path
       label: Alert Log Path(s)
@@ -53,6 +179,9 @@ spec:
         - name: enable_alert_log
           operator: equals
           value: true
+        - name: enable_logs
+          operator: equals
+          value: true
 
     - name: enable_listener_log
       label: Listener Logs
@@ -60,6 +189,10 @@ spec:
       default: true
       options:
         sectionHeader: true
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
 
     - name: listener_log_path
       label: Listener Log Path(s)
@@ -74,6 +207,9 @@ spec:
         - name: enable_listener_log
           operator: equals
           value: true
+        - name: enable_logs
+          operator: equals
+          value: true
 
     - name: start_at
       label: Start At
@@ -84,10 +220,15 @@ spec:
         - end
       default: end
       advancedConfig: true
+      relevantIf:
+        - name: enable_logs
+          operator: equals
+          value: true
 
   logs:
     receivers: |
-      - plugin:
+      {{ if .enable_logs }}
+      - plugin/oracledb_logs:
           path: $OIQ_OTEL_COLLECTOR_HOME/plugins/oracle_database_logs.yaml
           parameters:
             start_at: {{ .start_at }}
@@ -115,9 +256,41 @@ spec:
               - '{{ $fp }}'
               {{ end }}
             {{ end }}
+      {{ end }}
 
     processors: |
-      - resourcedetection:
+      {{ if .enable_logs }}
+      - resourcedetection/logs:
           detectors: ["system"]
           system:
             hostname_sources: ["os"]
+      {{ end }}
+
+  metrics:
+    receivers: |
+      {{ if .enable_metrics }}
+      - plugin/oracledb_metrics:
+          path: $OIQ_OTEL_COLLECTOR_HOME/plugins/oracledb_metrics.yaml
+          parameters:
+            endpoint: {{ .host }}:{{ .port }}
+            username: {{ .username }}
+            password: '{{ .password }}'
+            {{ if and (has "SID" .database_identification) .sid }}
+            sid: {{ .sid }}
+            {{ end }}
+            {{ if and (has "Service Name" .database_identification) .service_name }}
+            service_name: {{ .service_name }}
+            {{ end }}
+            {{ if .wallet }}
+            wallet: {{ .wallet }}
+            {{ end }}
+            scrape_interval: {{ .collection_interval }}s
+      {{ end }}
+
+    processors: |
+      {{ if .enable_metrics }}
+      - resourcedetection/metrics:
+          detectors: ["system"]
+          system:
+            hostname_sources: ["os"]
+      {{ end }}

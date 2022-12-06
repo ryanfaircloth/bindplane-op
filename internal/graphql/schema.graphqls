@@ -297,6 +297,7 @@ type RelevantIfCondition {
 enum RelevantIfOperatorType {
   equals
   notEquals
+  containsAny
 }
 
 # ----------------------------------------------------------------------
