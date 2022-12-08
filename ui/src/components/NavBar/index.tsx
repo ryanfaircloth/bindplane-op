@@ -2,6 +2,7 @@ import { AppBar, IconButton, Menu, MenuItem, Toolbar } from "@mui/material";
 import React, { SyntheticEvent, useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
+  AgentGridIcon,
   EmailIcon,
   GridIcon,
   HelpCircleIcon,
@@ -65,8 +66,15 @@ export const NavBar: React.FC = () => {
               }
               to="/overview"
             >
-              <GridIcon className={styles.icon} />
-              Overview
+              {({ isActive }) => {
+                const className = isActive ? classes([styles["icon"], styles["active"]]) : styles["icon"];
+                return (
+                  <>
+                    <GridIcon className={className} />
+                    Overview
+                  </>
+                );
+              }}
             </NavLink>
             <NavLink
               className={({ isActive }) =>
@@ -76,8 +84,15 @@ export const NavBar: React.FC = () => {
               }
               to="/agents"
             >
-              <GridIcon className={styles.icon} />
-              Agents
+              {({ isActive }) => {
+                const className = isActive ? classes([styles["icon"], styles["active"]]) : styles["icon"];
+                return (
+                  <>
+                    <AgentGridIcon className={className} />
+                    Agents
+                  </>
+                )
+              }}
             </NavLink>
 
             <NavLink
@@ -88,8 +103,15 @@ export const NavBar: React.FC = () => {
               }
               to="/configurations"
             >
-              <SlidersIcon className={styles.icon} />
-              Configs
+              {({ isActive }) => {
+                const className = isActive ? classes([styles["icon"], styles["active"]]) : styles["icon"];
+                return (
+                  <>
+                    <SlidersIcon className={className} />
+                    Configs
+                  </>
+                );
+              }}
             </NavLink>
 
             <NavLink
@@ -100,8 +122,15 @@ export const NavBar: React.FC = () => {
               }
               to="/destinations"
             >
-              <SquareIcon className={styles.icon} />
-              Destinations
+              {({ isActive }) => {
+                const className = isActive ? classes([styles["icon"], styles["active"]]) : styles["icon"];
+                return (
+                  <>
+                    <SquareIcon className={className} />
+                    Destinations
+                  </>
+                );
+              }}
             </NavLink>
           </div>
 

@@ -22,7 +22,7 @@ $bg-color-transition: background-color 0.2s ease;
 }
 
 .nav-link {
-  color: colors.$revolver;
+  color: colors.$light-gray;
   text-decoration: none;
 
   display: flex;
@@ -46,7 +46,10 @@ $bg-color-transition: background-color 0.2s ease;
     width: 1.125rem;
     height: 1.125rem;
     color: #2f2f31;
-    stroke: #2f2f31;
+    stroke: #ffffff;
+    &.active {
+      stroke: colors.$revolver;
+    }
   }
 
   &:hover {
