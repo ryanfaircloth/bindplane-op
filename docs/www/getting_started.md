@@ -5,6 +5,7 @@ excerpt: How to get up and running with BindPlane OP
 category: 636c08cbfcc97f00717832c4
 hidden: false
 ---
+
 # Welcome to BindPlane OP
 
 This guide will walk you through installing [BindPlane OP](https://github.com/observIQ/bindplane-op) on Linux, adding an Agent, and configuring a Destination.
@@ -21,7 +22,6 @@ An installation script is available to simplify installation. To see further ins
 curl -fsSlL https://github.com/observiq/bindplane-op/releases/latest/download/install-linux.sh | bash -s --
 ```
 
-
 **BindPlane OP Enterprise**
 
 If you have an enterprise license, install with the `--enterprise` flag.
@@ -30,9 +30,7 @@ If you have an enterprise license, install with the `--enterprise` flag.
 curl -fsSlL https://github.com/observiq/bindplane-op/releases/latest/download/install-linux.sh | bash -s -- --enterprise
 ```
 
-
 <img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/getting-started/bindplane_install.png" width="1000px" alt="bindplane_install.png">
-
 
 ### Configuration
 
@@ -44,9 +42,8 @@ First step is to initialize the server. For Linux, the default command for this 
 sudo /usr/local/bin/bindplane init server --config /etc/bindplane/config.yaml
 ```
 
-
 > 📘 Get the `bindplane init` command from the installer
-> 
+>
 > The **Server Initialization** section of the installer will have the exact `bindplane init` command for your system.
 
 This does the following to parameters in the `config.yaml` located by default at `/etc/bindplane/config.yaml`.
@@ -60,7 +57,6 @@ This does the following to parameters in the `config.yaml` located by default at
 
 <img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/getting-started/bindplane_init_server.png" width="1000px" alt="bindplane_init_server.png">
 
-
 #### Restart Server
 
 Use the following command to restart the BindPlane server.
@@ -69,7 +65,6 @@ Use the following command to restart the BindPlane server.
 sudo systemctl restart bindplane
 ```
 
-
 ### Viewing BindPlane Logs
 
 Web server access logs can be viewed with:
@@ -77,7 +72,6 @@ Web server access logs can be viewed with:
 ```bash
 sudo journalctl -f --unit bindplane
 ```
-
 
 All other BindPlane logs are written to `/var/log/bindplane/bindplane.log`. This log file is rotated and compressed by the BindPlane process.
 
@@ -89,7 +83,6 @@ The BindPlane CLI can be used from the BindPlane Server. For an example command,
 sudo bindplane --config /etc/bindplane/config.yaml help
 ```
 
-
 For a detailed list of commands and a guide to installing the CLI on remote clients, see our [CLI](doc:cli) page.
 
 ## Step 2: Access BindPlane UI
@@ -98,7 +91,7 @@ The BindPlane UI can be accessed with your browser on port 3001. The URL will be
 
 <img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/getting-started/bindplane_home_new.png" width="1000px" alt="bindplane_home_new.png">
 
-In the UI, you'll find the Agents, Configs, and Components tabs. Next, you'll setup an agent.
+In the UI, you'll find the Agents, Configs, and Destinations tabs. Next, you'll setup an agent.
 
 ## Step 3: Install an Agent
 
@@ -117,22 +110,20 @@ To setup a configuration for the agent, navigate to the **Configs** tab and clic
 
 <img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/getting-started/bindplane_config_new.png" width="1000px" alt="bindplane_config_new.png">
 
-
 You'll now be in the configuration wizard. First is to name your config (see naming rules below). Then choose a platform for it to run on that corresponds to your agent(s). You can optionally add a description for the config, then click **Next**.
 
 <img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/getting-started/bindplane_wizard_details.png" width="1000px" alt="bindplane_wizard_details.png">
 
-
 > 🚧 Note: Rules for naming configs.
-> 
+>
 > - must be 63 characters or less
 > - must begin and end with an alphanumeric character ( [a-z0-9A-Z] )
 > - can contain dashes ( - ), underscores ( \_ ), dots ( . ), and alphanumerics between
 
 > 📘 You can use existing OpenTelemetry config.yaml files.
-> 
+>
 > If you already have an OpenTelemetry `config.yaml`, you can click the link to the raw configuration wizard. Add a name, choose a platform, and optionally add a description, then click _Next_. You can then either upload or copy and paste your `config.yaml` into BindPlane.
-> 
+>
 > You can also import existing configs after the agent is added from the agent page.
 
 ### Add a Source
@@ -145,7 +136,6 @@ Click **Save** when you're done with the source configuration. You can add more 
 
 <img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/getting-started/bindplane_wizard_source.png" width="1000px" alt="bindplane_wizard_source.png">
 
-
 ### Add a Destination
 
 Last step is to add a destination. In this example, we'll use Google Cloud. Select the destination and configure the required settings.
@@ -156,17 +146,16 @@ When you're finished with the destination configuration, click **Save**. You can
 
 <img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/getting-started/bindplane_wizard_destination.png" width="1000px" alt="bindplane_wizard_destination.png">
 
-
 > 📘 Creating a credentials file for Google Cloud
-> 
+>
 > A Google Cloud Service Account can used for authentication by creating a service account and key.
-> 
+>
 > [Create a service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts) with the following roles:
-> 
+>
 > - Metrics: roles/monitoring.metricWriter
 > - Logs: roles/logging.logWriter
 > - Traces: roles/cloudtrace.agent
-> 
+>
 > [Create a service account json key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys) and place it on the system that is running the collector.
 
 ### Apply Configuration
@@ -174,7 +163,6 @@ When you're finished with the destination configuration, click **Save**. You can
 The next page is the Details page for the config you just created. At the bottom of the page in the Agents section, click the **+** icon to add an agent. Select which agents you'd like to apply the config to, then click **Apply**. Just like that, the config is now running on the agent!
 
 <img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/getting-started/bindplane_config_apply.png" width="1000px" alt="bindplane_config_apply.png">
-
 
 ## Next Steps
 

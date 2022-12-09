@@ -14,6 +14,6 @@ This is the first stop to quickly view your fleet of agents. From this page you 
 
 Here is the entry point to view all your current configurations. Its from here where you can select a configuration to edit or create a new configuration with the button on the top right.
 
-## Components
+## Destinations
 
-Here is where you'll find all your reusable resources. In particular any Destinations that you have created inside configurations can be viewed, edited, and deleted on this tab.
+Here is where you'll find all your reusable destination resources. In particular any Destinations that you have created inside configurations can be viewed, edited, and deleted on this tab.
