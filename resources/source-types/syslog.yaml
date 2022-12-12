@@ -6,7 +6,7 @@ metadata:
   icon: /icons/sources/network.svg
   description: Receive syslog from network devices.
 spec:
-  version: 0.0.1
+  version: 0.1.0
   supported_platforms:
     - macos
     - linux
@@ -16,6 +16,7 @@ spec:
       label: Listening IP Address
       description: The IP address to bind to and receive syslog.
       type: string
+      required: true
       default: "0.0.0.0"
 
     - name: listen_port
@@ -53,7 +54,6 @@ spec:
         - high
         - low
 
-
     - name: timezone
       label: Timezone
       description: RFC3164 only. The timezone to use when parsing timestamps.
@@ -61,8 +61,76 @@ spec:
       default: "UTC"
       advancedConfig: true
 
-    - name: enable_tls
-      label: Enable TLS
+    - name: enable_octet_counting
+      label: Enable Octet Counting
+      description: |
+        Whether or not to enable RFC 6587 Octet Counting on syslog framing. This framing allows for the transmission of all characters inside a syslog message.
+        This is incompatible with enabling usage of a non-transparent framing trailers.
+      type: bool
+      default: false
+      required: false
+      relevantIf:
+        - name: connection_type
+          operator: equals
+          value: tcp
+        - name: protocol
+          operator: equals
+          value: rfc5424
+        - name: enable_non_transparent_framing_trailer
+          operator: equals
+          value: false
+      advancedConfig: true
+      options:
+        # less jumpy configuration when selecting things
+        gridColumns: 12
+        # shows description for bools
+        sectionHeader: true
+
+    - name: enable_non_transparent_framing_trailer
+      label: Enable Non-Transparent Framing Trailer
+      description: |
+        Whether or not to parse using a trailer character. This is a special character that will be the termination character for syslog messages.
+        This is incompatible with enabling octet counting.
+      type: bool
+      default: false
+      required: false
+      relevantIf:
+        - name: connection_type
+          operator: equals
+          value: tcp
+        - name: protocol
+          operator: equals
+          value: rfc5424
+        - name: enable_octet_counting
+          operator: equals
+          value: false
+      advancedConfig: true
+      options:
+        gridColumns: 12
+        sectionHeader: true
+
+    - name: non_transparent_framing_trailer
+      label: Non-Transparent Framing Trailer
+      description: The framing trailer when using RFC 6587 Non-Transparent-Framing.
+      default: LF
+      type: enum
+      required: false
+      validValues:
+        - LF
+        - NUL
+      relevantIf:
+        - name: enable_non_transparent_framing_trailer
+          operator: equals
+          value: true
+        - name: connection_type
+          operator: equals
+          value: tcp
+      advancedConfig: true
+      options:
+        gridColumns: 12
+
+    - name: enable_mutual_tls
+      label: Enable Mutual TLS
       description: Whether or not to use TLS.
       type: bool
       default: false
@@ -71,15 +139,18 @@ spec:
           operator: equals
           value: "tcp"
       advancedConfig: true
+      # this gives more of an impression that the Enable TLS portion is its own section
+      options:
+        gridColumns: 12
 
     - name: cert_file
       label: TLS Certificate File
       description: Path to the x509 PEM certificate.
       type: string
-      required: false
+      required: true
       default: ""
       relevantIf:
-        - name: enable_tls
+        - name: enable_mutual_tls
           operator: equals
           value: true
       advancedConfig: true
@@ -88,10 +159,10 @@ spec:
       label: TLS Private Key File
       description: Path to the x509 PEM private key.
       type: string
-      required: false
+      required: true
       default: ""
       relevantIf:
-        - name: enable_tls
+        - name: enable_mutual_tls
           operator: equals
           value: true
       advancedConfig: true
@@ -103,7 +174,7 @@ spec:
       required: false
       default: ""
       relevantIf:
-        - name: enable_tls
+        - name: enable_mutual_tls
           operator: equals
           value: true
       advancedConfig: true
@@ -119,26 +190,43 @@ spec:
         - "1.1"
         - "1.0"
       relevantIf:
-        - name: enable_tls
+        - name: enable_mutual_tls
           operator: equals
           value: true
       advancedConfig: true
 
   logs:
     receivers: |
-      - plugin/syslog:
-          path: $OIQ_OTEL_COLLECTOR_HOME/plugins/syslog_logs.yaml
-          parameters:
-            connection_type: {{ .connection_type }}
-            protocol: {{ .protocol }}
-            listen_address: {{ .listen_ip }}:{{ .listen_port }}
-            # Used for RFC3164 Only
-            timezone: {{ .timezone }}
-            tls_certificate_path: "{{ .cert_file }}"
-            tls_private_key_path: "{{ .key_file }}"
-            tls_ca_path: "{{ .ca_file }}"
-            tls_min_version: "{{ .tls_min_version }}"
-            data_flow: {{ .data_flow }}
+      - syslog:
+          '{{ .connection_type }}': 
+            listen_address: '{{ .listen_ip }}:{{ .listen_port }}'
+            {{ if .enable_mutual_tls }}
+            tls:
+              {{ if .cert_file }}cert_file: '{{ .cert_file }}' {{ end }}
+              {{ if .key_file }}key_file: '{{ .key_file }}'{{ end }}
+              {{ if .ca_file }}ca_file: '{{ .ca_file }}'{{ end }}
+              min_version: {{ .tls_min_version }}
+            {{ end }}
+          location: {{ .timezone }}
+          protocol: {{ .protocol }}
+          {{ if and (eq .connection_type "tcp") (eq .protocol "rfc5424") }}
+          enable_octet_counting: {{ .enable_octet_counting }}
+          {{ end }}
+          {{ if and (.enable_non_transparent_framing_trailer) (eq .connection_type "tcp") (eq .protocol "rfc5424")}}
+          non_transparent_framing_trailer: {{ .non_transparent_framing_trailer }}
+          {{ end}}
+          {{ if eq .data_flow "low" }}
+          operators:
+            - type: filter
+              expr: 'attributes.priority != nil && attributes.priority % 8 == 7'
+            - type: retain
+              fields:
+                - attributes.hostname
+                - attributes.appname
+                - attributes.msg_id
+                - attributes.structured_data
+                - attributes.version
+          {{ end }}
 
     processors: |
       - resourcedetection:
