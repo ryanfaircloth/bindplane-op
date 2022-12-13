@@ -12,7 +12,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/vektah/gqlparser/v2 v2.5.1
 	go.uber.org/zap v1.23.0
 	k8s.io/apimachinery v0.25.1
@@ -46,15 +46,15 @@ require (
 	github.com/observiq/stanza v1.6.1
 	github.com/open-telemetry/opamp-go v0.2.0
 	github.com/testcontainers/testcontainers-go v0.13.0
-	go.opentelemetry.io/collector/pdata v0.60.0
+	go.opentelemetry.io/collector/pdata v0.66.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.36.1
-	go.opentelemetry.io/otel v1.11.1
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.11.1
-	go.opentelemetry.io/otel/sdk v1.11.1
-	go.opentelemetry.io/otel/trace v1.11.1
+	go.opentelemetry.io/otel v1.11.2
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.11.2
+	go.opentelemetry.io/otel/sdk v1.11.2
+	go.opentelemetry.io/otel/trace v1.11.2
 	golang.org/x/exp v0.0.0-20220414153411-bcd21879b8fd
 	google.golang.org/api v0.99.0
-	google.golang.org/grpc v1.50.1
+	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
@@ -76,7 +76,7 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/benbjohnson/clock v1.1.0 // indirect
-	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
+	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
 	github.com/containerd/cgroups v1.0.3 // indirect
 	github.com/containerd/containerd v1.5.16 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -138,12 +138,12 @@ require (
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/stretchr/objx v0.4.0 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.11.1 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.11.1 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.11.2 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.11.2 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
@@ -151,9 +151,9 @@ require (
 	golang.org/x/net v0.0.0-20221012135044-0b7e1fb9d458 // indirect
 	golang.org/x/oauth2 v0.0.0-20221006150949-b44042a4b9c1 // indirect
 	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0 // indirect
-	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
+	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

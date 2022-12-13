@@ -78,12 +78,12 @@ func ConvertMetrics(metrics pmetric.Metrics) []*Metric {
 
 // getRecords gets metric records from a pmetric
 func getRecordsFromMetric(metric pmetric.Metric, resourceAttributes map[string]interface{}) []*Metric {
-	switch metric.DataType() {
-	case pmetric.MetricDataTypeSum:
+	switch metric.Type() {
+	case pmetric.MetricTypeSum:
 		return getMetricRecordsFromSum(metric, resourceAttributes)
-	case pmetric.MetricDataTypeGauge:
+	case pmetric.MetricTypeGauge:
 		return getMetricRecordsFromGauge(metric, resourceAttributes)
-	case pmetric.MetricDataTypeSummary:
+	case pmetric.MetricTypeSummary:
 		return getMetricRecordsFromSummary(metric, resourceAttributes)
 	}
 
@@ -94,7 +94,7 @@ func getRecordsFromMetric(metric pmetric.Metric, resourceAttributes map[string]i
 func getMetricRecordsFromSum(metric pmetric.Metric, resourceAttributes map[string]interface{}) []*Metric {
 	metricName := metric.Name()
 	metricUnit := metric.Unit()
-	metricType := metric.DataType().String()
+	metricType := metric.Type().String()
 	metricRecords := []*Metric{}
 	sum := metric.Sum()
 	points := sum.DataPoints()
@@ -119,7 +119,7 @@ func getMetricRecordsFromSum(metric pmetric.Metric, resourceAttributes map[strin
 func getMetricRecordsFromGauge(metric pmetric.Metric, resourceAttributes map[string]interface{}) []*Metric {
 	metricName := metric.Name()
 	metricUnit := metric.Unit()
-	metricType := metric.DataType().String()
+	metricType := metric.Type().String()
 	metricRecords := []*Metric{}
 	gauge := metric.Gauge()
 	points := gauge.DataPoints()
@@ -143,7 +143,7 @@ func getMetricRecordsFromGauge(metric pmetric.Metric, resourceAttributes map[str
 func getMetricRecordsFromSummary(metric pmetric.Metric, resourceAttributes map[string]interface{}) []*Metric {
 	metricName := metric.Name()
 	metricUnit := metric.Unit()
-	metricType := metric.DataType().String()
+	metricType := metric.Type().String()
 	metricRecords := []*Metric{}
 	summary := metric.Summary()
 	points := summary.DataPoints()
@@ -168,9 +168,9 @@ func getMetricRecordsFromSummary(metric pmetric.Metric, resourceAttributes map[s
 func getDataPointValue(point pmetric.NumberDataPoint) interface{} {
 	switch point.ValueType() {
 	case pmetric.NumberDataPointValueTypeDouble:
-		return point.DoubleVal()
+		return point.DoubleValue()
 	case pmetric.NumberDataPointValueTypeInt:
-		return point.IntVal()
+		return point.IntValue()
 	default:
 		return 0
 	}
@@ -222,8 +222,13 @@ func getLogMessage(body pcommon.Value) string {
 	var b strings.Builder
 	b.WriteString("{\n")
 	// Sort to ensure logs with the same attributes display in the same order
-	body.MapVal().Sort().Range(func(k string, v pcommon.Value) bool {
-		fmt.Fprintf(&b, "\t-> %s: %s(%s)\n", k, v.Type(), v.AsString())
+	body.Map().Sort().Range(func(k string, v pcommon.Value) bool {
+		typeLabel := v.Type().String()
+		// Use STRING instead of Str
+		if v.Type() == pcommon.ValueTypeStr {
+			typeLabel = "STRING"
+		}
+		fmt.Fprintf(&b, "\t-> %s: %s(%s)\n", k, strings.ToUpper(typeLabel), v.AsString())
 		return true
 	})
 	b.WriteByte('}')

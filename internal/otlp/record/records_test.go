@@ -43,16 +43,16 @@ func TestConvertLogs(t *testing.T) {
 				l := plog.NewLogs()
 
 				resource := l.ResourceLogs().AppendEmpty()
-				resource.Resource().Attributes().InsertString("resource_id", "unique")
+				resource.Resource().Attributes().PutStr("resource_id", "unique")
 
 				logRecord := resource.ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
-				logRecord.Attributes().InsertString("custom_field", "custom_value")
-				logRecord.Attributes().InsertInt("db_id", 22)
+				logRecord.Attributes().PutStr("custom_field", "custom_value")
+				logRecord.Attributes().PutInt("db_id", 22)
 
 				logRecord.SetSeverityText("ERROR")
 				logRecord.SetSeverityNumber(plog.SeverityNumberError)
 				logRecord.SetTimestamp(pcommon.NewTimestampFromTime(time.Date(2022, time.September, 15, 1, 1, 1, 1, time.UTC)))
-				pcommon.NewValueString("log message").CopyTo(logRecord.Body())
+				pcommon.NewValueStr("log message").CopyTo(logRecord.Body())
 				return l
 			},
 			expected: []*Log{
@@ -89,7 +89,7 @@ func TestGetLogMessage(t *testing.T) {
 		{
 			name: "string value",
 			input: func() pcommon.Value {
-				return pcommon.NewValueString("plain string")
+				return pcommon.NewValueStr("plain string")
 			},
 			expected: "plain string",
 		},
@@ -117,7 +117,11 @@ func TestGetLogMessage(t *testing.T) {
 		{
 			name: "bytes value",
 			input: func() pcommon.Value {
-				return pcommon.NewValueBytes(pcommon.NewImmutableByteSlice([]byte("log message in bytes")))
+				// slice := pcommon.NewByteSlice()
+				// slice.Append([]byte("log message in bytes")...)
+				value := pcommon.NewValueBytes()
+				value.SetEmptyBytes().Append([]byte("log message in bytes")...)
+				return value
 			},
 			expected: base64.StdEncoding.EncodeToString([]byte("log message in bytes")),
 		},
@@ -132,10 +136,10 @@ func TestGetLogMessage(t *testing.T) {
 			name: "slice value",
 			input: func() pcommon.Value {
 				body := pcommon.NewValueSlice()
-				body.SliceVal().AppendEmpty().SetIntVal(30)
-				body.SliceVal().AppendEmpty().SetIntVal(60)
-				body.SliceVal().AppendEmpty().SetBoolVal(false)
-				body.SliceVal().AppendEmpty().SetStringVal("single string")
+				body.Slice().AppendEmpty().SetInt(30)
+				body.Slice().AppendEmpty().SetInt(60)
+				body.Slice().AppendEmpty().SetBool(false)
+				body.Slice().AppendEmpty().SetStr("single string")
 				return body
 			},
 			expected: `[30,60,false,"single string"]`,
@@ -144,9 +148,9 @@ func TestGetLogMessage(t *testing.T) {
 			name: "map value",
 			input: func() pcommon.Value {
 				body := pcommon.NewValueMap()
-				body.MapVal().InsertString("key1", "value1")
-				body.MapVal().InsertString("message", "log message")
-				body.MapVal().InsertInt("pid", 333)
+				body.Map().PutStr("key1", "value1")
+				body.Map().PutStr("message", "log message")
+				body.Map().PutInt("pid", 333)
 				return body
 			},
 			expected: `{
@@ -157,6 +161,7 @@ func TestGetLogMessage(t *testing.T) {
 		},
 	}
 
+	t.Parallel()
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.expected, getLogMessage(tc.input()))

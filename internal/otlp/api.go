@@ -43,7 +43,7 @@ func logs(c *gin.Context, bindplane server.BindPlane) {
 	_, span := tracer.Start(c.Request.Context(), "otlp/logs")
 	defer span.End()
 
-	otlpLogs := plogotlp.NewRequest()
+	otlpLogs := plogotlp.NewExportRequest()
 	if err := otlpParse(c, bindplane, otlpLogs); err != nil {
 		c.Error(err)
 		return
@@ -62,7 +62,7 @@ func metrics(c *gin.Context, bindplane server.BindPlane) {
 	_, span := tracer.Start(c.Request.Context(), "otlp/metrics")
 	defer span.End()
 
-	otlpMetrics := pmetricotlp.NewRequest()
+	otlpMetrics := pmetricotlp.NewExportRequest()
 	if err := otlpParse(c, bindplane, otlpMetrics); err != nil {
 		c.Error(err)
 		return
@@ -106,7 +106,7 @@ func traces(c *gin.Context, bindplane server.BindPlane) {
 	_, span := tracer.Start(c.Request.Context(), "otlp/traces")
 	defer span.End()
 
-	otlpTraces := ptraceotlp.NewRequest()
+	otlpTraces := ptraceotlp.NewExportRequest()
 	if err := otlpParse(c, bindplane, otlpTraces); err != nil {
 		c.Error(err)
 		return
