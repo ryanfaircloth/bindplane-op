@@ -9,6 +9,7 @@ updates:
     commit-message:
       prefix: "deps"
       include: "scope"
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "gomod"
     directory: "/internal/tools"
@@ -20,6 +21,7 @@ updates:
     commit-message:
       prefix: "deps"
       include: "scope"
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "docker"
     directory: "/"
