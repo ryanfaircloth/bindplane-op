@@ -78,6 +78,7 @@ export const EditDestinationDialog: React.FC<EditDestinationProps> = ({
       parameterDefinitions={
         data?.destinationWithType.destinationType?.spec.parameters ?? []
       }
+      paused={data?.destinationWithType.destination?.spec.disabled}
       kind={"destination"}
       open={open}
     />
