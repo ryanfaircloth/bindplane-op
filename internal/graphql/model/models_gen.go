@@ -223,18 +223,20 @@ func (e ParameterType) MarshalGQL(w io.Writer) {
 type RelevantIfOperatorType string
 
 const (
-	RelevantIfOperatorTypeEquals    RelevantIfOperatorType = "equals"
-	RelevantIfOperatorTypeNotEquals RelevantIfOperatorType = "notEquals"
+	RelevantIfOperatorTypeEquals      RelevantIfOperatorType = "equals"
+	RelevantIfOperatorTypeNotEquals   RelevantIfOperatorType = "notEquals"
+	RelevantIfOperatorTypeContainsAny RelevantIfOperatorType = "containsAny"
 )
 
 var AllRelevantIfOperatorType = []RelevantIfOperatorType{
 	RelevantIfOperatorTypeEquals,
 	RelevantIfOperatorTypeNotEquals,
+	RelevantIfOperatorTypeContainsAny,
 }
 
 func (e RelevantIfOperatorType) IsValid() bool {
 	switch e {
-	case RelevantIfOperatorTypeEquals, RelevantIfOperatorTypeNotEquals:
+	case RelevantIfOperatorTypeEquals, RelevantIfOperatorTypeNotEquals, RelevantIfOperatorTypeContainsAny:
 		return true
 	}
 	return false
