@@ -47,7 +47,7 @@ require (
 	github.com/open-telemetry/opamp-go v0.2.0
 	github.com/testcontainers/testcontainers-go v0.13.0
 	go.opentelemetry.io/collector/pdata v0.66.0
-	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.36.1
+	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.37.0
 	go.opentelemetry.io/otel v1.11.2
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.11.2
 	go.opentelemetry.io/otel/sdk v1.11.2
