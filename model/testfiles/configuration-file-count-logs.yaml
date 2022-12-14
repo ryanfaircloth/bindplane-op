@@ -1,0 +1,47 @@
+apiVersion: bindplane.observiq.com/v1
+kind: Configuration
+metadata:
+  name: file-countlogs
+spec:
+  contentType: text/yaml
+  sources:
+  # name is optional and this will become MacOS_1 if none is specified or MacOS_name if a name is specified
+  - type: file
+    parameters:
+      - name: file_path
+        value:
+          - /tmp/test.log
+      - name: exclude_file_path
+        value: []
+      - name: log_type
+        value: file
+      - name: parse_format
+        value: json
+      - name: regex_pattern
+        value: ""
+      - name: multiline_line_start_pattern
+        value: ""
+      - name: encoding
+        value: utf-8
+      - name: start_at
+        value: end
+    processors:
+      - type: count_logs
+        parameters:
+          - name: match
+            value: "true"
+          - name: metric_name
+            value: custom.metric.count
+          - name: metric_units
+            value: '{logs}'
+          - name: attributes
+            value:
+              status_code: body.status
+          - name: interval
+            value: 60
+        disabled: false
+  destinations:
+  - name: googlecloud
+  selector:
+    matchLabels:
+      "configuration": file-countlogs

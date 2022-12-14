@@ -101,6 +101,9 @@ const (
 
 	// AgentSupportsMeasurements will be set if this Agent supports the throughputmeasurement processor for measuring throughput.
 	AgentSupportsMeasurements
+
+	// AgentSupportsLogBasedMetrics will be set if this agent supports the logcount processor and route receiver for creating metrics from logs.
+	AgentSupportsLogBasedMetrics
 )
 
 // AgentFeaturesDefault is the default bitmask of features supported by Agents
@@ -231,6 +234,7 @@ func durationDisplay(t *time.Time) string {
 var v1_6_0 = semver.Parse("1.6.0")
 var v1_8_0 = semver.Parse("1.8.0")
 var v1_9_2 = semver.Parse("1.9.2")
+var v1_14_0 = semver.Parse("1.14.0")
 
 // Features returns a bitmask of the features supported by this Agent
 func (a *Agent) Features() AgentFeatures {
@@ -238,6 +242,9 @@ func (a *Agent) Features() AgentFeatures {
 
 	// arrange version checks newest first
 	switch {
+	// 1.14.0 introduced the logcount processor and route receiver
+	case !agentVersion.IsOlder(v1_14_0):
+		return AgentSupportsUpgrade | AgentSupportsSnapshots | AgentSupportsMeasurements | AgentSupportsLogBasedMetrics
 	// 1.9.2 introduced the throughputmeasurement processor
 	case !agentVersion.IsOlder(v1_9_2):
 		return AgentSupportsUpgrade | AgentSupportsSnapshots | AgentSupportsMeasurements

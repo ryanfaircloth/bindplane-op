@@ -22,7 +22,7 @@ The Severity Filter processor can be used to filter out logs that do not meet a 
 | :---       | :---    | :---     | :--- |
 | severity   | `enum`  | `TRACE` | Minimum severity to match. Log entries with lower severities will be filtered. |
 
-Valud severity levels:
+Valid severity levels:
 - TRACE
 - INFO
 - WARN

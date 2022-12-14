@@ -33,34 +33,34 @@ type overviewGraphTest struct {
 	agentIds       map[string][]string
 	rawConfig      bool
 	want           *graph.Graph
-	wantErr        bool	
+	wantErr        bool
 }
 
 func Test_overviewGraph(t *testing.T) {
 	tests := []struct {
-		description    string
-		testData overviewGraphTest 
+		description string
+		testData    overviewGraphTest
 	}{
 		{
 			"No configs, no destinations",
-			overviewGraphTest {
+			overviewGraphTest{
 				make([]*model.Destination, 0),
 				make([]*model.Configuration, 0),
 				make(map[string][]string),
 				false,
 				&graph.Graph{
-					Sources: 		make([]*graph.Node, 0),
-					Targets: 		make([]*graph.Node, 0),
-					Intermediates: 	make([]*graph.Node, 0),
-					Edges:   		make([]*graph.Edge, 0),
-					Attributes:    	testAttributes(),
+					Sources:       make([]*graph.Node, 0),
+					Targets:       make([]*graph.Node, 0),
+					Intermediates: make([]*graph.Node, 0),
+					Edges:         make([]*graph.Edge, 0),
+					Attributes:    testAttributes(),
 				},
 				false,
 			},
 		},
 		{
 			"one config, one destination, one edge",
-			overviewGraphTest {
+			overviewGraphTest{
 				[]*model.Destination{
 					testDestination("d-1"),
 				},
@@ -89,7 +89,7 @@ func Test_overviewGraph(t *testing.T) {
 		},
 		{
 			"1 config to 2 destinations",
-			overviewGraphTest {
+			overviewGraphTest{
 				[]*model.Destination{
 					testDestination("d-1"),
 					testDestination("d-2"),
@@ -154,7 +154,7 @@ func Test_overviewGraph(t *testing.T) {
 		},
 		{
 			"2 configs to 2 to destinations, no overlap",
-			overviewGraphTest {
+			overviewGraphTest{
 				[]*model.Destination{
 					testDestination("d-1"),
 					testDestination("d-2"),
@@ -174,7 +174,6 @@ func Test_overviewGraph(t *testing.T) {
 						testNode("c-2", "configurationNode", 1),
 					},
 					Intermediates: make([]*graph.Node, 0),
-					
 					Targets: []*graph.Node{
 						testNode("d-1", "destinationNode", 1),
 						testNode("d-2", "destinationNode", 1),
@@ -190,7 +189,7 @@ func Test_overviewGraph(t *testing.T) {
 		},
 		{
 			"2 configs to 2 to destinations, one config uses both",
-			overviewGraphTest {
+			overviewGraphTest{
 				[]*model.Destination{
 					testDestination("d-1"),
 					testDestination("d-2"),
@@ -227,7 +226,7 @@ func Test_overviewGraph(t *testing.T) {
 		},
 		{
 			"3 configs to 3 to destinations, one config uses two, second config shares one dest with the first, third config uses it's own destination.",
-			overviewGraphTest {
+			overviewGraphTest{
 				[]*model.Destination{
 					testDestination("d-1"),
 					testDestination("d-2"),
@@ -254,13 +253,13 @@ func Test_overviewGraph(t *testing.T) {
 					Targets: []*graph.Node{
 						testNode("d-1", "destinationNode", 1),
 						testNode("d-2", "destinationNode", 2),
-						testNode("d-3", "destinationNode", 1),						
+						testNode("d-3", "destinationNode", 1),
 					},
 					Edges: []*graph.Edge{
 						graph.NewEdge("configuration/c-1", "destination/d-1"),
 						graph.NewEdge("configuration/c-1", "destination/d-2"),
 						graph.NewEdge("configuration/c-2", "destination/d-2"),
-						graph.NewEdge("configuration/c-3", "destination/d-3"),						
+						graph.NewEdge("configuration/c-3", "destination/d-3"),
 					},
 					Attributes: testAttributes(),
 				},
@@ -269,7 +268,7 @@ func Test_overviewGraph(t *testing.T) {
 		},
 		{
 			"does not show configs with no destination",
-			overviewGraphTest {
+			overviewGraphTest{
 				[]*model.Destination{
 					testDestination("d-1"),
 				},
@@ -300,7 +299,7 @@ func Test_overviewGraph(t *testing.T) {
 		},
 		{
 			"works as expected with 2 configurations and 1 destination, one configuration with same name as destination",
-			overviewGraphTest {
+			overviewGraphTest{
 				[]*model.Destination{
 					testDestination("GCP"),
 				},
@@ -333,10 +332,10 @@ func Test_overviewGraph(t *testing.T) {
 		},
 		{
 			"works as expected with 2 configurations and 2 destinations, one configuration with same name as destination",
-			overviewGraphTest {
+			overviewGraphTest{
 				[]*model.Destination{
 					testDestination("GCP"),
-					testDestination("Kafka"),					
+					testDestination("Kafka"),
 				},
 				[]*model.Configuration{
 					testConfiguration("GCP", false, []string{"GCP"}),
@@ -361,18 +360,17 @@ func Test_overviewGraph(t *testing.T) {
 						graph.NewEdge("configuration/GCP", "destination/GCP"),
 						graph.NewEdge("configuration/c-1", "destination/Kafka"),
 					},
-					Attributes: testAttributes(),					
+					Attributes: testAttributes(),
 				},
 				false,
 			},
 		},
 		{
 			"works as expected with 2 configurations and 2 destinations, both configurations with same name as destinations",
-			overviewGraphTest {
+			overviewGraphTest{
 				[]*model.Destination{
 					testDestination("GCP"),
-					testDestination("Kafka"),					
-
+					testDestination("Kafka"),
 				},
 				[]*model.Configuration{
 					testConfiguration("GCP", false, []string{"GCP"}),
@@ -380,7 +378,7 @@ func Test_overviewGraph(t *testing.T) {
 				},
 				map[string][]string{
 					"Kafka": {"agent1"},
-					"GCP": {"agent2"},
+					"GCP":   {"agent2"},
 				},
 				false,
 				&graph.Graph{
@@ -397,120 +395,117 @@ func Test_overviewGraph(t *testing.T) {
 						graph.NewEdge("configuration/GCP", "destination/GCP"),
 						graph.NewEdge("configuration/Kafka", "destination/Kafka"),
 					},
-					Attributes: testAttributes(),					
+					Attributes: testAttributes(),
 				},
 				false,
 			},
 		},
 		{
 			"works as expected with 3 configurations and 3 destinations, all configurations with same name as destinations",
-			overviewGraphTest {
+			overviewGraphTest{
 				[]*model.Destination{
 					testDestination("GCP"),
-					testDestination("Kafka"),					
-					testDestination("Logging"),										
-
+					testDestination("Kafka"),
+					testDestination("Logging"),
 				},
 				[]*model.Configuration{
 					testConfiguration("GCP", false, []string{"GCP"}),
 					testConfiguration("Kafka", false, []string{"Kafka"}),
-					testConfiguration("Logging", false, []string{"Logging"}),					
+					testConfiguration("Logging", false, []string{"Logging"}),
 				},
 				map[string][]string{
-					"Kafka": {"agent1"},
-					"GCP": {"agent2"},
-					"Logging": {"agent3"},						
+					"Kafka":   {"agent1"},
+					"GCP":     {"agent2"},
+					"Logging": {"agent3"},
 				},
 				false,
 				&graph.Graph{
 					Sources: []*graph.Node{
 						testNode("GCP", "configurationNode", 1),
 						testNode("Kafka", "configurationNode", 1),
-						testNode("Logging", "configurationNode", 1),						
+						testNode("Logging", "configurationNode", 1),
 					},
 					Intermediates: make([]*graph.Node, 0),
 					Targets: []*graph.Node{
 						testNode("GCP", "destinationNode", 1),
 						testNode("Kafka", "destinationNode", 1),
-						testNode("Logging", "destinationNode", 1),						
+						testNode("Logging", "destinationNode", 1),
 					},
 					Edges: []*graph.Edge{
 						graph.NewEdge("configuration/GCP", "destination/GCP"),
 						graph.NewEdge("configuration/Kafka", "destination/Kafka"),
-						graph.NewEdge("configuration/Logging", "destination/Logging"),						
+						graph.NewEdge("configuration/Logging", "destination/Logging"),
 					},
-					Attributes: testAttributes(),					
+					Attributes: testAttributes(),
 				},
 				false,
 			},
 		},
 		{
 			"Raw configuration",
-			overviewGraphTest {
-				[]*model.Destination {
+			overviewGraphTest{
+				[]*model.Destination{
 					testDestination("d1"),
 				},
 				[]*model.Configuration{
 					testConfiguration("c1", true, []string{"d1"}),
 				},
 				map[string][]string{
-					"c1": {"agent"},						
-				},				
+					"c1": {"agent"},
+				},
 				true,
 				&graph.Graph{
-					Sources: make([]*graph.Node, 0),
+					Sources:       make([]*graph.Node, 0),
 					Intermediates: make([]*graph.Node, 0),
-					Targets: make([]*graph.Node, 0),
-					Edges:   make([]*graph.Edge, 0),
-					Attributes: testAttributes(),					
+					Targets:       make([]*graph.Node, 0),
+					Edges:         make([]*graph.Edge, 0),
+					Attributes:    testAttributes(),
 				},
 				false,
 			},
 		},
 		{
 			"Undeployed configuration",
-			overviewGraphTest {
-				[]*model.Destination {
+			overviewGraphTest{
+				[]*model.Destination{
 					testDestination("d1"),
 				},
 				[]*model.Configuration{
 					testConfiguration("c1", false, []string{"d1"}),
 				},
-				map[string][]string{
-									
-				},				
+				map[string][]string{},
 				false,
 				&graph.Graph{
-					Sources: make([]*graph.Node, 0),
+					Sources:       make([]*graph.Node, 0),
 					Intermediates: make([]*graph.Node, 0),
-					Targets: make([]*graph.Node, 0),
-					Edges:   make([]*graph.Edge, 0),
-					Attributes: testAttributes(),					
+					Targets:       make([]*graph.Node, 0),
+					Edges:         make([]*graph.Edge, 0),
+					Attributes:    testAttributes(),
 				},
 				false,
 			},
 		},
 		{
 			"Inline destination",
-			overviewGraphTest {
-				[]*model.Destination {
+			overviewGraphTest{
+				[]*model.Destination{
 					testDestination(""),
 				},
 				[]*model.Configuration{
 					testConfiguration("c1", false, []string{""}),
 				},
 				map[string][]string{
-					"c1": {"agent"},						
-				},				
+					"c1": {"agent"},
+				},
 				false,
 				&graph.Graph{
 					Sources: []*graph.Node{
-						testNode("c1", "configurationNode", 1),					
+						testNode("c1", "configurationNode", 1),
 					},
 					Intermediates: make([]*graph.Node, 0),
-					Targets: make([]*graph.Node, 0),
-					Edges:   make([]*graph.Edge, 0),
-					Attributes: testAttributes(),					
+					Targets:       make([]*graph.Node, 0),
+					Edges:         make([]*graph.Edge, 0),
+					Attributes:    testAttributes(),
 				},
 				false,
 			},
@@ -522,10 +517,10 @@ func Test_overviewGraph(t *testing.T) {
 			m := mocks.NewStore(t)
 			m.On("Configurations", mock.Anything, mock.Anything).Return(test.testData.configurations, nil)
 			m.On("AgentsIDsMatchingConfiguration", mock.Anything, mock.Anything).Maybe().Return(
-				func(ctx context.Context, config *model.Configuration)  []string {
+				func(ctx context.Context, config *model.Configuration) []string {
 					return test.testData.agentIds[config.Name()]
 				},
-				func(ctx context.Context, config *model.Configuration)  error {
+				func(ctx context.Context, config *model.Configuration) error {
 					return nil
 				},
 			)
@@ -535,7 +530,7 @@ func Test_overviewGraph(t *testing.T) {
 				},
 				func(ctx context.Context) error {
 					return nil
-				},				
+				},
 			)
 			m.On("Destination", mock.Anything, mock.Anything).Maybe().Return(
 				func(ctx context.Context, name string) *model.Destination {
@@ -544,7 +539,6 @@ func Test_overviewGraph(t *testing.T) {
 				func(ctx context.Context, name string) error {
 					return nil
 				},
-				
 			)
 			m.On("DestinationType", mock.Anything, mock.Anything).Maybe().Return(
 				func(ctx context.Context, name string) *model.DestinationType {

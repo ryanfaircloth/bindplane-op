@@ -115,6 +115,13 @@ const MapParamInputComponent: React.FC<
       <FormHelperText key={"description-text"}>
         {definition.description}
       </FormHelperText>
+      {definition.documentation && (
+        <FormHelperText>
+          {definition.documentation.map((d) => (
+            <a href={d.url} rel="noreferrer" target="_blank">{d.text}</a>
+          ))}
+        </FormHelperText>
+      )}
 
       <Stack spacing={1}>
         <Stack direction="row">

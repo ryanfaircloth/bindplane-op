@@ -109,6 +109,7 @@ var present = struct{}{}
 type RenderContext struct {
 	IncludeSnapshotProcessor bool
 	IncludeMeasurements      bool
+	IncludeRouteReceiver     bool
 	AgentID                  string
 	ConfigurationName        string
 	BindPlaneURL             string

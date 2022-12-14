@@ -1,0 +1,59 @@
+apiVersion: bindplane.observiq.com/v1
+kind: ProcessorType
+metadata:
+  name: count_logs
+  displayName: Count Logs
+  description: Count logs matching some expression.
+spec:
+  version: 0.0.1
+  parameters:
+    - name: match
+      label: Match Expression
+      description: Expr expression to find matching logs.
+      type: string
+      default: "true"
+      required: true
+      documentation:
+        - text: Language Reference
+          url: https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md
+    - name: metric_name
+      label: Metric Name
+      description: Name to give the created metric.
+      type: string
+      default: log.count
+      required: true
+    - name: metric_units
+      label: Metric Units
+      description: Units to give the created metric.
+      type: string
+      default: '{logs}'
+      required: true
+    - name: attributes
+      label: Metric Attributes
+      description: Mapping of attributes to assign the created metric to location of value in the log.
+      type: map
+      default: {}
+      documentation:
+        - text: How to Extract Log Attributes
+          url: https://github.com/observIQ/observiq-otel-collector/blob/main/processor/logcountprocessor/README.md#expression-language
+      options:
+        gridColumns: 12
+    - name: interval
+      label: Interval
+      description: Interval (seconds) to count logs over.
+      type: int
+      default: 60
+      advancedConfig: true
+
+  logs:
+    processors: |
+      - logcount:
+          route: builtin
+          match: '{{ .match }}'
+          metric_name: '{{ .metric_name }}'
+          metric_unit: '{{ .metric_units }}'
+          interval: {{ .interval }}s
+          attributes:
+          {{ range $k, $v := .attributes }}
+            {{ $k }}: '{{ $v }}'
+          {{ end }}

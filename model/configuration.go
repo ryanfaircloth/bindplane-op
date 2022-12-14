@@ -44,6 +44,9 @@ const (
 	// ConfigurationTypeModular configurations have Sources and Destinations that are used to generate the configuration to pass to an agent.
 	ConfigurationTypeModular ConfigurationType = "modular"
 	// TODO(andy): Do we like Modular for configurations with Sources/Destinations?
+
+	// builtinRouteReceiverName is the name of the route receiver builtin to configurations
+	builtinRouteReceiverName string = "builtin"
 )
 
 // Configuration is the resource for the entire agent configuration
@@ -206,6 +209,7 @@ func (c *Configuration) otelConfiguration(ctx context.Context, agent *Agent, con
 	}
 	rc.IncludeSnapshotProcessor = agentFeatures.Has(AgentSupportsSnapshots)
 	rc.IncludeMeasurements = agentFeatures.Has(AgentSupportsMeasurements)
+	rc.IncludeRouteReceiver = agentFeatures.Has(AgentSupportsLogBasedMetrics)
 
 	return c.otelConfigurationWithRenderContext(ctx, rc, store)
 }
@@ -252,10 +256,27 @@ func (c *Configuration) evalComponents(ctx context.Context, store ResourceStore,
 	sources = map[string]otel.Partials{}
 	destinations = map[string]otel.Partials{}
 
+	pipelineNeedsRouteReceiver := false
+
 	for i, source := range c.Spec.Sources {
 		source := source // copy to local variable to securely pass a reference to a loop variable
 		sourceName, srcParts := evalSource(ctx, &source, fmt.Sprintf("source%d", i), store, rc, errorHandler)
 		sources[sourceName] = srcParts
+
+		// If the route receiver is supported, check if any source is using the `count_logs` processor
+		if rc.IncludeRouteReceiver && !pipelineNeedsRouteReceiver {
+			for _, p := range source.Processors {
+				if p.Type == "count_logs" {
+					pipelineNeedsRouteReceiver = true
+				}
+			}
+		}
+	}
+
+	if pipelineNeedsRouteReceiver && rc.IncludeRouteReceiver {
+		if routeReceiver, routeParts := builtinRouteReceiver(ctx, store, errorHandler); routeReceiver != "" {
+			sources["route"] = routeParts
+		}
 	}
 
 	for i, destination := range c.Spec.Destinations {
@@ -351,6 +372,35 @@ func evalDestination(ctx context.Context, destination *ResourceConfiguration, de
 	partials.Prepend(d0partials)
 
 	return destName, partials
+}
+
+// builtinRouteReceiver renders a blank 'route' receiver with a hardcoded name. logcount processors can use the hardcoded
+// name to have calculated metrics routed to destinations. This receiver requires collector version >= 1.14.0
+func builtinRouteReceiver(ctx context.Context, store ResourceStore, errorHandler TemplateErrorHandler) (string, otel.Partials) {
+	srcType := SourceType{
+		ResourceType: ResourceType{
+			Spec: ResourceTypeSpec{
+				Version:    "0.0.1",
+				Parameters: []ParameterDefinition{},
+				Metrics: ResourceTypeOutput{
+					Receivers: "- route:",
+				},
+			},
+			ResourceMeta: ResourceMeta{
+				APIVersion: "bindplane.observiq.com/v1",
+				Kind:       KindSourceType,
+				Metadata: Metadata{
+					Name:        "route",
+					DisplayName: "Internal Routing",
+					Description: "Used internally for log-based metrics",
+					Icon:        "/icons/sources/file.svg",
+				},
+			},
+		},
+	}
+
+	src := NewSource(builtinRouteReceiverName, srcType.Name(), []Parameter{})
+	return src.Name(), srcType.eval(src, errorHandler)
 }
 
 func findSourceAndType(ctx context.Context, source *ResourceConfiguration, defaultName string, store ResourceStore) (*Source, *SourceType, error) {
