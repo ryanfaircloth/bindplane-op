@@ -266,7 +266,7 @@ func (c *Configuration) evalComponents(ctx context.Context, store ResourceStore,
 		// If the route receiver is supported, check if any source is using the `count_logs` processor
 		if rc.IncludeRouteReceiver && !pipelineNeedsRouteReceiver {
 			for _, p := range source.Processors {
-				if p.Type == "count_logs" {
+				if processorNeedsRouteReceiver(p) {
 					pipelineNeedsRouteReceiver = true
 				}
 			}
@@ -476,6 +476,12 @@ func findResourceAndType(ctx context.Context, resourceKind Kind, resource *Resou
 		return dest, &destType.ResourceType, err
 	}
 	return nil, nil, nil
+}
+
+// processorNeedsRouteReceiver checks if the processor needs the route receiver to be in the configuration
+func processorNeedsRouteReceiver(processor ResourceConfiguration) bool {
+	return processor.Type == "count_logs" ||
+		processor.Type == "extract_metric"
 }
 
 // ----------------------------------------------------------------------

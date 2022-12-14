@@ -1,14 +1,14 @@
 ---
-title: Count Logs
+title: Extract Metric
 category: 636c08e1212e49001e7a3032
 parentDoc: 636c0a0cddea2a005d14423a
-slug: count-logs
+slug: extract-metric
 hidden: false
 ---
 
-## Count Logs Processor
+## Extract Metric Processor
 
-The Count Logs Processor can count the number of logs matching some filter, and create a metric with that value.
+The Extract Metric Processor can look at all logs matching a filter, extract a numerical value from a field, and then create a metric with that value.
 Both the name and units of the created metric can be configured. Additionally, fields from matching logs can be preserved as metric attributes.
 
 ## Supported Types
@@ -25,10 +25,10 @@ Both the name and units of the created metric can be configured. Additionally, f
 | Field        | Type     | Default | Description |
 | ---          | ---      | ---     | ---         |
 | match        | `string`   | `true`  | A boolean [expression](https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md) used to match which logs to count. By default, all logs are counted. |
+| path        | `string`   |   | A boolean [expression](https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md) used to specify the field to extract from a matching log. |
 | metric_name  | `string`   | `log.count` | The name of the metric created. |
 | metric_units | `string`   | `{logs}`    | The unit of the metric created. See [Unified Code for Units of Measure](https://unitsofmeasure.org/ucum#section-Alphabetic-Index-By-Name) for available units. |
 | attributes   | `map`      | `{}`        | The mapped attributes of the metric created. Each key is an attribute name. Each value is an [expression](https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md) that extracts data from the log. |
-| interval     | `int` | `60`    | The interval, in seconds, at which metrics are created. The counter will reset after each interval. |
 
 
 ## Expression Language
@@ -56,33 +56,40 @@ For more information about syntax and available operators, see the [Expression L
 
 By default, all logs collected by the source will be counted, with the value used to create a new metric called `log.count` with the unit of `{logs}`.
 
-### Count HTTP Requests by Status
+### Break Down HTTP Request Durations by Status
 
-In this configuration, we want to parse our HTTP server logs to count how many requests were completed, broken down by status code. Our logs are JSON with the following structure:
+In this configuration, we want to parse our HTTP server logs to create metrics representing how long each request took, broken down by status code. Our logs are JSON with the following structure:
 
 ```JSON
 {
   "level": "warn",
   "host": "10.0.10.0",
-  "datetime":"2022-12-07T13:21",
+  "datetime":"2022-12-02T10:21",
+  "duration": 122,
   "method": "POST",
-  "request": "/api/create",
+  "request": "/api/v1/apply",
   "protocol": "HTTP/1.1",
-  "status": 500
+  "status": 200
 }
 ```
 
 The match expression will exclude all logs without a status code in its body:
 
 ```expr
-body.status != nil
+body.duration != nil
 ```
 
-We'll name this metric `http.request.count`, then we'll use the status code for the `status_code` metric attribute on the created metric:
+Our path expression will be the path to the `duration` field of the body, which we know is the request duration in milliseconds.
+
+```expr
+body.duration
+```
+
+We'll name this metric `http.request.duration`, then we'll use the status code for the `status_code` metric attribute on the created metric:
 
 ```yaml
 attributes:
   status_code: body.status
 ```
 
-<img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/count-logs/http_request_count.png" width="1000px" alt="The processor configured with the values specified above.">
+<img src="https://storage.googleapis.com/bindplane-op-doc-images/guides/extract-metric/extract_metric.png" width="1000px" alt="The processor configured with the values specified above.">

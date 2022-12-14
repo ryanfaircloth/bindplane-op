@@ -1362,6 +1362,253 @@ service:
 	require.Equal(t, expect, result)
 }
 
+func TestEvalConfiguration_WithMetricExtract(t *testing.T) {
+	t.Parallel()
+	store := newTestResourceStore()
+	config := newTestConfiguration()
+
+	filelog := testResource[*SourceType](t, "sourcetype-filelog.yaml")
+	store.sourceTypes[filelog.Name()] = filelog
+
+	googleCloudType := testResource[*DestinationType](t, "destinationtype-googlecloud.yaml")
+	store.destinationTypes[googleCloudType.Name()] = googleCloudType
+
+	googleCloud := testResource[*Destination](t, "destination-googlecloud.yaml")
+	store.destinations[googleCloud.Name()] = googleCloud
+
+	extractMetricProcessor := testResource[*ProcessorType](t, "processortype-extractmetric.yaml")
+	store.processorTypes[extractMetricProcessor.Name()] = extractMetricProcessor
+
+	configuration := testResource[*Configuration](t, "configuration-file-extract-metric.yaml")
+	agent := Agent{
+		Version: "v1.14.0",
+	}
+	result, err := configuration.Render(context.TODO(), &agent, config, store)
+	require.NoError(t, err)
+
+	expect := strings.TrimLeft(`
+receivers:
+    plugin/source0:
+        parameters:
+            encoding: utf-8
+            file_path:
+                - /var/log/http.log
+            log_type: file
+            multiline_line_start_pattern: ""
+            parse_format: json
+            start_at: end
+        path: $OIQ_OTEL_COLLECTOR_HOME/plugins/file_logs.yaml
+    prometheus/_agent_metrics:
+        config:
+            scrape_configs:
+                - job_name: observiq-otel-collector
+                  metric_relabel_configs:
+                    - action: keep
+                      regex: otelcol_processor_throughputmeasurement_.*
+                      source_labels:
+                        - __name__
+                  scrape_interval: 10s
+                  static_configs:
+                    - labels:
+                        agent: ""
+                        configuration: file-extract-duration
+                      targets:
+                        - 0.0.0.0:8888
+    route/builtin: null
+processors:
+    batch/_agent_metrics: null
+    batch/googlecloud: null
+    metricextract/source0__processor0:
+        attributes:
+            status_code: body.status
+        extract: body.duration
+        match: body.duration != nil
+        metric_name: http.request.duration
+        metric_unit: ms
+        route: builtin
+    normalizesums/googlecloud: null
+    resourcedetection/source0:
+        detectors:
+            - system
+        system:
+            hostname_sources:
+                - os
+    snapshotprocessor: null
+    throughputmeasurement/_d0_logs_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_d0_metrics_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_d1_logs_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_d1_metrics_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_s0_logs_source0:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_s1_logs_source0:
+        enabled: true
+        sampling_ratio: 1
+exporters:
+    googlecloud/googlecloud: null
+    otlphttp/_agent_metrics:
+        endpoint: /v1/otlphttp
+service:
+    pipelines:
+        logs/source0__googlecloud:
+            receivers:
+                - plugin/source0
+            processors:
+                - resourcedetection/source0
+                - throughputmeasurement/_s0_logs_source0
+                - metricextract/source0__processor0
+                - throughputmeasurement/_s1_logs_source0
+                - throughputmeasurement/_d0_logs_googlecloud
+                - throughputmeasurement/_d1_logs_googlecloud
+                - batch/googlecloud
+                - snapshotprocessor
+            exporters:
+                - googlecloud/googlecloud
+        metrics/_agent_metrics:
+            receivers:
+                - prometheus/_agent_metrics
+            processors:
+                - batch/_agent_metrics
+            exporters:
+                - otlphttp/_agent_metrics
+        metrics/route__googlecloud:
+            receivers:
+                - route/builtin
+            processors:
+                - throughputmeasurement/_d0_metrics_googlecloud
+                - throughputmeasurement/_d1_metrics_googlecloud
+                - normalizesums/googlecloud
+                - batch/googlecloud
+                - snapshotprocessor
+            exporters:
+                - googlecloud/googlecloud
+`, "\n")
+
+	require.Equal(t, expect, result)
+}
+
+func TestEvalConfiguration_WithMetricExtractUnsupported(t *testing.T) {
+	t.Parallel()
+	store := newTestResourceStore()
+	config := newTestConfiguration()
+
+	filelog := testResource[*SourceType](t, "sourcetype-filelog.yaml")
+	store.sourceTypes[filelog.Name()] = filelog
+
+	googleCloudType := testResource[*DestinationType](t, "destinationtype-googlecloud.yaml")
+	store.destinationTypes[googleCloudType.Name()] = googleCloudType
+
+	googleCloud := testResource[*Destination](t, "destination-googlecloud.yaml")
+	store.destinations[googleCloud.Name()] = googleCloud
+
+	extractMetricProcessor := testResource[*ProcessorType](t, "processortype-extractmetric.yaml")
+	store.processorTypes[extractMetricProcessor.Name()] = extractMetricProcessor
+
+	configuration := testResource[*Configuration](t, "configuration-file-extract-metric.yaml")
+	agent := Agent{
+		Version: "v1.13.22",
+	}
+	result, err := configuration.Render(context.TODO(), &agent, config, store)
+	require.NoError(t, err)
+
+	expect := strings.TrimLeft(`
+receivers:
+    plugin/source0:
+        parameters:
+            encoding: utf-8
+            file_path:
+                - /var/log/http.log
+            log_type: file
+            multiline_line_start_pattern: ""
+            parse_format: json
+            start_at: end
+        path: $OIQ_OTEL_COLLECTOR_HOME/plugins/file_logs.yaml
+    prometheus/_agent_metrics:
+        config:
+            scrape_configs:
+                - job_name: observiq-otel-collector
+                  metric_relabel_configs:
+                    - action: keep
+                      regex: otelcol_processor_throughputmeasurement_.*
+                      source_labels:
+                        - __name__
+                  scrape_interval: 10s
+                  static_configs:
+                    - labels:
+                        agent: ""
+                        configuration: file-extract-duration
+                      targets:
+                        - 0.0.0.0:8888
+processors:
+    batch/_agent_metrics: null
+    batch/googlecloud: null
+    metricextract/source0__processor0:
+        attributes:
+            status_code: body.status
+        extract: body.duration
+        match: body.duration != nil
+        metric_name: http.request.duration
+        metric_unit: ms
+        route: builtin
+    resourcedetection/source0:
+        detectors:
+            - system
+        system:
+            hostname_sources:
+                - os
+    snapshotprocessor: null
+    throughputmeasurement/_d0_logs_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_d1_logs_googlecloud:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_s0_logs_source0:
+        enabled: true
+        sampling_ratio: 1
+    throughputmeasurement/_s1_logs_source0:
+        enabled: true
+        sampling_ratio: 1
+exporters:
+    googlecloud/googlecloud: null
+    otlphttp/_agent_metrics:
+        endpoint: /v1/otlphttp
+service:
+    pipelines:
+        logs/source0__googlecloud:
+            receivers:
+                - plugin/source0
+            processors:
+                - resourcedetection/source0
+                - throughputmeasurement/_s0_logs_source0
+                - metricextract/source0__processor0
+                - throughputmeasurement/_s1_logs_source0
+                - throughputmeasurement/_d0_logs_googlecloud
+                - throughputmeasurement/_d1_logs_googlecloud
+                - batch/googlecloud
+                - snapshotprocessor
+            exporters:
+                - googlecloud/googlecloud
+        metrics/_agent_metrics:
+            receivers:
+                - prometheus/_agent_metrics
+            processors:
+                - batch/_agent_metrics
+            exporters:
+                - otlphttp/_agent_metrics
+`, "\n")
+
+	require.Equal(t, expect, result)
+}
+
 func TestDuplicate(t *testing.T) {
 	duplicateName := "duplicate-config"
 

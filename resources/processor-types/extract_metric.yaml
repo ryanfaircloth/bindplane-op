@@ -1,9 +1,9 @@
 apiVersion: bindplane.observiq.com/v1
 kind: ProcessorType
 metadata:
-  name: count_logs
-  displayName: Count Logs
-  description: Count logs matching some expression.
+  name: extract_metric
+  displayName: Extract Metric
+  description: Extract a number from a log field to create a metric.
 spec:
   version: 0.0.1
   parameters:
@@ -12,6 +12,15 @@ spec:
       description: Expr expression to find matching logs.
       type: string
       default: "true"
+      required: true
+      documentation:
+        - text: Language Reference
+          url: https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md
+    - name: path
+      label: Path Expression
+      description: Expr expression used to find the field to extract from a matching log.
+      type: string
+      default: ""
       required: true
       documentation:
         - text: Language Reference
@@ -47,26 +56,19 @@ spec:
           url: https://github.com/observIQ/observiq-otel-collector/blob/main/processor/logcountprocessor/README.md#expression-language
       options:
         gridColumns: 12
-      required: true
       relevantIf:
         - name: enable_attributes
           operator: equals
           value: true
-    - name: interval
-      label: Interval
-      description: Interval (seconds) to count logs over.
-      type: int
-      default: 60
-      advancedConfig: true
 
   logs:
     processors: |
-      - logcount:
+      - metricextract:
           route: builtin
           match: '{{ .match }}'
+          extract: '{{ .path }}'
           metric_name: '{{ .metric_name }}'
           metric_unit: '{{ .metric_units }}'
-          interval: {{ .interval }}s
           {{ if and (eq .enable_attributes true) .attributes }}
           attributes:
           {{ range $k, $v := .attributes }}
