@@ -1,5 +1,9 @@
 import { useCallback, useEffect } from "react";
-import ReactFlow, { Controls, useReactFlow } from "react-flow-renderer";
+import ReactFlow, {
+  Controls,
+  useReactFlow,
+  useStore,
+} from "react-flow-renderer";
 import SourceNode from "./Nodes/SourceNode";
 import DestinationNode from "./Nodes/DestinationNode";
 import UIControlNode from "./Nodes/UIControlNode";
@@ -103,11 +107,17 @@ export const ConfigurationFlow: React.FC<ConfigurationFlowProps> = ({
     reactFlowInstance.fitView();
   }, [reactFlowInstance]);
 
+  const reactFlowWidth = useStore((state: { width: any }) => state.width);
+  const reactFlowHeight = useStore((state: { height: any }) => state.height);
+  const reactFlowNodeCount = useStore(
+    (state: { nodeInternals: any }) =>
+      Array.from(state.nodeInternals.values()).length || 0
+  );
   useEffect(() => {
     setTimeout(() => {
       reactFlowInstance.fitView();
-    }, 10);
-  }, [reactFlowInstance, viewPortHeight]);
+    }, 0);
+  }, [reactFlowWidth, reactFlowHeight, reactFlowNodeCount, reactFlowInstance]);
 
   return (
     <div style={{ height: viewPortHeight, width: "100%" }}>

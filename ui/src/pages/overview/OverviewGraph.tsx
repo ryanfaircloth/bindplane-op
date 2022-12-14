@@ -8,7 +8,11 @@ import {
 } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useEffect, useState } from "react";
-import ReactFlow, { Controls, useReactFlow } from "react-flow-renderer";
+import ReactFlow, {
+  Controls,
+  useReactFlow,
+  useStore,
+} from "react-flow-renderer";
 import { useNavigate } from "react-router-dom";
 import {
   DEFAULT_PERIOD,
@@ -123,6 +127,16 @@ export const OverviewGraph: React.FC = () => {
       );
     }
   }, [data?.overviewPage.graph.attributes, onTelemetryTypeChange]);
+
+  const reactFlowWidth = useStore((state: { width: any }) => state.width);
+  const reactFlowHeight = useStore((state: { height: any }) => state.height);
+  const reactFlowNodeCount = useStore(
+    (state: { nodeInternals: any }) =>
+      Array.from(state.nodeInternals.values()).length || 0
+  );
+  useEffect(() => {
+    reactFlowInstance.fitView();
+  }, [reactFlowWidth, reactFlowHeight, reactFlowNodeCount, reactFlowInstance]);
 
   if (loading || data == null || data?.overviewPage == null) {
     return <LoadingIndicator />;
