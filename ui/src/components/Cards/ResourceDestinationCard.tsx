@@ -228,7 +228,7 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
         updatedConfig.replaceDestination(
           {
             name: updatedDestination.name(),
-            processors: updatedDestination.spec.processors,
+            processors,
             parameters: updatedDestination.spec.parameters,
             type: updatedDestination.spec.type,
             disabled: updatedDestination.spec.disabled,
