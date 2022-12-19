@@ -329,6 +329,10 @@ func evalProcessor(ctx context.Context, processor *ResourceConfiguration, defaul
 		return "", nil
 	}
 
+	if prc.Spec.Disabled || processor.Disabled {
+		return prc.Name(), otel.NewPartials()
+	}
+
 	return prc.Name(), prcType.eval(prc, errorHandler)
 }
 

@@ -1248,6 +1248,78 @@ service:
 
 	require.Equal(t, expect, result)
 }
+
+func TestConfigurationRender_DisabledProcessor(t *testing.T) {
+	store := newTestResourceStore()
+	config := newTestConfiguration()
+
+	postgresql := testResource[*SourceType](t, "sourcetype-macos.yaml")
+	store.sourceTypes[postgresql.Name()] = postgresql
+
+	googleCloudType := testResource[*DestinationType](t, "destinationtype-googlecloud.yaml")
+	store.destinationTypes[googleCloudType.Name()] = googleCloudType
+
+	googleCloud := testResource[*Destination](t, "destination-googlecloud.yaml")
+	store.destinations[googleCloud.Name()] = googleCloud
+
+	resourceAttributeTransposerType := testResource[*ProcessorType](t, "processortype-resourceattributetransposer.yaml")
+	store.processorTypes[resourceAttributeTransposerType.Name()] = resourceAttributeTransposerType
+
+	configuration := testResource[*Configuration](t, "configuration-macos-processors-disabled.yaml")
+	result, err := configuration.Render(context.TODO(), nil, config, store)
+	require.NoError(t, err)
+
+	expect := strings.TrimLeft(`
+receivers:
+    hostmetrics/source0:
+        collection_interval: 1m
+        scrapers:
+            load: null
+    plugin/source0__journald:
+        plugin:
+            name: journald
+    plugin/source0__macos:
+        parameters:
+            - name: enable_system_log
+              value: false
+            - name: system_log_path
+              value: /var/log/system.log
+            - name: enable_install_log
+              value: true
+            - name: install_log_path
+              value: /var/log/install.log
+            - name: start_at
+              value: end
+        plugin:
+            name: macos
+processors:
+    batch/googlecloud: null
+    normalizesums/googlecloud: null
+exporters:
+    googlecloud/googlecloud: null
+service:
+    pipelines:
+        logs/source0__googlecloud:
+            receivers:
+                - plugin/source0__macos
+                - plugin/source0__journald
+            processors:
+                - batch/googlecloud
+            exporters:
+                - googlecloud/googlecloud
+        metrics/source0__googlecloud:
+            receivers:
+                - hostmetrics/source0
+            processors:
+                - normalizesums/googlecloud
+                - batch/googlecloud
+            exporters:
+                - googlecloud/googlecloud
+`, "\n")
+
+	require.Equal(t, expect, result)
+}
+
 func TestEvalConfiguration_WithLogCountUnsupported(t *testing.T) {
 	t.Parallel()
 	store := newTestResourceStore()
