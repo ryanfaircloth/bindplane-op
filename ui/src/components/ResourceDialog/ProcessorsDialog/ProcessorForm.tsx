@@ -1,10 +1,10 @@
 import { Grid, Typography } from "@mui/material";
-import { Parameter, ParameterDefinition } from "../../graphql/generated";
-import { ParameterInput } from "./ParameterInput";
-import { useResourceFormValues } from "./ResourceFormContext";
-import { satisfiesRelevantIf } from "./satisfiesRelevantIf";
+import { Parameter, ParameterDefinition } from "../../../graphql/generated";
+import { ParameterInput } from "../../ResourceConfigForm/ParameterInput";
+import { useResourceFormValues } from "../../ResourceConfigForm/ResourceFormContext";
+import { satisfiesRelevantIf } from "../../ResourceConfigForm/satisfiesRelevantIf";
 
-import mixins from "../../styles/mixins.module.scss";
+import mixins from "../../../styles/mixins.module.scss";
 
 interface Props {
   parameterDefinitions: ParameterDefinition[];

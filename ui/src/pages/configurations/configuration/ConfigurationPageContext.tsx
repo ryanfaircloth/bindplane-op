@@ -32,7 +32,7 @@ const defaultContextValue: ConfigurationPageContextValue = {
   setAddDestDialogOpen: () => {},
 };
 
-const ConfigurationPageContext = createContext(defaultContextValue);
+export const ConfigurationPageContext = createContext(defaultContextValue);
 
 export const ConfigurationPageContextProvider: React.FC<ConfigurationPageContextValue> =
   ({

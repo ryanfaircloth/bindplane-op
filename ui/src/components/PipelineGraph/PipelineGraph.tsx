@@ -9,9 +9,9 @@ import {
 } from "../MeasurementControlBar/MeasurementControlBar";
 import { ConfigurationFlow } from "./ConfigurationFlow";
 import { PipelineGraphProvider } from "./PipelineGraphContext";
-
 import { firstActiveTelemetry } from "./Nodes/nodeUtils";
 import { YamlEditor } from "../YamlEditor";
+import { ProcessorDialog } from "../ResourceDialog/ProcessorsDialog";
 
 import styles from "./pipeline-graph.module.scss";
 
@@ -39,7 +39,11 @@ export const PipelineGraph: React.FC<PipelineGraphProps> = ({
 
   if (rawOrTopology === "topology") {
     return (
-      <PipelineGraphProvider selectedTelemetryType={selectedTelemetry}>
+      <PipelineGraphProvider
+        selectedTelemetryType={selectedTelemetry}
+        configuration={configuration}
+        refetchConfiguration={refetchConfiguration}
+      >
         <GraphContainer>
           <Card style={{ border: 0 }}>
             <MeasurementControlBar
@@ -59,6 +63,7 @@ export const PipelineGraph: React.FC<PipelineGraphProps> = ({
             </ReactFlowProvider>
           </Card>
         </GraphContainer>
+        <ProcessorDialog />
       </PipelineGraphProvider>
     );
   } else {

@@ -1,6 +1,6 @@
 export { initFormValues } from "./init-form-values";
-export { CreateProcessorSelectView } from "./CreateProcessorSelectView";
-export { MainView } from "./MainView";
+export { CreateProcessorSelectView } from "../ResourceDialog/ProcessorsDialog/CreateProcessorSelectView";
+export { ConfigureResourceView } from "./ConfigureResourceView";
 export { ResourceConfigurationView as ResourceConfigForm } from "./ResourceConfigurationView";
 export type { FormValues, ProcessorType } from "./ResourceConfigurationView";
 export {
@@ -8,8 +8,7 @@ export {
   useValidationContext,
   isValid,
 } from "./ValidationContext";
-export { CreateProcessorConfigureView } from "./CreateProcessorConfigureView";
-export { EditProcessorView } from "./EditProcessorView";
+export { CreateProcessorConfigureView } from "../ResourceDialog/ProcessorsDialog/CreateProcessorConfigureView";
+export { EditProcessorView } from "../ResourceDialog/ProcessorsDialog/EditProcessorView";
 export { ParameterInput, ResourceNameInput } from "./ParameterInput";
 export { satisfiesRelevantIf } from "./satisfiesRelevantIf";
-export { InlineProcessorLabel } from "./InlineProcessorLabel";

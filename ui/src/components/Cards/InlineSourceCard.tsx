@@ -233,8 +233,6 @@ export const InlineSourceCard: React.FC<{
         displayName={displayName}
         description={data?.sourceType?.metadata.description ?? ""}
         kind="source"
-        enableProcessors
-        processors={source?.processors}
         parameters={source?.parameters ?? []}
         parameterDefinitions={data.sourceType.spec.parameters}
         open={editing}

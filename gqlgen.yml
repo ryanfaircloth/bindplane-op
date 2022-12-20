@@ -70,3 +70,6 @@ models:
   PipelineType:
     model:
       - github.com/observiq/bindplane-op/model/otel.PipelineType
+  ProcessorInput:
+    model:
+      - github.com/observiq/bindplane-op/model.ResourceConfiguration

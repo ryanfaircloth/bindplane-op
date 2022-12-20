@@ -17,21 +17,31 @@ export function ProcessorNode({
 }) {
   const { id, metric, configuration } = data;
 
-  let processorCount = 0;
+  const isSource = isSourceID(id);
 
-  if (isSourceID(id)) {
+  let processorCount = 0;
+  let resourceIndex = -1;
+  if (isSource) {
+    resourceIndex = getSourceIndex(id);
     const source = configuration?.spec?.sources![getSourceIndex(id)];
     processorCount = source?.processors?.length ?? 0;
   } else {
-    const destination = configuration?.spec?.destinations?.find(
-      (d) => d.name === getDestinationName(id)
-    );
+    resourceIndex =
+      configuration?.spec?.destinations?.findIndex(
+        (d) => d.name === getDestinationName(id)
+      ) ?? -1;
+
+    const destination = configuration?.spec?.destinations![resourceIndex];
     processorCount = destination?.processors?.length ?? 0;
   }
   return (
     <>
       <Handle type="target" position={Position.Left} />
-      <ProcessorCard processors={processorCount} />
+      <ProcessorCard
+        processorCount={processorCount}
+        resourceType={isSource ? "source" : "destination"}
+        resourceIndex={resourceIndex}
+      />
       <CardMeasurementContent>{metric}</CardMeasurementContent>
       <Handle type="source" position={Position.Right} />
     </>

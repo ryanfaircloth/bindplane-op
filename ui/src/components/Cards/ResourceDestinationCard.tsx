@@ -111,11 +111,6 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
       (d) => d.name === name
     );
 
-    const processors =
-      destinationIndex !== -1 && destinationIndex != null
-        ? configuration?.spec?.destinations?.[destinationIndex].processors
-        : [];
-
     function closeEditDialog() {
       setEditing(false);
     }
@@ -228,7 +223,9 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
         updatedConfig.replaceDestination(
           {
             name: updatedDestination.name(),
-            processors,
+            processors:
+              configuration?.spec?.destinations![destinationIndex].processors ??
+              [],
             parameters: updatedDestination.spec.parameters,
             type: updatedDestination.spec.type,
             disabled: updatedDestination.spec.disabled,
@@ -353,8 +350,6 @@ const ResourceDestinationCardComponent: React.FC<ResourceDestinationCardProps> =
           description={
             data.destinationWithType.destinationType.metadata.description ?? ""
           }
-          enableProcessors={enableProcessors}
-          processors={processors}
           fullWidth
           maxWidth="sm"
           parameters={

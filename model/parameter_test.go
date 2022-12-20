@@ -15,6 +15,8 @@
 package model
 
 import (
+	"encoding/json"
+	"strconv"
 	"testing"
 
 	"github.com/observiq/bindplane-op/model/validation"
@@ -315,6 +317,24 @@ func TestValidateValue(t *testing.T) {
 				Default: 5,
 			},
 			"test",
+		},
+		{
+			"Valid json.Number",
+			false,
+			ParameterDefinition{
+				Type:    "int",
+				Default: 5,
+			},
+			json.Number(strconv.FormatInt(60, 10)),
+		},
+		{
+			"Invalid json.Number",
+			true,
+			ParameterDefinition{
+				Type:    "int",
+				Default: 5,
+			},
+			json.Number(strconv.FormatFloat(60.104824, 'e', -1, 64)),
 		},
 		{
 			"ValidBool",
@@ -658,7 +678,7 @@ func TestValidateAwsCloudwatchNamedFieldType(t *testing.T) {
 			[]struct {
 				ID       string `mapstructure:"id"`
 				Names    []interface{}
-			    Prefixes string
+				Prefixes string
 			}{
 				{
 					"id",
@@ -715,9 +735,9 @@ func TestValidateAwsCloudwatchNamedFieldType(t *testing.T) {
 				Prefixes []interface{}
 			}{
 				{
-					 "id",
-					 make([]interface{}, 0),
-					 make([]interface{}, 0),
+					"id",
+					make([]interface{}, 0),
+					make([]interface{}, 0),
 				},
 			},
 			"",

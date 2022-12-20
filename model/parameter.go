@@ -15,6 +15,7 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
 	"go/token"
 	"reflect"
@@ -454,6 +455,9 @@ func (p ParameterDefinition) validateIntValue(fieldType parameterFieldType, valu
 	} else if stringValue, ok := value.(string); ok {
 		_, err := strconv.Atoi(stringValue)
 		isIntValue = err == nil
+	} else if jsonNumberValue, ok := value.(json.Number); ok {
+		_, err := jsonNumberValue.Int64()
+		isIntValue = err == nil
 	}
 
 	if !isIntValue {
@@ -663,11 +667,11 @@ func (p ParameterDefinition) validateAwsCloudwatchNamedFieldType(fieldType param
 			case "names", "prefixes":
 				_, ok := n.([]interface{})
 				if !ok {
-					return errors.NewError("incorrect type included in "+ s +" field",
+					return errors.NewError("incorrect type included in "+s+" field",
 						"awsCloudwatchNamedField"+s+"should be of type []string")
 				}
 			default:
-				return errors.NewError("unexpected field " + s +" included in struct",
+				return errors.NewError("unexpected field "+s+" included in struct",
 					s+"should not be an included field in awsCloudWatchNamedField")
 
 			}

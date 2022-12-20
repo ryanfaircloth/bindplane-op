@@ -453,6 +453,41 @@ type Subscription {
   configurationChanges(selector: String, query: String): [ConfigurationChange!]!
 
   agentMetrics(period: String!, ids: [ID!]): GraphMetrics!
-  configurationMetrics(period: String!, name: String, agent: String): GraphMetrics!
+  configurationMetrics(
+    period: String!
+    name: String
+    agent: String
+  ): GraphMetrics!
   overviewMetrics(period: String!): GraphMetrics!
+}
+
+# ----------------------------------------------------------------------
+# mutations
+
+enum ResourceTypeKind {
+  SOURCE
+  DESTINATION
+}
+
+input ParameterInput {
+  name: String!
+  value: Any!
+}
+
+input ProcessorInput {
+  name: String
+  type: String
+  parameters: [ParameterInput!]
+  disabled: Boolean
+}
+
+input UpdateProcessorsInput {
+  configuration: String!
+  resourceType: ResourceTypeKind!
+  resourceIndex: Int!
+  processors: [ProcessorInput!]!
+}
+
+type Mutation {
+  updateProcessors(input: UpdateProcessorsInput!): Boolean
 }

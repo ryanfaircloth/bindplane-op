@@ -2,7 +2,6 @@ import { FormValues, satisfiesRelevantIf } from ".";
 import {
   ParameterDefinition,
   Parameter,
-  ResourceConfiguration,
   ParameterType,
 } from "../../graphql/generated";
 import { validateNameField } from "../../utils/forms/validate-name-field";
@@ -18,7 +17,6 @@ import {
 export function initFormValues(
   definitions: ParameterDefinition[],
   parameters?: Parameter[] | null,
-  processors?: ResourceConfiguration[] | null,
   includeNameField?: boolean
 ): FormValues {
   // Assign defaults
@@ -38,10 +36,6 @@ export function initFormValues(
     }
   }
 
-  // Set the processors value if present
-  if (processors != null) {
-    defaults.processors = processors;
-  }
   return defaults;
 }
 

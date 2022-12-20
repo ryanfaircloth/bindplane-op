@@ -1,4 +1,4 @@
-// Copyright  observIQ, Inc.
+// Copyright observIQ, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -150,6 +150,43 @@ func (r *metadataResolver) Labels(ctx context.Context, obj *model.Metadata) (map
 		labels[k] = obj.Labels.Get(k)
 	}
 	return labels, nil
+}
+
+// UpdateProcessors is the resolver for the updateProcessors field.
+func (r *mutationResolver) UpdateProcessors(ctx context.Context, input model1.UpdateProcessorsInput) (*bool, error) {
+	config, err := r.bindplane.Store().Configuration(ctx, input.Configuration)
+	if err != nil {
+		return nil, err
+	}
+
+	if config == nil {
+		return nil, fmt.Errorf("configuration not found")
+	}
+
+	processors := make([]model.ResourceConfiguration, len(input.Processors))
+	for ix, p := range input.Processors {
+		processors[ix] = *p
+	}
+
+	switch input.ResourceType {
+	case model1.ResourceTypeKindDestination:
+		config.Spec.Destinations[input.ResourceIndex].Processors = processors
+	case model1.ResourceTypeKindSource:
+		config.Spec.Sources[input.ResourceIndex].Processors = processors
+	default:
+		return nil, fmt.Errorf("invalid resource type, should be source or destination")
+	}
+
+	statuses, err := r.bindplane.Store().ApplyResources(ctx, []model.Resource{config})
+	if err != nil {
+		return nil, err
+	}
+
+	if statuses[0].Status == model.StatusError {
+		return nil, errors.New(statuses[0].Reason)
+	}
+
+	return nil, nil
 }
 
 // Type is the resolver for the type field.
@@ -637,6 +674,9 @@ func (r *Resolver) DestinationType() generated.DestinationTypeResolver {
 // Metadata returns generated.MetadataResolver implementation.
 func (r *Resolver) Metadata() generated.MetadataResolver { return &metadataResolver{r} }
 
+// Mutation returns generated.MutationResolver implementation.
+func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
+
 // ParameterDefinition returns generated.ParameterDefinitionResolver implementation.
 func (r *Resolver) ParameterDefinition() generated.ParameterDefinitionResolver {
 	return &parameterDefinitionResolver{r}
@@ -672,6 +712,7 @@ type configurationResolver struct{ *Resolver }
 type destinationResolver struct{ *Resolver }
 type destinationTypeResolver struct{ *Resolver }
 type metadataResolver struct{ *Resolver }
+type mutationResolver struct{ *Resolver }
 type parameterDefinitionResolver struct{ *Resolver }
 type processorResolver struct{ *Resolver }
 type processorTypeResolver struct{ *Resolver }

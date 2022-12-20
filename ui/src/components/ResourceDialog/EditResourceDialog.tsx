@@ -1,10 +1,5 @@
 import { Dialog, DialogProps } from "@mui/material";
-import {
-  Maybe,
-  Parameter,
-  ParameterDefinition,
-  ResourceConfiguration,
-} from "../../graphql/generated";
+import { Parameter, ParameterDefinition } from "../../graphql/generated";
 import { ResourceConfigForm } from "../ResourceConfigForm";
 import { ResourceDialogContextProvider } from "./ResourceDialogContext";
 import { isFunction } from "lodash";
@@ -17,8 +12,6 @@ interface EditResourceDialogProps extends DialogProps {
   onCancel: () => void;
   parameters: Parameter[];
   parameterDefinitions: ParameterDefinition[];
-  processors?: Maybe<ResourceConfiguration[]>;
-  enableProcessors?: boolean;
   includeNameField?: boolean;
   kind: "source" | "destination";
   // The supported telemetry types of the resource type that is
@@ -36,8 +29,6 @@ const EditResourceDialogComponent: React.FC<EditResourceDialogProps> = ({
   displayName,
   description,
   parameters,
-  processors,
-  enableProcessors,
   parameterDefinitions,
   kind,
   telemetryTypes,
@@ -54,8 +45,6 @@ const EditResourceDialogComponent: React.FC<EditResourceDialogProps> = ({
         kind={kind}
         parameterDefinitions={parameterDefinitions}
         parameters={parameters}
-        processors={processors}
-        enableProcessors={enableProcessors}
         onSave={onSave}
         onDelete={onDelete}
         telemetryTypes={telemetryTypes}

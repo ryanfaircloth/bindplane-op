@@ -6,28 +6,27 @@ import {
   ProcessorType,
   useValidationContext,
   ValidationContextProvider,
-} from ".";
-import { ActionsSection } from "../ResourceDialog/ActionSection";
-import { ContentSection } from "../ResourceDialog/ContentSection";
-import { useResourceDialog } from "../ResourceDialog/ResourceDialogContext";
-import { TitleSection } from "../ResourceDialog/TitleSection";
-import { initFormErrors } from "./init-form-values";
+} from "../../ResourceConfigForm";
+import { ActionsSection } from "../ActionSection";
+import { ContentSection } from "../ContentSection";
+import { TitleSection } from "../TitleSection";
+import { initFormErrors } from "../../ResourceConfigForm/init-form-values";
 import { ProcessorForm } from "./ProcessorForm";
 import {
   FormValueContextProvider,
   useResourceFormValues,
-} from "./ResourceFormContext";
+} from "../../ResourceConfigForm/ResourceFormContext";
 
 interface CreateProcessorConfigureViewProps {
   processorType: ProcessorType;
   onBack: () => void;
   onSave: (formValues: FormValues) => void;
+  onClose: () => void;
 }
 
 const CreateProcessorConfigureViewComponent: React.FC<CreateProcessorConfigureViewProps> =
-  ({ processorType, onSave, onBack }) => {
+  ({ processorType, onSave, onBack, onClose }) => {
     const { formValues } = useResourceFormValues();
-    const { onClose } = useResourceDialog();
     const { touchAll, setErrors } = useValidationContext();
 
     function handleSave() {

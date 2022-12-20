@@ -75,6 +75,13 @@ type Snapshot struct {
 	Traces  []*record.Trace  `json:"traces"`
 }
 
+type UpdateProcessorsInput struct {
+	Configuration string                         `json:"configuration"`
+	ResourceType  ResourceTypeKind               `json:"resourceType"`
+	ResourceIndex int                            `json:"resourceIndex"`
+	Processors    []*model.ResourceConfiguration `json:"processors"`
+}
+
 type AgentChangeType string
 
 const (
@@ -260,5 +267,46 @@ func (e *RelevantIfOperatorType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e RelevantIfOperatorType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ResourceTypeKind string
+
+const (
+	ResourceTypeKindSource      ResourceTypeKind = "SOURCE"
+	ResourceTypeKindDestination ResourceTypeKind = "DESTINATION"
+)
+
+var AllResourceTypeKind = []ResourceTypeKind{
+	ResourceTypeKindSource,
+	ResourceTypeKindDestination,
+}
+
+func (e ResourceTypeKind) IsValid() bool {
+	switch e {
+	case ResourceTypeKindSource, ResourceTypeKindDestination:
+		return true
+	}
+	return false
+}
+
+func (e ResourceTypeKind) String() string {
+	return string(e)
+}
+
+func (e *ResourceTypeKind) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ResourceTypeKind(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ResourceTypeKind", str)
+	}
+	return nil
+}
+
+func (e ResourceTypeKind) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

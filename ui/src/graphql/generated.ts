@@ -230,6 +230,16 @@ export type MetricOption = {
   name: Scalars['String'];
 };
 
+export type Mutation = {
+  __typename?: 'Mutation';
+  updateProcessors?: Maybe<Scalars['Boolean']>;
+};
+
+
+export type MutationUpdateProcessorsArgs = {
+  input: UpdateProcessorsInput;
+};
+
 export type Node = {
   __typename?: 'Node';
   attributes: Scalars['Map'];
@@ -262,6 +272,11 @@ export type ParameterDefinition = {
   required: Scalars['Boolean'];
   type: ParameterType;
   validValues?: Maybe<Array<Scalars['String']>>;
+};
+
+export type ParameterInput = {
+  name: Scalars['String'];
+  value: Scalars['Any'];
 };
 
 export type ParameterOptions = {
@@ -308,6 +323,13 @@ export type Processor = {
   kind: Scalars['String'];
   metadata: Metadata;
   spec: ParameterizedSpec;
+};
+
+export type ProcessorInput = {
+  disabled?: InputMaybe<Scalars['Boolean']>;
+  name?: InputMaybe<Scalars['String']>;
+  parameters?: InputMaybe<Array<ParameterInput>>;
+  type?: InputMaybe<Scalars['String']>;
 };
 
 export type ProcessorType = {
@@ -447,6 +469,11 @@ export type ResourceConfiguration = {
   type?: Maybe<Scalars['String']>;
 };
 
+export enum ResourceTypeKind {
+  Destination = 'DESTINATION',
+  Source = 'SOURCE'
+}
+
 export type ResourceTypeSpec = {
   __typename?: 'ResourceTypeSpec';
   parameters: Array<ParameterDefinition>;
@@ -535,6 +562,13 @@ export type Trace = {
   traceID?: Maybe<Scalars['String']>;
 };
 
+export type UpdateProcessorsInput = {
+  configuration: Scalars['String'];
+  processors: Array<ProcessorInput>;
+  resourceIndex: Scalars['Int'];
+  resourceType: ResourceTypeKind;
+};
+
 export type DestinationTypeQueryVariables = Exact<{
   name: Scalars['String'];
 }>;
@@ -576,6 +610,27 @@ export type GetProcessorTypeQueryVariables = Exact<{
 
 
 export type GetProcessorTypeQuery = { __typename?: 'Query', processorType?: { __typename?: 'ProcessorType', metadata: { __typename?: 'Metadata', displayName?: string | null, name: string, description?: string | null }, spec: { __typename?: 'ResourceTypeSpec', parameters: Array<{ __typename?: 'ParameterDefinition', label: string, name: string, description: string, required: boolean, type: ParameterType, default?: any | null, advancedConfig?: boolean | null, validValues?: Array<string> | null, relevantIf?: Array<{ __typename?: 'RelevantIfCondition', name: string, operator: RelevantIfOperatorType, value: any }> | null, documentation?: Array<{ __typename?: 'DocumentationLink', text: string, url: string }> | null, options: { __typename?: 'ParameterOptions', creatable?: boolean | null, trackUnchecked?: boolean | null, gridColumns?: number | null, sectionHeader?: boolean | null, multiline?: boolean | null, metricCategories?: Array<{ __typename?: 'MetricCategory', label: string, column: number, metrics: Array<{ __typename?: 'MetricOption', name: string, description?: string | null, kpi?: boolean | null }> }> | null } }> } } | null };
+
+export type ProcessorDialogSourceTypeQueryVariables = Exact<{
+  name: Scalars['String'];
+}>;
+
+
+export type ProcessorDialogSourceTypeQuery = { __typename?: 'Query', sourceType?: { __typename?: 'SourceType', metadata: { __typename?: 'Metadata', name: string, displayName?: string | null, description?: string | null }, spec: { __typename?: 'ResourceTypeSpec', telemetryTypes: Array<PipelineType> } } | null };
+
+export type ProcessorDialogDestinationTypeQueryVariables = Exact<{
+  name: Scalars['String'];
+}>;
+
+
+export type ProcessorDialogDestinationTypeQuery = { __typename?: 'Query', destinationWithType: { __typename?: 'DestinationWithType', destinationType?: { __typename?: 'DestinationType', metadata: { __typename?: 'Metadata', name: string, displayName?: string | null, description?: string | null }, spec: { __typename?: 'ResourceTypeSpec', telemetryTypes: Array<PipelineType> } } | null } };
+
+export type UpdateProcessorsMutationVariables = Exact<{
+  input: UpdateProcessorsInput;
+}>;
+
+
+export type UpdateProcessorsMutation = { __typename?: 'Mutation', updateProcessors?: boolean | null };
 
 export type SnapshotQueryVariables = Exact<{
   agentID: Scalars['String'];
@@ -1144,6 +1199,123 @@ export function useGetProcessorTypeLazyQuery(baseOptions?: Apollo.LazyQueryHookO
 export type GetProcessorTypeQueryHookResult = ReturnType<typeof useGetProcessorTypeQuery>;
 export type GetProcessorTypeLazyQueryHookResult = ReturnType<typeof useGetProcessorTypeLazyQuery>;
 export type GetProcessorTypeQueryResult = Apollo.QueryResult<GetProcessorTypeQuery, GetProcessorTypeQueryVariables>;
+export const ProcessorDialogSourceTypeDocument = gql`
+    query processorDialogSourceType($name: String!) {
+  sourceType(name: $name) {
+    metadata {
+      name
+      displayName
+      description
+    }
+    spec {
+      telemetryTypes
+    }
+  }
+}
+    `;
+
+/**
+ * __useProcessorDialogSourceTypeQuery__
+ *
+ * To run a query within a React component, call `useProcessorDialogSourceTypeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProcessorDialogSourceTypeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProcessorDialogSourceTypeQuery({
+ *   variables: {
+ *      name: // value for 'name'
+ *   },
+ * });
+ */
+export function useProcessorDialogSourceTypeQuery(baseOptions: Apollo.QueryHookOptions<ProcessorDialogSourceTypeQuery, ProcessorDialogSourceTypeQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProcessorDialogSourceTypeQuery, ProcessorDialogSourceTypeQueryVariables>(ProcessorDialogSourceTypeDocument, options);
+      }
+export function useProcessorDialogSourceTypeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProcessorDialogSourceTypeQuery, ProcessorDialogSourceTypeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProcessorDialogSourceTypeQuery, ProcessorDialogSourceTypeQueryVariables>(ProcessorDialogSourceTypeDocument, options);
+        }
+export type ProcessorDialogSourceTypeQueryHookResult = ReturnType<typeof useProcessorDialogSourceTypeQuery>;
+export type ProcessorDialogSourceTypeLazyQueryHookResult = ReturnType<typeof useProcessorDialogSourceTypeLazyQuery>;
+export type ProcessorDialogSourceTypeQueryResult = Apollo.QueryResult<ProcessorDialogSourceTypeQuery, ProcessorDialogSourceTypeQueryVariables>;
+export const ProcessorDialogDestinationTypeDocument = gql`
+    query processorDialogDestinationType($name: String!) {
+  destinationWithType(name: $name) {
+    destinationType {
+      metadata {
+        name
+        displayName
+        description
+      }
+      spec {
+        telemetryTypes
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useProcessorDialogDestinationTypeQuery__
+ *
+ * To run a query within a React component, call `useProcessorDialogDestinationTypeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProcessorDialogDestinationTypeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProcessorDialogDestinationTypeQuery({
+ *   variables: {
+ *      name: // value for 'name'
+ *   },
+ * });
+ */
+export function useProcessorDialogDestinationTypeQuery(baseOptions: Apollo.QueryHookOptions<ProcessorDialogDestinationTypeQuery, ProcessorDialogDestinationTypeQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProcessorDialogDestinationTypeQuery, ProcessorDialogDestinationTypeQueryVariables>(ProcessorDialogDestinationTypeDocument, options);
+      }
+export function useProcessorDialogDestinationTypeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProcessorDialogDestinationTypeQuery, ProcessorDialogDestinationTypeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProcessorDialogDestinationTypeQuery, ProcessorDialogDestinationTypeQueryVariables>(ProcessorDialogDestinationTypeDocument, options);
+        }
+export type ProcessorDialogDestinationTypeQueryHookResult = ReturnType<typeof useProcessorDialogDestinationTypeQuery>;
+export type ProcessorDialogDestinationTypeLazyQueryHookResult = ReturnType<typeof useProcessorDialogDestinationTypeLazyQuery>;
+export type ProcessorDialogDestinationTypeQueryResult = Apollo.QueryResult<ProcessorDialogDestinationTypeQuery, ProcessorDialogDestinationTypeQueryVariables>;
+export const UpdateProcessorsDocument = gql`
+    mutation updateProcessors($input: UpdateProcessorsInput!) {
+  updateProcessors(input: $input)
+}
+    `;
+export type UpdateProcessorsMutationFn = Apollo.MutationFunction<UpdateProcessorsMutation, UpdateProcessorsMutationVariables>;
+
+/**
+ * __useUpdateProcessorsMutation__
+ *
+ * To run a mutation, you first call `useUpdateProcessorsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateProcessorsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateProcessorsMutation, { data, loading, error }] = useUpdateProcessorsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateProcessorsMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProcessorsMutation, UpdateProcessorsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateProcessorsMutation, UpdateProcessorsMutationVariables>(UpdateProcessorsDocument, options);
+      }
+export type UpdateProcessorsMutationHookResult = ReturnType<typeof useUpdateProcessorsMutation>;
+export type UpdateProcessorsMutationResult = Apollo.MutationResult<UpdateProcessorsMutation>;
+export type UpdateProcessorsMutationOptions = Apollo.BaseMutationOptions<UpdateProcessorsMutation, UpdateProcessorsMutationVariables>;
 export const SnapshotDocument = gql`
     query snapshot($agentID: String!, $pipelineType: PipelineType!) {
   snapshot(agentID: $agentID, pipelineType: $pipelineType) {

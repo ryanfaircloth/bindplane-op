@@ -2,7 +2,6 @@ import { DialogActions, Grid, Button, Stack, Typography } from "@mui/material";
 import { isFunction } from "lodash";
 import { ParameterDefinition } from "../../graphql/generated";
 import { ResourceNameInput, useValidationContext, isValid } from ".";
-import { InlineProcessorContainer } from "./InlineProcessorContainer";
 import { useResourceFormValues } from "./ResourceFormContext";
 import { useResourceDialog } from "../ResourceDialog/ResourceDialogContext";
 import { memo, useMemo } from "react";
@@ -10,9 +9,9 @@ import { TitleSection } from "../ResourceDialog/TitleSection";
 import { ContentSection } from "../ResourceDialog/ContentSection";
 import { initFormErrors } from "./init-form-values";
 import { ParameterSection } from "./ParameterSection";
+import { PauseIcon, PlayIcon } from "../Icons";
 
 import mixins from "../../styles/mixins.module.scss";
-import { PauseIcon, PlayIcon } from "../Icons";
 
 export interface ParameterGroup {
   advanced: boolean;
@@ -39,7 +38,7 @@ function groupParameters(parameters: ParameterDefinition[]): ParameterGroup[] {
   return groups;
 }
 
-interface MainProps {
+interface ConfigureResourceViewProps {
   kind: "source" | "destination" | "processor";
   displayName: string;
   description: string;
@@ -47,20 +46,16 @@ interface MainProps {
   includeNameField?: boolean;
   existingResourceNames?: string[];
   parameterDefinitions: ParameterDefinition[];
-  enableProcessors?: boolean;
   onBack?: () => void;
   onSave?: (formValues: { [key: string]: any }) => void;
   saveButtonLabel?: string;
   onDelete?: () => void;
-  onAddProcessor: () => void;
   onTogglePause?: () => void;
-  onEditProcessor: (editingIndex: number) => void;
-  onRemoveProcessor: (removeIndex: number) => void;
   disableSave?: boolean;
   paused?: boolean;
 }
 
-export const MainViewComponent: React.FC<MainProps> = ({
+export const ConfigureResourceContent: React.FC<ConfigureResourceViewProps> = ({
   kind,
   displayName,
   description,
@@ -68,13 +63,10 @@ export const MainViewComponent: React.FC<MainProps> = ({
   includeNameField,
   existingResourceNames,
   parameterDefinitions,
-  enableProcessors,
   onBack,
   onSave,
   saveButtonLabel,
   onDelete,
-  onAddProcessor,
-  onEditProcessor,
   disableSave,
   onTogglePause,
   paused,
@@ -184,14 +176,6 @@ export const MainViewComponent: React.FC<MainProps> = ({
               </>
             )}
           </Grid>
-
-          {enableProcessors && (
-            <InlineProcessorContainer
-              processors={formValues.processors ?? []}
-              onAddProcessor={onAddProcessor}
-              onEditProcessor={onEditProcessor}
-            />
-          )}
         </form>
       </ContentSection>
 
@@ -224,4 +208,4 @@ export const MainViewComponent: React.FC<MainProps> = ({
   );
 };
 
-export const MainView = memo(MainViewComponent);
+export const ConfigureResourceView = memo(ConfigureResourceContent);

@@ -2,17 +2,16 @@ import { gql } from "@apollo/client";
 import { Box, Button, CircularProgress } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useEffect, useMemo, useState } from "react";
-import { ProcessorType } from ".";
-import { useGetProcessorTypesQuery } from "../../graphql/generated";
-import { metadataSatisfiesSubstring } from "../../utils/metadata-satisfies-substring";
-import { ActionsSection } from "../ResourceDialog/ActionSection";
-import { ContentSection } from "../ResourceDialog/ContentSection";
-import { useResourceDialog } from "../ResourceDialog/ResourceDialogContext";
-import { TitleSection } from "../ResourceDialog/TitleSection";
+import { ProcessorType } from "../../ResourceConfigForm";
+import { useGetProcessorTypesQuery } from "../../../graphql/generated";
+import { metadataSatisfiesSubstring } from "../../../utils/metadata-satisfies-substring";
+import { ActionsSection } from "../ActionSection";
+import { ContentSection } from "../ContentSection";
+import { TitleSection } from "../TitleSection";
 import {
   ResourceTypeButton,
   ResourceTypeButtonContainer,
-} from "../ResourceTypeButton";
+} from "../../ResourceTypeButton";
 
 gql`
   query getProcessorTypes {
@@ -76,14 +75,14 @@ interface CreateProcessorSelectViewProps {
 
   onBack?: () => void;
   onSelect: (pt: ProcessorType) => void;
+  onClose: () => void;
 }
 
 export const CreateProcessorSelectView: React.FC<CreateProcessorSelectViewProps> =
-  ({ displayName, onBack, onSelect, telemetryTypes }) => {
+  ({ displayName, onBack, onSelect, telemetryTypes, onClose }) => {
     const { data, loading, error } = useGetProcessorTypesQuery();
     const [search, setSearch] = useState("");
     const { enqueueSnackbar } = useSnackbar();
-    const { onClose } = useResourceDialog();
 
     useEffect(() => {
       if (error != null) {

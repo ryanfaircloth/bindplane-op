@@ -45,7 +45,8 @@
   border: 1px solid rgb(168, 168, 174);
 }
 
-.resource-card:hover {
+.resource-card:hover,
+.processor-card:hover {
   background-color: colors.$gray;
   transition: background-color 0.2s ease-in-out;
 }
@@ -57,6 +58,8 @@
 .processor-card {
   height: 50px;
   width: 100px;
+  cursor: pointer;
+
   background-color: #fff;
   transition: background-color 0.2s ease-in-out;
 

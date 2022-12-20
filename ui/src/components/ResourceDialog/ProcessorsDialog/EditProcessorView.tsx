@@ -1,13 +1,12 @@
 import { useSnackbar } from "notistack";
 import { useEffect } from "react";
-import { FormValues, ResourceConfigForm } from ".";
+import { FormValues, ResourceConfigForm } from "../../ResourceConfigForm";
 import {
   ResourceConfiguration,
   useGetProcessorTypeQuery,
-} from "../../graphql/generated";
+} from "../../../graphql/generated";
 
 interface EditProcessorViewProps {
-  title: string;
   processors: ResourceConfiguration[];
   editingIndex: number;
   onEditProcessorSave: (values: FormValues) => void;
@@ -16,7 +15,6 @@ interface EditProcessorViewProps {
 }
 
 export const EditProcessorView: React.FC<EditProcessorViewProps> = ({
-  title,
   processors,
   editingIndex,
   onEditProcessorSave,

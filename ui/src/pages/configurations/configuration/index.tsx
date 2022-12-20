@@ -22,9 +22,9 @@ import { withRequireLogin } from "../../../contexts/RequireLogin";
 import { withNavBar } from "../../../components/NavBar";
 import { PipelineGraph } from "../../../components/PipelineGraph/PipelineGraph";
 import { ConfigurationPageContextProvider } from "./ConfigurationPageContext";
+import { RawOrTopologyControl } from "../../../components/PipelineGraph/RawOrTopologyControl";
 
 import styles from "./configuration-page.module.scss";
-import { RawOrTopologyControl } from "../../../components/PipelineGraph/RawOrTopologyControl";
 
 gql`
   query GetConfiguration($name: String!) {

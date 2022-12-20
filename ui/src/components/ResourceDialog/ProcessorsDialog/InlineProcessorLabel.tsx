@@ -6,8 +6,8 @@ import { useDrag, useDrop } from "react-dnd";
 import {
   ResourceConfiguration,
   useGetProcessorTypeQuery,
-} from "../../graphql/generated";
-import { EditIcon, MenuIcon } from "../Icons";
+} from "../../../graphql/generated";
+import { MenuIcon, EditIcon } from "../../Icons";
 
 import styles from "./inline-processor-label.module.scss";
 
@@ -18,8 +18,6 @@ interface Props {
   // Move processor should change the components order state
   moveProcessor: (dragIndex: number, dropIndex: number) => void;
 
-  // onDrop should "save" the current order to the formValues and apply
-  // the changed configuration.
   onDrop: () => void;
 }
 
@@ -84,8 +82,8 @@ export const InlineProcessorLabel: React.FC<Props> = ({
   index,
   processor,
   onEdit,
-  onDrop,
   moveProcessor,
+  onDrop,
 }) => {
   // TODO (dsvanlani) handle loading and error
   const { data, error } = useGetProcessorTypeQuery({
@@ -166,7 +164,7 @@ export const InlineProcessorLabel: React.FC<Props> = ({
           <Typography>{data?.processorType?.metadata.displayName}</Typography>
         </Stack>
 
-        <IconButton onClick={onEdit}>
+        <IconButton onClick={onEdit} data-testid={`edit-processor-${index}`}>
           <EditIcon width={15} height={15} style={{ float: "right" }} />
         </IconButton>
       </Stack>

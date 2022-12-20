@@ -1,35 +1,31 @@
-import { Button, Divider, Typography } from "@mui/material";
-import { ResourceConfiguration } from "../../graphql/generated";
-import { PlusCircleIcon } from "../Icons";
+import { Button, Stack } from "@mui/material";
+import { ResourceConfiguration } from "../../../graphql/generated";
+import { PlusCircleIcon } from "../../Icons";
 import { InlineProcessorLabel } from "./InlineProcessorLabel";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useCallback, useState } from "react";
-import { FormValues } from ".";
-import { useResourceFormValues } from "./ResourceFormContext";
 
-import mixins from "../../styles/mixins.module.scss";
+import mixins from "../../../styles/mixins.module.scss";
 
 interface Props {
   processors: ResourceConfiguration[];
   onAddProcessor: () => void;
   onEditProcessor: (index: number) => void;
+  onProcessorsChange: (ps: ResourceConfiguration[]) => void;
 }
 
 export const InlineProcessorContainer: React.FC<Props> = ({
   processors: processorsProp,
+  onProcessorsChange,
   onAddProcessor,
   onEditProcessor,
 }) => {
-  const { setFormValues } = useResourceFormValues();
-  // Manage the processor order state internally in this component
+  // manage state internally
   const [processors, setProcessors] = useState(processorsProp);
 
   function handleDrop() {
-    setFormValues((prev: FormValues) => ({
-      ...prev,
-      processors,
-    }));
+    onProcessorsChange(processors);
   }
 
   const moveProcessor = useCallback(
@@ -49,22 +45,12 @@ export const InlineProcessorContainer: React.FC<Props> = ({
 
       setProcessors(newProcessors);
     },
-    [processors]
+    [processors, setProcessors]
   );
 
   return (
     <>
       <DndProvider backend={HTML5Backend}>
-        <Divider />
-        <Typography fontWeight={600} marginTop={2}>
-          Processors
-        </Typography>
-
-        <Typography variant="body2" marginBottom={2}>
-          Processors are run on data after it&apos;s received and prior to being
-          sent to a destination. They will be executed in the order they appear
-          below.
-        </Typography>
         {processors.map((p, ix) => {
           return (
             <InlineProcessorLabel
@@ -72,21 +58,21 @@ export const InlineProcessorContainer: React.FC<Props> = ({
               key={`${p.name}-${ix}`}
               processor={p}
               onEdit={() => onEditProcessor(ix)}
-              onDrop={handleDrop}
               index={ix}
+              onDrop={handleDrop}
             />
           );
         })}
-
-        <Button
-          variant="text"
-          startIcon={<PlusCircleIcon />}
-          classes={{ root: mixins["mb-2"] }}
-          onClick={onAddProcessor}
-        >
-          Add processor
-        </Button>
-        <Divider />
+        <Stack alignItems="center">
+          <Button
+            variant="text"
+            startIcon={<PlusCircleIcon />}
+            classes={{ root: mixins["mb-2"] }}
+            onClick={onAddProcessor}
+          >
+            Add processor
+          </Button>
+        </Stack>
       </DndProvider>
     </>
   );

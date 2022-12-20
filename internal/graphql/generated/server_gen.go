@@ -15,10 +15,10 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	model1 "github.com/observiq/bindplane-op/internal/graphql/model"
+	"github.com/observiq/bindplane-op/internal/graphql/model"
 	"github.com/observiq/bindplane-op/internal/otlp/record"
 	"github.com/observiq/bindplane-op/internal/store/search"
-	"github.com/observiq/bindplane-op/model"
+	model1 "github.com/observiq/bindplane-op/model"
 	"github.com/observiq/bindplane-op/model/graph"
 	"github.com/observiq/bindplane-op/model/otel"
 	gqlparser "github.com/vektah/gqlparser/v2"
@@ -50,6 +50,7 @@ type ResolverRoot interface {
 	Destination() DestinationResolver
 	DestinationType() DestinationTypeResolver
 	Metadata() MetadataResolver
+	Mutation() MutationResolver
 	ParameterDefinition() ParameterDefinitionResolver
 	Processor() ProcessorResolver
 	ProcessorType() ProcessorTypeResolver
@@ -240,6 +241,10 @@ type ComplexityRoot struct {
 		Name        func(childComplexity int) int
 	}
 
+	Mutation struct {
+		UpdateProcessors func(childComplexity int, input model.UpdateProcessorsInput) int
+	}
+
 	Node struct {
 		Attributes func(childComplexity int) int
 		ID         func(childComplexity int) int
@@ -393,87 +398,90 @@ type ComplexityRoot struct {
 }
 
 type AgentResolver interface {
-	Labels(ctx context.Context, obj *model.Agent) (map[string]interface{}, error)
+	Labels(ctx context.Context, obj *model1.Agent) (map[string]interface{}, error)
 
-	Status(ctx context.Context, obj *model.Agent) (int, error)
+	Status(ctx context.Context, obj *model1.Agent) (int, error)
 
-	Configuration(ctx context.Context, obj *model.Agent) (*model1.AgentConfiguration, error)
-	ConfigurationResource(ctx context.Context, obj *model.Agent) (*model.Configuration, error)
+	Configuration(ctx context.Context, obj *model1.Agent) (*model.AgentConfiguration, error)
+	ConfigurationResource(ctx context.Context, obj *model1.Agent) (*model1.Configuration, error)
 
-	UpgradeAvailable(ctx context.Context, obj *model.Agent) (*string, error)
-	Features(ctx context.Context, obj *model.Agent) (int, error)
+	UpgradeAvailable(ctx context.Context, obj *model1.Agent) (*string, error)
+	Features(ctx context.Context, obj *model1.Agent) (int, error)
 }
 type AgentSelectorResolver interface {
-	MatchLabels(ctx context.Context, obj *model.AgentSelector) (map[string]interface{}, error)
+	MatchLabels(ctx context.Context, obj *model1.AgentSelector) (map[string]interface{}, error)
 }
 type AgentUpgradeResolver interface {
-	Status(ctx context.Context, obj *model.AgentUpgrade) (int, error)
+	Status(ctx context.Context, obj *model1.AgentUpgrade) (int, error)
 }
 type ConfigurationResolver interface {
-	Kind(ctx context.Context, obj *model.Configuration) (string, error)
+	Kind(ctx context.Context, obj *model1.Configuration) (string, error)
 
-	AgentCount(ctx context.Context, obj *model.Configuration) (*int, error)
-	Graph(ctx context.Context, obj *model.Configuration) (*graph.Graph, error)
-	Rendered(ctx context.Context, obj *model.Configuration) (*string, error)
+	AgentCount(ctx context.Context, obj *model1.Configuration) (*int, error)
+	Graph(ctx context.Context, obj *model1.Configuration) (*graph.Graph, error)
+	Rendered(ctx context.Context, obj *model1.Configuration) (*string, error)
 }
 type DestinationResolver interface {
-	Kind(ctx context.Context, obj *model.Destination) (string, error)
+	Kind(ctx context.Context, obj *model1.Destination) (string, error)
 }
 type DestinationTypeResolver interface {
-	Kind(ctx context.Context, obj *model.DestinationType) (string, error)
+	Kind(ctx context.Context, obj *model1.DestinationType) (string, error)
 }
 type MetadataResolver interface {
-	Labels(ctx context.Context, obj *model.Metadata) (map[string]interface{}, error)
+	Labels(ctx context.Context, obj *model1.Metadata) (map[string]interface{}, error)
+}
+type MutationResolver interface {
+	UpdateProcessors(ctx context.Context, input model.UpdateProcessorsInput) (*bool, error)
 }
 type ParameterDefinitionResolver interface {
-	Type(ctx context.Context, obj *model.ParameterDefinition) (model1.ParameterType, error)
+	Type(ctx context.Context, obj *model1.ParameterDefinition) (model.ParameterType, error)
 }
 type ProcessorResolver interface {
-	Kind(ctx context.Context, obj *model.Processor) (string, error)
+	Kind(ctx context.Context, obj *model1.Processor) (string, error)
 }
 type ProcessorTypeResolver interface {
-	Kind(ctx context.Context, obj *model.ProcessorType) (string, error)
+	Kind(ctx context.Context, obj *model1.ProcessorType) (string, error)
 }
 type QueryResolver interface {
-	OverviewPage(ctx context.Context) (*model1.OverviewPage, error)
-	Agents(ctx context.Context, selector *string, query *string) (*model1.Agents, error)
-	Agent(ctx context.Context, id string) (*model.Agent, error)
-	Configurations(ctx context.Context, selector *string, query *string) (*model1.Configurations, error)
-	Configuration(ctx context.Context, name string) (*model.Configuration, error)
-	Sources(ctx context.Context) ([]*model.Source, error)
-	Source(ctx context.Context, name string) (*model.Source, error)
-	SourceTypes(ctx context.Context) ([]*model.SourceType, error)
-	SourceType(ctx context.Context, name string) (*model.SourceType, error)
-	Processors(ctx context.Context) ([]*model.Processor, error)
-	Processor(ctx context.Context, name string) (*model.Processor, error)
-	ProcessorTypes(ctx context.Context) ([]*model.ProcessorType, error)
-	ProcessorType(ctx context.Context, name string) (*model.ProcessorType, error)
-	Destinations(ctx context.Context) ([]*model.Destination, error)
-	Destination(ctx context.Context, name string) (*model.Destination, error)
-	DestinationWithType(ctx context.Context, name string) (*model1.DestinationWithType, error)
-	DestinationTypes(ctx context.Context) ([]*model.DestinationType, error)
-	DestinationType(ctx context.Context, name string) (*model.DestinationType, error)
-	Components(ctx context.Context) (*model1.Components, error)
-	Snapshot(ctx context.Context, agentID string, pipelineType otel.PipelineType) (*model1.Snapshot, error)
-	AgentMetrics(ctx context.Context, period string, ids []string) (*model1.GraphMetrics, error)
-	ConfigurationMetrics(ctx context.Context, period string, name *string) (*model1.GraphMetrics, error)
-	OverviewMetrics(ctx context.Context, period string) (*model1.GraphMetrics, error)
+	OverviewPage(ctx context.Context) (*model.OverviewPage, error)
+	Agents(ctx context.Context, selector *string, query *string) (*model.Agents, error)
+	Agent(ctx context.Context, id string) (*model1.Agent, error)
+	Configurations(ctx context.Context, selector *string, query *string) (*model.Configurations, error)
+	Configuration(ctx context.Context, name string) (*model1.Configuration, error)
+	Sources(ctx context.Context) ([]*model1.Source, error)
+	Source(ctx context.Context, name string) (*model1.Source, error)
+	SourceTypes(ctx context.Context) ([]*model1.SourceType, error)
+	SourceType(ctx context.Context, name string) (*model1.SourceType, error)
+	Processors(ctx context.Context) ([]*model1.Processor, error)
+	Processor(ctx context.Context, name string) (*model1.Processor, error)
+	ProcessorTypes(ctx context.Context) ([]*model1.ProcessorType, error)
+	ProcessorType(ctx context.Context, name string) (*model1.ProcessorType, error)
+	Destinations(ctx context.Context) ([]*model1.Destination, error)
+	Destination(ctx context.Context, name string) (*model1.Destination, error)
+	DestinationWithType(ctx context.Context, name string) (*model.DestinationWithType, error)
+	DestinationTypes(ctx context.Context) ([]*model1.DestinationType, error)
+	DestinationType(ctx context.Context, name string) (*model1.DestinationType, error)
+	Components(ctx context.Context) (*model.Components, error)
+	Snapshot(ctx context.Context, agentID string, pipelineType otel.PipelineType) (*model.Snapshot, error)
+	AgentMetrics(ctx context.Context, period string, ids []string) (*model.GraphMetrics, error)
+	ConfigurationMetrics(ctx context.Context, period string, name *string) (*model.GraphMetrics, error)
+	OverviewMetrics(ctx context.Context, period string) (*model.GraphMetrics, error)
 }
 type RelevantIfConditionResolver interface {
-	Operator(ctx context.Context, obj *model.RelevantIfCondition) (model1.RelevantIfOperatorType, error)
+	Operator(ctx context.Context, obj *model1.RelevantIfCondition) (model.RelevantIfOperatorType, error)
 }
 type SourceResolver interface {
-	Kind(ctx context.Context, obj *model.Source) (string, error)
+	Kind(ctx context.Context, obj *model1.Source) (string, error)
 }
 type SourceTypeResolver interface {
-	Kind(ctx context.Context, obj *model.SourceType) (string, error)
+	Kind(ctx context.Context, obj *model1.SourceType) (string, error)
 }
 type SubscriptionResolver interface {
-	AgentChanges(ctx context.Context, selector *string, query *string) (<-chan []*model1.AgentChange, error)
-	ConfigurationChanges(ctx context.Context, selector *string, query *string) (<-chan []*model1.ConfigurationChange, error)
-	AgentMetrics(ctx context.Context, period string, ids []string) (<-chan *model1.GraphMetrics, error)
-	ConfigurationMetrics(ctx context.Context, period string, name *string, agent *string) (<-chan *model1.GraphMetrics, error)
-	OverviewMetrics(ctx context.Context, period string) (<-chan *model1.GraphMetrics, error)
+	AgentChanges(ctx context.Context, selector *string, query *string) (<-chan []*model.AgentChange, error)
+	ConfigurationChanges(ctx context.Context, selector *string, query *string) (<-chan []*model.ConfigurationChange, error)
+	AgentMetrics(ctx context.Context, period string, ids []string) (<-chan *model.GraphMetrics, error)
+	ConfigurationMetrics(ctx context.Context, period string, name *string, agent *string) (<-chan *model.GraphMetrics, error)
+	OverviewMetrics(ctx context.Context, period string) (<-chan *model.GraphMetrics, error)
 }
 
 type executableSchema struct {
@@ -1218,6 +1226,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MetricOption.Name(childComplexity), true
+
+	case "Mutation.updateProcessors":
+		if e.complexity.Mutation.UpdateProcessors == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateProcessors_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateProcessors(childComplexity, args["input"].(model.UpdateProcessorsInput)), true
 
 	case "Node.attributes":
 		if e.complexity.Node.Attributes == nil {
@@ -2005,7 +2025,11 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
-	inputUnmarshalMap := graphql.BuildUnmarshalerMap()
+	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputParameterInput,
+		ec.unmarshalInputProcessorInput,
+		ec.unmarshalInputUpdateProcessorsInput,
+	)
 	first := true
 
 	switch rc.Operation.Operation {
@@ -2017,6 +2041,21 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			first = false
 			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
 			data := ec._Query(ctx, rc.Operation.SelectionSet)
+			var buf bytes.Buffer
+			data.MarshalGQL(&buf)
+
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
+		}
+	case ast.Mutation:
+		return func(ctx context.Context) *graphql.Response {
+			if !first {
+				return nil
+			}
+			first = false
+			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
+			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
 
@@ -2522,8 +2561,43 @@ type Subscription {
   configurationChanges(selector: String, query: String): [ConfigurationChange!]!
 
   agentMetrics(period: String!, ids: [ID!]): GraphMetrics!
-  configurationMetrics(period: String!, name: String, agent: String): GraphMetrics!
+  configurationMetrics(
+    period: String!
+    name: String
+    agent: String
+  ): GraphMetrics!
   overviewMetrics(period: String!): GraphMetrics!
+}
+
+# ----------------------------------------------------------------------
+# mutations
+
+enum ResourceTypeKind {
+  SOURCE
+  DESTINATION
+}
+
+input ParameterInput {
+  name: String!
+  value: Any!
+}
+
+input ProcessorInput {
+  name: String
+  type: String
+  parameters: [ParameterInput!]
+  disabled: Boolean
+}
+
+input UpdateProcessorsInput {
+  configuration: String!
+  resourceType: ResourceTypeKind!
+  resourceIndex: Int!
+  processors: [ProcessorInput!]!
+}
+
+type Mutation {
+  updateProcessors(input: UpdateProcessorsInput!): Boolean
 }
 `, BuiltIn: false},
 }
@@ -2532,6 +2606,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_updateProcessors_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UpdateProcessorsInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUpdateProcessorsInput2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐUpdateProcessorsInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -2976,7 +3065,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Agent_id(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_id(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_id(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3020,7 +3109,7 @@ func (ec *executionContext) fieldContext_Agent_id(ctx context.Context, field gra
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_architecture(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_architecture(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_architecture(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3061,7 +3150,7 @@ func (ec *executionContext) fieldContext_Agent_architecture(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_hostName(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_hostName(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_hostName(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3102,7 +3191,7 @@ func (ec *executionContext) fieldContext_Agent_hostName(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_labels(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_labels(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_labels(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3143,7 +3232,7 @@ func (ec *executionContext) fieldContext_Agent_labels(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_platform(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_platform(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_platform(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3184,7 +3273,7 @@ func (ec *executionContext) fieldContext_Agent_platform(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_operatingSystem(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_operatingSystem(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_operatingSystem(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3225,7 +3314,7 @@ func (ec *executionContext) fieldContext_Agent_operatingSystem(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_version(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_version(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_version(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3266,7 +3355,7 @@ func (ec *executionContext) fieldContext_Agent_version(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_name(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_name(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_name(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3310,7 +3399,7 @@ func (ec *executionContext) fieldContext_Agent_name(ctx context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_home(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_home(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_home(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3351,7 +3440,7 @@ func (ec *executionContext) fieldContext_Agent_home(ctx context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_macAddress(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_macAddress(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_macAddress(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3392,7 +3481,7 @@ func (ec *executionContext) fieldContext_Agent_macAddress(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_remoteAddress(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_remoteAddress(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_remoteAddress(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3433,7 +3522,7 @@ func (ec *executionContext) fieldContext_Agent_remoteAddress(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_type(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_type(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_type(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3474,7 +3563,7 @@ func (ec *executionContext) fieldContext_Agent_type(ctx context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_status(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_status(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_status(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3518,7 +3607,7 @@ func (ec *executionContext) fieldContext_Agent_status(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_errorMessage(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_errorMessage(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_errorMessage(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3559,7 +3648,7 @@ func (ec *executionContext) fieldContext_Agent_errorMessage(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_connectedAt(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_connectedAt(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_connectedAt(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3600,7 +3689,7 @@ func (ec *executionContext) fieldContext_Agent_connectedAt(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_disconnectedAt(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_disconnectedAt(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_disconnectedAt(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3641,7 +3730,7 @@ func (ec *executionContext) fieldContext_Agent_disconnectedAt(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_configuration(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_configuration(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_configuration(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3664,7 +3753,7 @@ func (ec *executionContext) _Agent_configuration(ctx context.Context, field grap
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model1.AgentConfiguration)
+	res := resTmp.(*model.AgentConfiguration)
 	fc.Result = res
 	return ec.marshalOAgentConfiguration2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgentConfiguration(ctx, field.Selections, res)
 }
@@ -3690,7 +3779,7 @@ func (ec *executionContext) fieldContext_Agent_configuration(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_configurationResource(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_configurationResource(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_configurationResource(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3713,7 +3802,7 @@ func (ec *executionContext) _Agent_configurationResource(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Configuration)
+	res := resTmp.(*model1.Configuration)
 	fc.Result = res
 	return ec.marshalOConfiguration2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfiguration(ctx, field.Selections, res)
 }
@@ -3747,7 +3836,7 @@ func (ec *executionContext) fieldContext_Agent_configurationResource(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_upgrade(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_upgrade(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_upgrade(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3770,7 +3859,7 @@ func (ec *executionContext) _Agent_upgrade(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.AgentUpgrade)
+	res := resTmp.(*model1.AgentUpgrade)
 	fc.Result = res
 	return ec.marshalOAgentUpgrade2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgentUpgrade(ctx, field.Selections, res)
 }
@@ -3796,7 +3885,7 @@ func (ec *executionContext) fieldContext_Agent_upgrade(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_upgradeAvailable(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_upgradeAvailable(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_upgradeAvailable(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3837,7 +3926,7 @@ func (ec *executionContext) fieldContext_Agent_upgradeAvailable(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Agent_features(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agent_features(ctx context.Context, field graphql.CollectedField, obj *model1.Agent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agent_features(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3881,7 +3970,7 @@ func (ec *executionContext) fieldContext_Agent_features(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _AgentChange_agent(ctx context.Context, field graphql.CollectedField, obj *model1.AgentChange) (ret graphql.Marshaler) {
+func (ec *executionContext) _AgentChange_agent(ctx context.Context, field graphql.CollectedField, obj *model.AgentChange) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AgentChange_agent(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3907,7 +3996,7 @@ func (ec *executionContext) _AgentChange_agent(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Agent)
+	res := resTmp.(*model1.Agent)
 	fc.Result = res
 	return ec.marshalNAgent2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgent(ctx, field.Selections, res)
 }
@@ -3969,7 +4058,7 @@ func (ec *executionContext) fieldContext_AgentChange_agent(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _AgentChange_changeType(ctx context.Context, field graphql.CollectedField, obj *model1.AgentChange) (ret graphql.Marshaler) {
+func (ec *executionContext) _AgentChange_changeType(ctx context.Context, field graphql.CollectedField, obj *model.AgentChange) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AgentChange_changeType(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3995,7 +4084,7 @@ func (ec *executionContext) _AgentChange_changeType(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model1.AgentChangeType)
+	res := resTmp.(model.AgentChangeType)
 	fc.Result = res
 	return ec.marshalNAgentChangeType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgentChangeType(ctx, field.Selections, res)
 }
@@ -4013,7 +4102,7 @@ func (ec *executionContext) fieldContext_AgentChange_changeType(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _AgentConfiguration_Collector(ctx context.Context, field graphql.CollectedField, obj *model1.AgentConfiguration) (ret graphql.Marshaler) {
+func (ec *executionContext) _AgentConfiguration_Collector(ctx context.Context, field graphql.CollectedField, obj *model.AgentConfiguration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AgentConfiguration_Collector(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4054,7 +4143,7 @@ func (ec *executionContext) fieldContext_AgentConfiguration_Collector(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _AgentConfiguration_Logging(ctx context.Context, field graphql.CollectedField, obj *model1.AgentConfiguration) (ret graphql.Marshaler) {
+func (ec *executionContext) _AgentConfiguration_Logging(ctx context.Context, field graphql.CollectedField, obj *model.AgentConfiguration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AgentConfiguration_Logging(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4095,7 +4184,7 @@ func (ec *executionContext) fieldContext_AgentConfiguration_Logging(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _AgentConfiguration_Manager(ctx context.Context, field graphql.CollectedField, obj *model1.AgentConfiguration) (ret graphql.Marshaler) {
+func (ec *executionContext) _AgentConfiguration_Manager(ctx context.Context, field graphql.CollectedField, obj *model.AgentConfiguration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AgentConfiguration_Manager(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4136,7 +4225,7 @@ func (ec *executionContext) fieldContext_AgentConfiguration_Manager(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _AgentSelector_matchLabels(ctx context.Context, field graphql.CollectedField, obj *model.AgentSelector) (ret graphql.Marshaler) {
+func (ec *executionContext) _AgentSelector_matchLabels(ctx context.Context, field graphql.CollectedField, obj *model1.AgentSelector) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AgentSelector_matchLabels(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4177,7 +4266,7 @@ func (ec *executionContext) fieldContext_AgentSelector_matchLabels(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _AgentUpgrade_status(ctx context.Context, field graphql.CollectedField, obj *model.AgentUpgrade) (ret graphql.Marshaler) {
+func (ec *executionContext) _AgentUpgrade_status(ctx context.Context, field graphql.CollectedField, obj *model1.AgentUpgrade) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AgentUpgrade_status(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4221,7 +4310,7 @@ func (ec *executionContext) fieldContext_AgentUpgrade_status(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _AgentUpgrade_version(ctx context.Context, field graphql.CollectedField, obj *model.AgentUpgrade) (ret graphql.Marshaler) {
+func (ec *executionContext) _AgentUpgrade_version(ctx context.Context, field graphql.CollectedField, obj *model1.AgentUpgrade) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AgentUpgrade_version(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4265,7 +4354,7 @@ func (ec *executionContext) fieldContext_AgentUpgrade_version(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _AgentUpgrade_error(ctx context.Context, field graphql.CollectedField, obj *model.AgentUpgrade) (ret graphql.Marshaler) {
+func (ec *executionContext) _AgentUpgrade_error(ctx context.Context, field graphql.CollectedField, obj *model1.AgentUpgrade) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AgentUpgrade_error(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4306,7 +4395,7 @@ func (ec *executionContext) fieldContext_AgentUpgrade_error(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Agents_query(ctx context.Context, field graphql.CollectedField, obj *model1.Agents) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agents_query(ctx context.Context, field graphql.CollectedField, obj *model.Agents) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agents_query(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4347,7 +4436,7 @@ func (ec *executionContext) fieldContext_Agents_query(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Agents_agents(ctx context.Context, field graphql.CollectedField, obj *model1.Agents) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agents_agents(ctx context.Context, field graphql.CollectedField, obj *model.Agents) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agents_agents(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4373,7 +4462,7 @@ func (ec *executionContext) _Agents_agents(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Agent)
+	res := resTmp.([]*model1.Agent)
 	fc.Result = res
 	return ec.marshalNAgent2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgentᚄ(ctx, field.Selections, res)
 }
@@ -4435,7 +4524,7 @@ func (ec *executionContext) fieldContext_Agents_agents(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Agents_suggestions(ctx context.Context, field graphql.CollectedField, obj *model1.Agents) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agents_suggestions(ctx context.Context, field graphql.CollectedField, obj *model.Agents) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agents_suggestions(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4482,7 +4571,7 @@ func (ec *executionContext) fieldContext_Agents_suggestions(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Agents_latestVersion(ctx context.Context, field graphql.CollectedField, obj *model1.Agents) (ret graphql.Marshaler) {
+func (ec *executionContext) _Agents_latestVersion(ctx context.Context, field graphql.CollectedField, obj *model.Agents) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Agents_latestVersion(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4526,7 +4615,7 @@ func (ec *executionContext) fieldContext_Agents_latestVersion(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Components_sources(ctx context.Context, field graphql.CollectedField, obj *model1.Components) (ret graphql.Marshaler) {
+func (ec *executionContext) _Components_sources(ctx context.Context, field graphql.CollectedField, obj *model.Components) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Components_sources(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4552,7 +4641,7 @@ func (ec *executionContext) _Components_sources(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Source)
+	res := resTmp.([]*model1.Source)
 	fc.Result = res
 	return ec.marshalNSource2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceᚄ(ctx, field.Selections, res)
 }
@@ -4580,7 +4669,7 @@ func (ec *executionContext) fieldContext_Components_sources(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Components_destinations(ctx context.Context, field graphql.CollectedField, obj *model1.Components) (ret graphql.Marshaler) {
+func (ec *executionContext) _Components_destinations(ctx context.Context, field graphql.CollectedField, obj *model.Components) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Components_destinations(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4606,7 +4695,7 @@ func (ec *executionContext) _Components_destinations(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Destination)
+	res := resTmp.([]*model1.Destination)
 	fc.Result = res
 	return ec.marshalNDestination2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationᚄ(ctx, field.Selections, res)
 }
@@ -4634,7 +4723,7 @@ func (ec *executionContext) fieldContext_Components_destinations(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Configuration_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model.Configuration) (ret graphql.Marshaler) {
+func (ec *executionContext) _Configuration_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model1.Configuration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Configuration_apiVersion(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4678,7 +4767,7 @@ func (ec *executionContext) fieldContext_Configuration_apiVersion(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _Configuration_kind(ctx context.Context, field graphql.CollectedField, obj *model.Configuration) (ret graphql.Marshaler) {
+func (ec *executionContext) _Configuration_kind(ctx context.Context, field graphql.CollectedField, obj *model1.Configuration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Configuration_kind(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4722,7 +4811,7 @@ func (ec *executionContext) fieldContext_Configuration_kind(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Configuration_metadata(ctx context.Context, field graphql.CollectedField, obj *model.Configuration) (ret graphql.Marshaler) {
+func (ec *executionContext) _Configuration_metadata(ctx context.Context, field graphql.CollectedField, obj *model1.Configuration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Configuration_metadata(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4748,7 +4837,7 @@ func (ec *executionContext) _Configuration_metadata(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Metadata)
+	res := resTmp.(model1.Metadata)
 	fc.Result = res
 	return ec.marshalNMetadata2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
@@ -4780,7 +4869,7 @@ func (ec *executionContext) fieldContext_Configuration_metadata(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Configuration_spec(ctx context.Context, field graphql.CollectedField, obj *model.Configuration) (ret graphql.Marshaler) {
+func (ec *executionContext) _Configuration_spec(ctx context.Context, field graphql.CollectedField, obj *model1.Configuration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Configuration_spec(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4806,7 +4895,7 @@ func (ec *executionContext) _Configuration_spec(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ConfigurationSpec)
+	res := resTmp.(model1.ConfigurationSpec)
 	fc.Result = res
 	return ec.marshalNConfigurationSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfigurationSpec(ctx, field.Selections, res)
 }
@@ -4836,7 +4925,7 @@ func (ec *executionContext) fieldContext_Configuration_spec(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Configuration_agentCount(ctx context.Context, field graphql.CollectedField, obj *model.Configuration) (ret graphql.Marshaler) {
+func (ec *executionContext) _Configuration_agentCount(ctx context.Context, field graphql.CollectedField, obj *model1.Configuration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Configuration_agentCount(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4877,7 +4966,7 @@ func (ec *executionContext) fieldContext_Configuration_agentCount(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _Configuration_graph(ctx context.Context, field graphql.CollectedField, obj *model.Configuration) (ret graphql.Marshaler) {
+func (ec *executionContext) _Configuration_graph(ctx context.Context, field graphql.CollectedField, obj *model1.Configuration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Configuration_graph(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4930,7 +5019,7 @@ func (ec *executionContext) fieldContext_Configuration_graph(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Configuration_rendered(ctx context.Context, field graphql.CollectedField, obj *model.Configuration) (ret graphql.Marshaler) {
+func (ec *executionContext) _Configuration_rendered(ctx context.Context, field graphql.CollectedField, obj *model1.Configuration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Configuration_rendered(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4971,7 +5060,7 @@ func (ec *executionContext) fieldContext_Configuration_rendered(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _ConfigurationChange_configuration(ctx context.Context, field graphql.CollectedField, obj *model1.ConfigurationChange) (ret graphql.Marshaler) {
+func (ec *executionContext) _ConfigurationChange_configuration(ctx context.Context, field graphql.CollectedField, obj *model.ConfigurationChange) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ConfigurationChange_configuration(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -4997,7 +5086,7 @@ func (ec *executionContext) _ConfigurationChange_configuration(ctx context.Conte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Configuration)
+	res := resTmp.(*model1.Configuration)
 	fc.Result = res
 	return ec.marshalNConfiguration2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfiguration(ctx, field.Selections, res)
 }
@@ -5031,7 +5120,7 @@ func (ec *executionContext) fieldContext_ConfigurationChange_configuration(ctx c
 	return fc, nil
 }
 
-func (ec *executionContext) _ConfigurationChange_eventType(ctx context.Context, field graphql.CollectedField, obj *model1.ConfigurationChange) (ret graphql.Marshaler) {
+func (ec *executionContext) _ConfigurationChange_eventType(ctx context.Context, field graphql.CollectedField, obj *model.ConfigurationChange) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ConfigurationChange_eventType(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5057,7 +5146,7 @@ func (ec *executionContext) _ConfigurationChange_eventType(ctx context.Context, 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model1.EventType)
+	res := resTmp.(model.EventType)
 	fc.Result = res
 	return ec.marshalNEventType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐEventType(ctx, field.Selections, res)
 }
@@ -5075,7 +5164,7 @@ func (ec *executionContext) fieldContext_ConfigurationChange_eventType(ctx conte
 	return fc, nil
 }
 
-func (ec *executionContext) _ConfigurationSpec_contentType(ctx context.Context, field graphql.CollectedField, obj *model.ConfigurationSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ConfigurationSpec_contentType(ctx context.Context, field graphql.CollectedField, obj *model1.ConfigurationSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ConfigurationSpec_contentType(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5116,7 +5205,7 @@ func (ec *executionContext) fieldContext_ConfigurationSpec_contentType(ctx conte
 	return fc, nil
 }
 
-func (ec *executionContext) _ConfigurationSpec_raw(ctx context.Context, field graphql.CollectedField, obj *model.ConfigurationSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ConfigurationSpec_raw(ctx context.Context, field graphql.CollectedField, obj *model1.ConfigurationSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ConfigurationSpec_raw(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5157,7 +5246,7 @@ func (ec *executionContext) fieldContext_ConfigurationSpec_raw(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _ConfigurationSpec_sources(ctx context.Context, field graphql.CollectedField, obj *model.ConfigurationSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ConfigurationSpec_sources(ctx context.Context, field graphql.CollectedField, obj *model1.ConfigurationSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ConfigurationSpec_sources(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5180,7 +5269,7 @@ func (ec *executionContext) _ConfigurationSpec_sources(ctx context.Context, fiel
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.ResourceConfiguration)
+	res := resTmp.([]model1.ResourceConfiguration)
 	fc.Result = res
 	return ec.marshalOResourceConfiguration2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfigurationᚄ(ctx, field.Selections, res)
 }
@@ -5210,7 +5299,7 @@ func (ec *executionContext) fieldContext_ConfigurationSpec_sources(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _ConfigurationSpec_destinations(ctx context.Context, field graphql.CollectedField, obj *model.ConfigurationSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ConfigurationSpec_destinations(ctx context.Context, field graphql.CollectedField, obj *model1.ConfigurationSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ConfigurationSpec_destinations(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5233,7 +5322,7 @@ func (ec *executionContext) _ConfigurationSpec_destinations(ctx context.Context,
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.ResourceConfiguration)
+	res := resTmp.([]model1.ResourceConfiguration)
 	fc.Result = res
 	return ec.marshalOResourceConfiguration2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfigurationᚄ(ctx, field.Selections, res)
 }
@@ -5263,7 +5352,7 @@ func (ec *executionContext) fieldContext_ConfigurationSpec_destinations(ctx cont
 	return fc, nil
 }
 
-func (ec *executionContext) _ConfigurationSpec_selector(ctx context.Context, field graphql.CollectedField, obj *model.ConfigurationSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ConfigurationSpec_selector(ctx context.Context, field graphql.CollectedField, obj *model1.ConfigurationSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ConfigurationSpec_selector(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5286,7 +5375,7 @@ func (ec *executionContext) _ConfigurationSpec_selector(ctx context.Context, fie
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(model.AgentSelector)
+	res := resTmp.(model1.AgentSelector)
 	fc.Result = res
 	return ec.marshalOAgentSelector2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgentSelector(ctx, field.Selections, res)
 }
@@ -5308,7 +5397,7 @@ func (ec *executionContext) fieldContext_ConfigurationSpec_selector(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _Configurations_query(ctx context.Context, field graphql.CollectedField, obj *model1.Configurations) (ret graphql.Marshaler) {
+func (ec *executionContext) _Configurations_query(ctx context.Context, field graphql.CollectedField, obj *model.Configurations) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Configurations_query(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5349,7 +5438,7 @@ func (ec *executionContext) fieldContext_Configurations_query(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Configurations_configurations(ctx context.Context, field graphql.CollectedField, obj *model1.Configurations) (ret graphql.Marshaler) {
+func (ec *executionContext) _Configurations_configurations(ctx context.Context, field graphql.CollectedField, obj *model.Configurations) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Configurations_configurations(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5375,7 +5464,7 @@ func (ec *executionContext) _Configurations_configurations(ctx context.Context, 
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Configuration)
+	res := resTmp.([]*model1.Configuration)
 	fc.Result = res
 	return ec.marshalNConfiguration2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfigurationᚄ(ctx, field.Selections, res)
 }
@@ -5409,7 +5498,7 @@ func (ec *executionContext) fieldContext_Configurations_configurations(ctx conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Configurations_suggestions(ctx context.Context, field graphql.CollectedField, obj *model1.Configurations) (ret graphql.Marshaler) {
+func (ec *executionContext) _Configurations_suggestions(ctx context.Context, field graphql.CollectedField, obj *model.Configurations) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Configurations_suggestions(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5456,7 +5545,7 @@ func (ec *executionContext) fieldContext_Configurations_suggestions(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _Destination_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model.Destination) (ret graphql.Marshaler) {
+func (ec *executionContext) _Destination_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model1.Destination) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Destination_apiVersion(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5500,7 +5589,7 @@ func (ec *executionContext) fieldContext_Destination_apiVersion(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Destination_kind(ctx context.Context, field graphql.CollectedField, obj *model.Destination) (ret graphql.Marshaler) {
+func (ec *executionContext) _Destination_kind(ctx context.Context, field graphql.CollectedField, obj *model1.Destination) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Destination_kind(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5544,7 +5633,7 @@ func (ec *executionContext) fieldContext_Destination_kind(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Destination_metadata(ctx context.Context, field graphql.CollectedField, obj *model.Destination) (ret graphql.Marshaler) {
+func (ec *executionContext) _Destination_metadata(ctx context.Context, field graphql.CollectedField, obj *model1.Destination) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Destination_metadata(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5570,7 +5659,7 @@ func (ec *executionContext) _Destination_metadata(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Metadata)
+	res := resTmp.(model1.Metadata)
 	fc.Result = res
 	return ec.marshalNMetadata2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
@@ -5602,7 +5691,7 @@ func (ec *executionContext) fieldContext_Destination_metadata(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Destination_spec(ctx context.Context, field graphql.CollectedField, obj *model.Destination) (ret graphql.Marshaler) {
+func (ec *executionContext) _Destination_spec(ctx context.Context, field graphql.CollectedField, obj *model1.Destination) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Destination_spec(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5628,7 +5717,7 @@ func (ec *executionContext) _Destination_spec(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ParameterizedSpec)
+	res := resTmp.(model1.ParameterizedSpec)
 	fc.Result = res
 	return ec.marshalNParameterizedSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterizedSpec(ctx, field.Selections, res)
 }
@@ -5656,7 +5745,7 @@ func (ec *executionContext) fieldContext_Destination_spec(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _DestinationType_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model.DestinationType) (ret graphql.Marshaler) {
+func (ec *executionContext) _DestinationType_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model1.DestinationType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DestinationType_apiVersion(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5700,7 +5789,7 @@ func (ec *executionContext) fieldContext_DestinationType_apiVersion(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _DestinationType_metadata(ctx context.Context, field graphql.CollectedField, obj *model.DestinationType) (ret graphql.Marshaler) {
+func (ec *executionContext) _DestinationType_metadata(ctx context.Context, field graphql.CollectedField, obj *model1.DestinationType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DestinationType_metadata(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5726,7 +5815,7 @@ func (ec *executionContext) _DestinationType_metadata(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Metadata)
+	res := resTmp.(model1.Metadata)
 	fc.Result = res
 	return ec.marshalNMetadata2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
@@ -5758,7 +5847,7 @@ func (ec *executionContext) fieldContext_DestinationType_metadata(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _DestinationType_kind(ctx context.Context, field graphql.CollectedField, obj *model.DestinationType) (ret graphql.Marshaler) {
+func (ec *executionContext) _DestinationType_kind(ctx context.Context, field graphql.CollectedField, obj *model1.DestinationType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DestinationType_kind(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5802,7 +5891,7 @@ func (ec *executionContext) fieldContext_DestinationType_kind(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _DestinationType_spec(ctx context.Context, field graphql.CollectedField, obj *model.DestinationType) (ret graphql.Marshaler) {
+func (ec *executionContext) _DestinationType_spec(ctx context.Context, field graphql.CollectedField, obj *model1.DestinationType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DestinationType_spec(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5828,7 +5917,7 @@ func (ec *executionContext) _DestinationType_spec(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ResourceTypeSpec)
+	res := resTmp.(model1.ResourceTypeSpec)
 	fc.Result = res
 	return ec.marshalNResourceTypeSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceTypeSpec(ctx, field.Selections, res)
 }
@@ -5856,7 +5945,7 @@ func (ec *executionContext) fieldContext_DestinationType_spec(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _DestinationWithType_destination(ctx context.Context, field graphql.CollectedField, obj *model1.DestinationWithType) (ret graphql.Marshaler) {
+func (ec *executionContext) _DestinationWithType_destination(ctx context.Context, field graphql.CollectedField, obj *model.DestinationWithType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DestinationWithType_destination(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5879,7 +5968,7 @@ func (ec *executionContext) _DestinationWithType_destination(ctx context.Context
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Destination)
+	res := resTmp.(*model1.Destination)
 	fc.Result = res
 	return ec.marshalODestination2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestination(ctx, field.Selections, res)
 }
@@ -5907,7 +5996,7 @@ func (ec *executionContext) fieldContext_DestinationWithType_destination(ctx con
 	return fc, nil
 }
 
-func (ec *executionContext) _DestinationWithType_destinationType(ctx context.Context, field graphql.CollectedField, obj *model1.DestinationWithType) (ret graphql.Marshaler) {
+func (ec *executionContext) _DestinationWithType_destinationType(ctx context.Context, field graphql.CollectedField, obj *model.DestinationWithType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DestinationWithType_destinationType(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -5930,7 +6019,7 @@ func (ec *executionContext) _DestinationWithType_destinationType(ctx context.Con
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.DestinationType)
+	res := resTmp.(*model1.DestinationType)
 	fc.Result = res
 	return ec.marshalODestinationType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationType(ctx, field.Selections, res)
 }
@@ -5958,7 +6047,7 @@ func (ec *executionContext) fieldContext_DestinationWithType_destinationType(ctx
 	return fc, nil
 }
 
-func (ec *executionContext) _DocumentationLink_text(ctx context.Context, field graphql.CollectedField, obj *model.DocumentationLink) (ret graphql.Marshaler) {
+func (ec *executionContext) _DocumentationLink_text(ctx context.Context, field graphql.CollectedField, obj *model1.DocumentationLink) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DocumentationLink_text(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -6002,7 +6091,7 @@ func (ec *executionContext) fieldContext_DocumentationLink_text(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _DocumentationLink_url(ctx context.Context, field graphql.CollectedField, obj *model.DocumentationLink) (ret graphql.Marshaler) {
+func (ec *executionContext) _DocumentationLink_url(ctx context.Context, field graphql.CollectedField, obj *model1.DocumentationLink) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DocumentationLink_url(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -6436,7 +6525,7 @@ func (ec *executionContext) fieldContext_Graph_attributes(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _GraphMetric_name(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetric) (ret graphql.Marshaler) {
+func (ec *executionContext) _GraphMetric_name(ctx context.Context, field graphql.CollectedField, obj *model.GraphMetric) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GraphMetric_name(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -6480,7 +6569,7 @@ func (ec *executionContext) fieldContext_GraphMetric_name(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _GraphMetric_nodeID(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetric) (ret graphql.Marshaler) {
+func (ec *executionContext) _GraphMetric_nodeID(ctx context.Context, field graphql.CollectedField, obj *model.GraphMetric) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GraphMetric_nodeID(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -6524,7 +6613,7 @@ func (ec *executionContext) fieldContext_GraphMetric_nodeID(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _GraphMetric_pipelineType(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetric) (ret graphql.Marshaler) {
+func (ec *executionContext) _GraphMetric_pipelineType(ctx context.Context, field graphql.CollectedField, obj *model.GraphMetric) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GraphMetric_pipelineType(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -6568,7 +6657,7 @@ func (ec *executionContext) fieldContext_GraphMetric_pipelineType(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _GraphMetric_value(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetric) (ret graphql.Marshaler) {
+func (ec *executionContext) _GraphMetric_value(ctx context.Context, field graphql.CollectedField, obj *model.GraphMetric) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GraphMetric_value(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -6612,7 +6701,7 @@ func (ec *executionContext) fieldContext_GraphMetric_value(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _GraphMetric_unit(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetric) (ret graphql.Marshaler) {
+func (ec *executionContext) _GraphMetric_unit(ctx context.Context, field graphql.CollectedField, obj *model.GraphMetric) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GraphMetric_unit(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -6656,7 +6745,7 @@ func (ec *executionContext) fieldContext_GraphMetric_unit(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _GraphMetric_agentID(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetric) (ret graphql.Marshaler) {
+func (ec *executionContext) _GraphMetric_agentID(ctx context.Context, field graphql.CollectedField, obj *model.GraphMetric) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GraphMetric_agentID(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -6697,7 +6786,7 @@ func (ec *executionContext) fieldContext_GraphMetric_agentID(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _GraphMetrics_metrics(ctx context.Context, field graphql.CollectedField, obj *model1.GraphMetrics) (ret graphql.Marshaler) {
+func (ec *executionContext) _GraphMetrics_metrics(ctx context.Context, field graphql.CollectedField, obj *model.GraphMetrics) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GraphMetrics_metrics(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -6723,7 +6812,7 @@ func (ec *executionContext) _GraphMetrics_metrics(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model1.GraphMetric)
+	res := resTmp.([]*model.GraphMetric)
 	fc.Result = res
 	return ec.marshalNGraphMetric2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetricᚄ(ctx, field.Selections, res)
 }
@@ -6960,7 +7049,7 @@ func (ec *executionContext) fieldContext_Log_resource(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Metadata_id(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_id(ctx context.Context, field graphql.CollectedField, obj *model1.Metadata) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Metadata_id(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7004,7 +7093,7 @@ func (ec *executionContext) fieldContext_Metadata_id(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Metadata_name(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_name(ctx context.Context, field graphql.CollectedField, obj *model1.Metadata) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Metadata_name(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7048,7 +7137,7 @@ func (ec *executionContext) fieldContext_Metadata_name(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Metadata_displayName(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_displayName(ctx context.Context, field graphql.CollectedField, obj *model1.Metadata) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Metadata_displayName(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7089,7 +7178,7 @@ func (ec *executionContext) fieldContext_Metadata_displayName(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Metadata_description(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_description(ctx context.Context, field graphql.CollectedField, obj *model1.Metadata) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Metadata_description(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7130,7 +7219,7 @@ func (ec *executionContext) fieldContext_Metadata_description(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Metadata_icon(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_icon(ctx context.Context, field graphql.CollectedField, obj *model1.Metadata) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Metadata_icon(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7171,7 +7260,7 @@ func (ec *executionContext) fieldContext_Metadata_icon(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Metadata_labels(ctx context.Context, field graphql.CollectedField, obj *model.Metadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _Metadata_labels(ctx context.Context, field graphql.CollectedField, obj *model1.Metadata) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Metadata_labels(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7499,7 +7588,7 @@ func (ec *executionContext) fieldContext_Metric_resource(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _MetricCategory_label(ctx context.Context, field graphql.CollectedField, obj *model.MetricCategory) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricCategory_label(ctx context.Context, field graphql.CollectedField, obj *model1.MetricCategory) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MetricCategory_label(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7543,7 +7632,7 @@ func (ec *executionContext) fieldContext_MetricCategory_label(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _MetricCategory_column(ctx context.Context, field graphql.CollectedField, obj *model.MetricCategory) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricCategory_column(ctx context.Context, field graphql.CollectedField, obj *model1.MetricCategory) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MetricCategory_column(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7587,7 +7676,7 @@ func (ec *executionContext) fieldContext_MetricCategory_column(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _MetricCategory_metrics(ctx context.Context, field graphql.CollectedField, obj *model.MetricCategory) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricCategory_metrics(ctx context.Context, field graphql.CollectedField, obj *model1.MetricCategory) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MetricCategory_metrics(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7613,7 +7702,7 @@ func (ec *executionContext) _MetricCategory_metrics(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]model.MetricOption)
+	res := resTmp.([]model1.MetricOption)
 	fc.Result = res
 	return ec.marshalNMetricOption2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricOptionᚄ(ctx, field.Selections, res)
 }
@@ -7639,7 +7728,7 @@ func (ec *executionContext) fieldContext_MetricCategory_metrics(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _MetricOption_name(ctx context.Context, field graphql.CollectedField, obj *model.MetricOption) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricOption_name(ctx context.Context, field graphql.CollectedField, obj *model1.MetricOption) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MetricOption_name(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7683,7 +7772,7 @@ func (ec *executionContext) fieldContext_MetricOption_name(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _MetricOption_description(ctx context.Context, field graphql.CollectedField, obj *model.MetricOption) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricOption_description(ctx context.Context, field graphql.CollectedField, obj *model1.MetricOption) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MetricOption_description(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7724,7 +7813,7 @@ func (ec *executionContext) fieldContext_MetricOption_description(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _MetricOption_kpi(ctx context.Context, field graphql.CollectedField, obj *model.MetricOption) (ret graphql.Marshaler) {
+func (ec *executionContext) _MetricOption_kpi(ctx context.Context, field graphql.CollectedField, obj *model1.MetricOption) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MetricOption_kpi(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7761,6 +7850,58 @@ func (ec *executionContext) fieldContext_MetricOption_kpi(ctx context.Context, f
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateProcessors(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateProcessors(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateProcessors(rctx, fc.Args["input"].(model.UpdateProcessorsInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateProcessors(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateProcessors_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -7941,7 +8082,7 @@ func (ec *executionContext) fieldContext_Node_attributes(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _OverviewPage_graph(ctx context.Context, field graphql.CollectedField, obj *model1.OverviewPage) (ret graphql.Marshaler) {
+func (ec *executionContext) _OverviewPage_graph(ctx context.Context, field graphql.CollectedField, obj *model.OverviewPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OverviewPage_graph(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -7997,7 +8138,7 @@ func (ec *executionContext) fieldContext_OverviewPage_graph(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Parameter_name(ctx context.Context, field graphql.CollectedField, obj *model.Parameter) (ret graphql.Marshaler) {
+func (ec *executionContext) _Parameter_name(ctx context.Context, field graphql.CollectedField, obj *model1.Parameter) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Parameter_name(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8041,7 +8182,7 @@ func (ec *executionContext) fieldContext_Parameter_name(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Parameter_value(ctx context.Context, field graphql.CollectedField, obj *model.Parameter) (ret graphql.Marshaler) {
+func (ec *executionContext) _Parameter_value(ctx context.Context, field graphql.CollectedField, obj *model1.Parameter) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Parameter_value(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8085,7 +8226,7 @@ func (ec *executionContext) fieldContext_Parameter_value(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterDefinition_name(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterDefinition_name(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterDefinition_name(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8129,7 +8270,7 @@ func (ec *executionContext) fieldContext_ParameterDefinition_name(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterDefinition_label(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterDefinition_label(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterDefinition_label(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8173,7 +8314,7 @@ func (ec *executionContext) fieldContext_ParameterDefinition_label(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterDefinition_description(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterDefinition_description(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterDefinition_description(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8217,7 +8358,7 @@ func (ec *executionContext) fieldContext_ParameterDefinition_description(ctx con
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterDefinition_required(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterDefinition_required(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterDefinition_required(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8261,7 +8402,7 @@ func (ec *executionContext) fieldContext_ParameterDefinition_required(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterDefinition_type(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterDefinition_type(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterDefinition_type(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8287,7 +8428,7 @@ func (ec *executionContext) _ParameterDefinition_type(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model1.ParameterType)
+	res := resTmp.(model.ParameterType)
 	fc.Result = res
 	return ec.marshalNParameterType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐParameterType(ctx, field.Selections, res)
 }
@@ -8305,7 +8446,7 @@ func (ec *executionContext) fieldContext_ParameterDefinition_type(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterDefinition_validValues(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterDefinition_validValues(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterDefinition_validValues(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8346,7 +8487,7 @@ func (ec *executionContext) fieldContext_ParameterDefinition_validValues(ctx con
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterDefinition_default(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterDefinition_default(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterDefinition_default(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8387,7 +8528,7 @@ func (ec *executionContext) fieldContext_ParameterDefinition_default(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterDefinition_relevantIf(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterDefinition_relevantIf(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterDefinition_relevantIf(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8410,7 +8551,7 @@ func (ec *executionContext) _ParameterDefinition_relevantIf(ctx context.Context,
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.RelevantIfCondition)
+	res := resTmp.([]model1.RelevantIfCondition)
 	fc.Result = res
 	return ec.marshalORelevantIfCondition2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐRelevantIfConditionᚄ(ctx, field.Selections, res)
 }
@@ -8436,7 +8577,7 @@ func (ec *executionContext) fieldContext_ParameterDefinition_relevantIf(ctx cont
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterDefinition_advancedConfig(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterDefinition_advancedConfig(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterDefinition_advancedConfig(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8477,7 +8618,7 @@ func (ec *executionContext) fieldContext_ParameterDefinition_advancedConfig(ctx 
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterDefinition_options(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterDefinition_options(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterDefinition_options(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8503,7 +8644,7 @@ func (ec *executionContext) _ParameterDefinition_options(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ParameterOptions)
+	res := resTmp.(model1.ParameterOptions)
 	fc.Result = res
 	return ec.marshalNParameterOptions2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterOptions(ctx, field.Selections, res)
 }
@@ -8535,7 +8676,7 @@ func (ec *executionContext) fieldContext_ParameterDefinition_options(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterDefinition_documentation(ctx context.Context, field graphql.CollectedField, obj *model.ParameterDefinition) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterDefinition_documentation(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterDefinition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterDefinition_documentation(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8558,7 +8699,7 @@ func (ec *executionContext) _ParameterDefinition_documentation(ctx context.Conte
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.DocumentationLink)
+	res := resTmp.([]model1.DocumentationLink)
 	fc.Result = res
 	return ec.marshalODocumentationLink2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDocumentationLinkᚄ(ctx, field.Selections, res)
 }
@@ -8582,7 +8723,7 @@ func (ec *executionContext) fieldContext_ParameterDefinition_documentation(ctx c
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterOptions_creatable(ctx context.Context, field graphql.CollectedField, obj *model.ParameterOptions) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterOptions_creatable(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterOptions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterOptions_creatable(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8623,7 +8764,7 @@ func (ec *executionContext) fieldContext_ParameterOptions_creatable(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterOptions_trackUnchecked(ctx context.Context, field graphql.CollectedField, obj *model.ParameterOptions) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterOptions_trackUnchecked(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterOptions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterOptions_trackUnchecked(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8664,7 +8805,7 @@ func (ec *executionContext) fieldContext_ParameterOptions_trackUnchecked(ctx con
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterOptions_gridColumns(ctx context.Context, field graphql.CollectedField, obj *model.ParameterOptions) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterOptions_gridColumns(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterOptions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterOptions_gridColumns(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8705,7 +8846,7 @@ func (ec *executionContext) fieldContext_ParameterOptions_gridColumns(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterOptions_sectionHeader(ctx context.Context, field graphql.CollectedField, obj *model.ParameterOptions) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterOptions_sectionHeader(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterOptions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterOptions_sectionHeader(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8746,7 +8887,7 @@ func (ec *executionContext) fieldContext_ParameterOptions_sectionHeader(ctx cont
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterOptions_metricCategories(ctx context.Context, field graphql.CollectedField, obj *model.ParameterOptions) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterOptions_metricCategories(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterOptions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterOptions_metricCategories(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8769,7 +8910,7 @@ func (ec *executionContext) _ParameterOptions_metricCategories(ctx context.Conte
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.MetricCategory)
+	res := resTmp.([]model1.MetricCategory)
 	fc.Result = res
 	return ec.marshalOMetricCategory2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricCategoryᚄ(ctx, field.Selections, res)
 }
@@ -8795,7 +8936,7 @@ func (ec *executionContext) fieldContext_ParameterOptions_metricCategories(ctx c
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterOptions_multiline(ctx context.Context, field graphql.CollectedField, obj *model.ParameterOptions) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterOptions_multiline(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterOptions) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterOptions_multiline(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8836,7 +8977,7 @@ func (ec *executionContext) fieldContext_ParameterOptions_multiline(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterizedSpec_type(ctx context.Context, field graphql.CollectedField, obj *model.ParameterizedSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterizedSpec_type(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterizedSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterizedSpec_type(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8880,7 +9021,7 @@ func (ec *executionContext) fieldContext_ParameterizedSpec_type(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterizedSpec_parameters(ctx context.Context, field graphql.CollectedField, obj *model.ParameterizedSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterizedSpec_parameters(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterizedSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterizedSpec_parameters(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8903,7 +9044,7 @@ func (ec *executionContext) _ParameterizedSpec_parameters(ctx context.Context, f
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.Parameter)
+	res := resTmp.([]model1.Parameter)
 	fc.Result = res
 	return ec.marshalOParameter2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterᚄ(ctx, field.Selections, res)
 }
@@ -8927,7 +9068,7 @@ func (ec *executionContext) fieldContext_ParameterizedSpec_parameters(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterizedSpec_processors(ctx context.Context, field graphql.CollectedField, obj *model.ParameterizedSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterizedSpec_processors(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterizedSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterizedSpec_processors(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -8950,7 +9091,7 @@ func (ec *executionContext) _ParameterizedSpec_processors(ctx context.Context, f
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.ResourceConfiguration)
+	res := resTmp.([]model1.ResourceConfiguration)
 	fc.Result = res
 	return ec.marshalOResourceConfiguration2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfigurationᚄ(ctx, field.Selections, res)
 }
@@ -8980,7 +9121,7 @@ func (ec *executionContext) fieldContext_ParameterizedSpec_processors(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _ParameterizedSpec_disabled(ctx context.Context, field graphql.CollectedField, obj *model.ParameterizedSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ParameterizedSpec_disabled(ctx context.Context, field graphql.CollectedField, obj *model1.ParameterizedSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ParameterizedSpec_disabled(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -9024,7 +9165,7 @@ func (ec *executionContext) fieldContext_ParameterizedSpec_disabled(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _Processor_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model.Processor) (ret graphql.Marshaler) {
+func (ec *executionContext) _Processor_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model1.Processor) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Processor_apiVersion(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -9068,7 +9209,7 @@ func (ec *executionContext) fieldContext_Processor_apiVersion(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Processor_kind(ctx context.Context, field graphql.CollectedField, obj *model.Processor) (ret graphql.Marshaler) {
+func (ec *executionContext) _Processor_kind(ctx context.Context, field graphql.CollectedField, obj *model1.Processor) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Processor_kind(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -9112,7 +9253,7 @@ func (ec *executionContext) fieldContext_Processor_kind(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Processor_metadata(ctx context.Context, field graphql.CollectedField, obj *model.Processor) (ret graphql.Marshaler) {
+func (ec *executionContext) _Processor_metadata(ctx context.Context, field graphql.CollectedField, obj *model1.Processor) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Processor_metadata(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -9138,7 +9279,7 @@ func (ec *executionContext) _Processor_metadata(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Metadata)
+	res := resTmp.(model1.Metadata)
 	fc.Result = res
 	return ec.marshalNMetadata2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
@@ -9170,7 +9311,7 @@ func (ec *executionContext) fieldContext_Processor_metadata(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Processor_spec(ctx context.Context, field graphql.CollectedField, obj *model.Processor) (ret graphql.Marshaler) {
+func (ec *executionContext) _Processor_spec(ctx context.Context, field graphql.CollectedField, obj *model1.Processor) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Processor_spec(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -9196,7 +9337,7 @@ func (ec *executionContext) _Processor_spec(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ParameterizedSpec)
+	res := resTmp.(model1.ParameterizedSpec)
 	fc.Result = res
 	return ec.marshalNParameterizedSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterizedSpec(ctx, field.Selections, res)
 }
@@ -9224,7 +9365,7 @@ func (ec *executionContext) fieldContext_Processor_spec(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _ProcessorType_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model.ProcessorType) (ret graphql.Marshaler) {
+func (ec *executionContext) _ProcessorType_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model1.ProcessorType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ProcessorType_apiVersion(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -9268,7 +9409,7 @@ func (ec *executionContext) fieldContext_ProcessorType_apiVersion(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _ProcessorType_metadata(ctx context.Context, field graphql.CollectedField, obj *model.ProcessorType) (ret graphql.Marshaler) {
+func (ec *executionContext) _ProcessorType_metadata(ctx context.Context, field graphql.CollectedField, obj *model1.ProcessorType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ProcessorType_metadata(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -9294,7 +9435,7 @@ func (ec *executionContext) _ProcessorType_metadata(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Metadata)
+	res := resTmp.(model1.Metadata)
 	fc.Result = res
 	return ec.marshalNMetadata2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
@@ -9326,7 +9467,7 @@ func (ec *executionContext) fieldContext_ProcessorType_metadata(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _ProcessorType_kind(ctx context.Context, field graphql.CollectedField, obj *model.ProcessorType) (ret graphql.Marshaler) {
+func (ec *executionContext) _ProcessorType_kind(ctx context.Context, field graphql.CollectedField, obj *model1.ProcessorType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ProcessorType_kind(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -9370,7 +9511,7 @@ func (ec *executionContext) fieldContext_ProcessorType_kind(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _ProcessorType_spec(ctx context.Context, field graphql.CollectedField, obj *model.ProcessorType) (ret graphql.Marshaler) {
+func (ec *executionContext) _ProcessorType_spec(ctx context.Context, field graphql.CollectedField, obj *model1.ProcessorType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ProcessorType_spec(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -9396,7 +9537,7 @@ func (ec *executionContext) _ProcessorType_spec(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ResourceTypeSpec)
+	res := resTmp.(model1.ResourceTypeSpec)
 	fc.Result = res
 	return ec.marshalNResourceTypeSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceTypeSpec(ctx, field.Selections, res)
 }
@@ -9450,7 +9591,7 @@ func (ec *executionContext) _Query_overviewPage(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model1.OverviewPage)
+	res := resTmp.(*model.OverviewPage)
 	fc.Result = res
 	return ec.marshalNOverviewPage2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐOverviewPage(ctx, field.Selections, res)
 }
@@ -9498,7 +9639,7 @@ func (ec *executionContext) _Query_agents(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model1.Agents)
+	res := resTmp.(*model.Agents)
 	fc.Result = res
 	return ec.marshalNAgents2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgents(ctx, field.Selections, res)
 }
@@ -9560,7 +9701,7 @@ func (ec *executionContext) _Query_agent(ctx context.Context, field graphql.Coll
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Agent)
+	res := resTmp.(*model1.Agent)
 	fc.Result = res
 	return ec.marshalOAgent2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgent(ctx, field.Selections, res)
 }
@@ -9659,7 +9800,7 @@ func (ec *executionContext) _Query_configurations(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model1.Configurations)
+	res := resTmp.(*model.Configurations)
 	fc.Result = res
 	return ec.marshalNConfigurations2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐConfigurations(ctx, field.Selections, res)
 }
@@ -9719,7 +9860,7 @@ func (ec *executionContext) _Query_configuration(ctx context.Context, field grap
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Configuration)
+	res := resTmp.(*model1.Configuration)
 	fc.Result = res
 	return ec.marshalOConfiguration2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfiguration(ctx, field.Selections, res)
 }
@@ -9790,7 +9931,7 @@ func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Source)
+	res := resTmp.([]*model1.Source)
 	fc.Result = res
 	return ec.marshalNSource2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceᚄ(ctx, field.Selections, res)
 }
@@ -9841,7 +9982,7 @@ func (ec *executionContext) _Query_source(ctx context.Context, field graphql.Col
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Source)
+	res := resTmp.(*model1.Source)
 	fc.Result = res
 	return ec.marshalOSource2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSource(ctx, field.Selections, res)
 }
@@ -9906,7 +10047,7 @@ func (ec *executionContext) _Query_sourceTypes(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.SourceType)
+	res := resTmp.([]*model1.SourceType)
 	fc.Result = res
 	return ec.marshalNSourceType2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceTypeᚄ(ctx, field.Selections, res)
 }
@@ -9957,7 +10098,7 @@ func (ec *executionContext) _Query_sourceType(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.SourceType)
+	res := resTmp.(*model1.SourceType)
 	fc.Result = res
 	return ec.marshalOSourceType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceType(ctx, field.Selections, res)
 }
@@ -10022,7 +10163,7 @@ func (ec *executionContext) _Query_processors(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Processor)
+	res := resTmp.([]*model1.Processor)
 	fc.Result = res
 	return ec.marshalNProcessor2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessorᚄ(ctx, field.Selections, res)
 }
@@ -10073,7 +10214,7 @@ func (ec *executionContext) _Query_processor(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Processor)
+	res := resTmp.(*model1.Processor)
 	fc.Result = res
 	return ec.marshalOProcessor2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessor(ctx, field.Selections, res)
 }
@@ -10138,7 +10279,7 @@ func (ec *executionContext) _Query_processorTypes(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.ProcessorType)
+	res := resTmp.([]*model1.ProcessorType)
 	fc.Result = res
 	return ec.marshalNProcessorType2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessorTypeᚄ(ctx, field.Selections, res)
 }
@@ -10189,7 +10330,7 @@ func (ec *executionContext) _Query_processorType(ctx context.Context, field grap
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.ProcessorType)
+	res := resTmp.(*model1.ProcessorType)
 	fc.Result = res
 	return ec.marshalOProcessorType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessorType(ctx, field.Selections, res)
 }
@@ -10254,7 +10395,7 @@ func (ec *executionContext) _Query_destinations(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Destination)
+	res := resTmp.([]*model1.Destination)
 	fc.Result = res
 	return ec.marshalNDestination2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationᚄ(ctx, field.Selections, res)
 }
@@ -10305,7 +10446,7 @@ func (ec *executionContext) _Query_destination(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Destination)
+	res := resTmp.(*model1.Destination)
 	fc.Result = res
 	return ec.marshalODestination2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestination(ctx, field.Selections, res)
 }
@@ -10370,7 +10511,7 @@ func (ec *executionContext) _Query_destinationWithType(ctx context.Context, fiel
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model1.DestinationWithType)
+	res := resTmp.(*model.DestinationWithType)
 	fc.Result = res
 	return ec.marshalNDestinationWithType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐDestinationWithType(ctx, field.Selections, res)
 }
@@ -10431,7 +10572,7 @@ func (ec *executionContext) _Query_destinationTypes(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.DestinationType)
+	res := resTmp.([]*model1.DestinationType)
 	fc.Result = res
 	return ec.marshalNDestinationType2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationTypeᚄ(ctx, field.Selections, res)
 }
@@ -10482,7 +10623,7 @@ func (ec *executionContext) _Query_destinationType(ctx context.Context, field gr
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.DestinationType)
+	res := resTmp.(*model1.DestinationType)
 	fc.Result = res
 	return ec.marshalODestinationType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationType(ctx, field.Selections, res)
 }
@@ -10547,7 +10688,7 @@ func (ec *executionContext) _Query_components(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model1.Components)
+	res := resTmp.(*model.Components)
 	fc.Result = res
 	return ec.marshalNComponents2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐComponents(ctx, field.Selections, res)
 }
@@ -10597,7 +10738,7 @@ func (ec *executionContext) _Query_snapshot(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model1.Snapshot)
+	res := resTmp.(*model.Snapshot)
 	fc.Result = res
 	return ec.marshalNSnapshot2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐSnapshot(ctx, field.Selections, res)
 }
@@ -10660,7 +10801,7 @@ func (ec *executionContext) _Query_agentMetrics(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model1.GraphMetrics)
+	res := resTmp.(*model.GraphMetrics)
 	fc.Result = res
 	return ec.marshalNGraphMetrics2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx, field.Selections, res)
 }
@@ -10719,7 +10860,7 @@ func (ec *executionContext) _Query_configurationMetrics(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model1.GraphMetrics)
+	res := resTmp.(*model.GraphMetrics)
 	fc.Result = res
 	return ec.marshalNGraphMetrics2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx, field.Selections, res)
 }
@@ -10778,7 +10919,7 @@ func (ec *executionContext) _Query_overviewMetrics(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model1.GraphMetrics)
+	res := resTmp.(*model.GraphMetrics)
 	fc.Result = res
 	return ec.marshalNGraphMetrics2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx, field.Selections, res)
 }
@@ -10940,7 +11081,7 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _RelevantIfCondition_name(ctx context.Context, field graphql.CollectedField, obj *model.RelevantIfCondition) (ret graphql.Marshaler) {
+func (ec *executionContext) _RelevantIfCondition_name(ctx context.Context, field graphql.CollectedField, obj *model1.RelevantIfCondition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_RelevantIfCondition_name(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -10984,7 +11125,7 @@ func (ec *executionContext) fieldContext_RelevantIfCondition_name(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _RelevantIfCondition_operator(ctx context.Context, field graphql.CollectedField, obj *model.RelevantIfCondition) (ret graphql.Marshaler) {
+func (ec *executionContext) _RelevantIfCondition_operator(ctx context.Context, field graphql.CollectedField, obj *model1.RelevantIfCondition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_RelevantIfCondition_operator(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11010,7 +11151,7 @@ func (ec *executionContext) _RelevantIfCondition_operator(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model1.RelevantIfOperatorType)
+	res := resTmp.(model.RelevantIfOperatorType)
 	fc.Result = res
 	return ec.marshalNRelevantIfOperatorType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐRelevantIfOperatorType(ctx, field.Selections, res)
 }
@@ -11028,7 +11169,7 @@ func (ec *executionContext) fieldContext_RelevantIfCondition_operator(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _RelevantIfCondition_value(ctx context.Context, field graphql.CollectedField, obj *model.RelevantIfCondition) (ret graphql.Marshaler) {
+func (ec *executionContext) _RelevantIfCondition_value(ctx context.Context, field graphql.CollectedField, obj *model1.RelevantIfCondition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_RelevantIfCondition_value(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11072,7 +11213,7 @@ func (ec *executionContext) fieldContext_RelevantIfCondition_value(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _ResourceConfiguration_name(ctx context.Context, field graphql.CollectedField, obj *model.ResourceConfiguration) (ret graphql.Marshaler) {
+func (ec *executionContext) _ResourceConfiguration_name(ctx context.Context, field graphql.CollectedField, obj *model1.ResourceConfiguration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ResourceConfiguration_name(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11113,7 +11254,7 @@ func (ec *executionContext) fieldContext_ResourceConfiguration_name(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _ResourceConfiguration_type(ctx context.Context, field graphql.CollectedField, obj *model.ResourceConfiguration) (ret graphql.Marshaler) {
+func (ec *executionContext) _ResourceConfiguration_type(ctx context.Context, field graphql.CollectedField, obj *model1.ResourceConfiguration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ResourceConfiguration_type(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11154,7 +11295,7 @@ func (ec *executionContext) fieldContext_ResourceConfiguration_type(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _ResourceConfiguration_parameters(ctx context.Context, field graphql.CollectedField, obj *model.ResourceConfiguration) (ret graphql.Marshaler) {
+func (ec *executionContext) _ResourceConfiguration_parameters(ctx context.Context, field graphql.CollectedField, obj *model1.ResourceConfiguration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ResourceConfiguration_parameters(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11177,7 +11318,7 @@ func (ec *executionContext) _ResourceConfiguration_parameters(ctx context.Contex
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.Parameter)
+	res := resTmp.([]model1.Parameter)
 	fc.Result = res
 	return ec.marshalOParameter2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterᚄ(ctx, field.Selections, res)
 }
@@ -11201,7 +11342,7 @@ func (ec *executionContext) fieldContext_ResourceConfiguration_parameters(ctx co
 	return fc, nil
 }
 
-func (ec *executionContext) _ResourceConfiguration_processors(ctx context.Context, field graphql.CollectedField, obj *model.ResourceConfiguration) (ret graphql.Marshaler) {
+func (ec *executionContext) _ResourceConfiguration_processors(ctx context.Context, field graphql.CollectedField, obj *model1.ResourceConfiguration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ResourceConfiguration_processors(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11224,7 +11365,7 @@ func (ec *executionContext) _ResourceConfiguration_processors(ctx context.Contex
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.ResourceConfiguration)
+	res := resTmp.([]model1.ResourceConfiguration)
 	fc.Result = res
 	return ec.marshalOResourceConfiguration2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfigurationᚄ(ctx, field.Selections, res)
 }
@@ -11254,7 +11395,7 @@ func (ec *executionContext) fieldContext_ResourceConfiguration_processors(ctx co
 	return fc, nil
 }
 
-func (ec *executionContext) _ResourceConfiguration_disabled(ctx context.Context, field graphql.CollectedField, obj *model.ResourceConfiguration) (ret graphql.Marshaler) {
+func (ec *executionContext) _ResourceConfiguration_disabled(ctx context.Context, field graphql.CollectedField, obj *model1.ResourceConfiguration) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ResourceConfiguration_disabled(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11298,7 +11439,7 @@ func (ec *executionContext) fieldContext_ResourceConfiguration_disabled(ctx cont
 	return fc, nil
 }
 
-func (ec *executionContext) _ResourceTypeSpec_version(ctx context.Context, field graphql.CollectedField, obj *model.ResourceTypeSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ResourceTypeSpec_version(ctx context.Context, field graphql.CollectedField, obj *model1.ResourceTypeSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ResourceTypeSpec_version(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11342,7 +11483,7 @@ func (ec *executionContext) fieldContext_ResourceTypeSpec_version(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _ResourceTypeSpec_parameters(ctx context.Context, field graphql.CollectedField, obj *model.ResourceTypeSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ResourceTypeSpec_parameters(ctx context.Context, field graphql.CollectedField, obj *model1.ResourceTypeSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ResourceTypeSpec_parameters(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11368,7 +11509,7 @@ func (ec *executionContext) _ResourceTypeSpec_parameters(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]model.ParameterDefinition)
+	res := resTmp.([]model1.ParameterDefinition)
 	fc.Result = res
 	return ec.marshalNParameterDefinition2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterDefinitionᚄ(ctx, field.Selections, res)
 }
@@ -11410,7 +11551,7 @@ func (ec *executionContext) fieldContext_ResourceTypeSpec_parameters(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _ResourceTypeSpec_supportedPlatforms(ctx context.Context, field graphql.CollectedField, obj *model.ResourceTypeSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ResourceTypeSpec_supportedPlatforms(ctx context.Context, field graphql.CollectedField, obj *model1.ResourceTypeSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ResourceTypeSpec_supportedPlatforms(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11454,7 +11595,7 @@ func (ec *executionContext) fieldContext_ResourceTypeSpec_supportedPlatforms(ctx
 	return fc, nil
 }
 
-func (ec *executionContext) _ResourceTypeSpec_telemetryTypes(ctx context.Context, field graphql.CollectedField, obj *model.ResourceTypeSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ResourceTypeSpec_telemetryTypes(ctx context.Context, field graphql.CollectedField, obj *model1.ResourceTypeSpec) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ResourceTypeSpec_telemetryTypes(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11498,7 +11639,7 @@ func (ec *executionContext) fieldContext_ResourceTypeSpec_telemetryTypes(ctx con
 	return fc, nil
 }
 
-func (ec *executionContext) _Snapshot_logs(ctx context.Context, field graphql.CollectedField, obj *model1.Snapshot) (ret graphql.Marshaler) {
+func (ec *executionContext) _Snapshot_logs(ctx context.Context, field graphql.CollectedField, obj *model.Snapshot) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Snapshot_logs(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11554,7 +11695,7 @@ func (ec *executionContext) fieldContext_Snapshot_logs(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Snapshot_metrics(ctx context.Context, field graphql.CollectedField, obj *model1.Snapshot) (ret graphql.Marshaler) {
+func (ec *executionContext) _Snapshot_metrics(ctx context.Context, field graphql.CollectedField, obj *model.Snapshot) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Snapshot_metrics(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11614,7 +11755,7 @@ func (ec *executionContext) fieldContext_Snapshot_metrics(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Snapshot_traces(ctx context.Context, field graphql.CollectedField, obj *model1.Snapshot) (ret graphql.Marshaler) {
+func (ec *executionContext) _Snapshot_traces(ctx context.Context, field graphql.CollectedField, obj *model.Snapshot) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Snapshot_traces(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11676,7 +11817,7 @@ func (ec *executionContext) fieldContext_Snapshot_traces(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Source_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Source_apiVersion(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11720,7 +11861,7 @@ func (ec *executionContext) fieldContext_Source_apiVersion(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Source_kind(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_kind(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Source_kind(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11764,7 +11905,7 @@ func (ec *executionContext) fieldContext_Source_kind(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Source_metadata(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_metadata(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Source_metadata(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11790,7 +11931,7 @@ func (ec *executionContext) _Source_metadata(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Metadata)
+	res := resTmp.(model1.Metadata)
 	fc.Result = res
 	return ec.marshalNMetadata2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
@@ -11822,7 +11963,7 @@ func (ec *executionContext) fieldContext_Source_metadata(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Source_spec(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_spec(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Source_spec(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11848,7 +11989,7 @@ func (ec *executionContext) _Source_spec(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ParameterizedSpec)
+	res := resTmp.(model1.ParameterizedSpec)
 	fc.Result = res
 	return ec.marshalNParameterizedSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterizedSpec(ctx, field.Selections, res)
 }
@@ -11876,7 +12017,7 @@ func (ec *executionContext) fieldContext_Source_spec(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _SourceType_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model.SourceType) (ret graphql.Marshaler) {
+func (ec *executionContext) _SourceType_apiVersion(ctx context.Context, field graphql.CollectedField, obj *model1.SourceType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SourceType_apiVersion(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11920,7 +12061,7 @@ func (ec *executionContext) fieldContext_SourceType_apiVersion(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _SourceType_metadata(ctx context.Context, field graphql.CollectedField, obj *model.SourceType) (ret graphql.Marshaler) {
+func (ec *executionContext) _SourceType_metadata(ctx context.Context, field graphql.CollectedField, obj *model1.SourceType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SourceType_metadata(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -11946,7 +12087,7 @@ func (ec *executionContext) _SourceType_metadata(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Metadata)
+	res := resTmp.(model1.Metadata)
 	fc.Result = res
 	return ec.marshalNMetadata2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
@@ -11978,7 +12119,7 @@ func (ec *executionContext) fieldContext_SourceType_metadata(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _SourceType_kind(ctx context.Context, field graphql.CollectedField, obj *model.SourceType) (ret graphql.Marshaler) {
+func (ec *executionContext) _SourceType_kind(ctx context.Context, field graphql.CollectedField, obj *model1.SourceType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SourceType_kind(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -12022,7 +12163,7 @@ func (ec *executionContext) fieldContext_SourceType_kind(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _SourceType_spec(ctx context.Context, field graphql.CollectedField, obj *model.SourceType) (ret graphql.Marshaler) {
+func (ec *executionContext) _SourceType_spec(ctx context.Context, field graphql.CollectedField, obj *model1.SourceType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SourceType_spec(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -12048,7 +12189,7 @@ func (ec *executionContext) _SourceType_spec(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ResourceTypeSpec)
+	res := resTmp.(model1.ResourceTypeSpec)
 	fc.Result = res
 	return ec.marshalNResourceTypeSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceTypeSpec(ctx, field.Selections, res)
 }
@@ -12104,7 +12245,7 @@ func (ec *executionContext) _Subscription_agentChanges(ctx context.Context, fiel
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan []*model1.AgentChange):
+		case res, ok := <-resTmp.(<-chan []*model.AgentChange):
 			if !ok {
 				return nil
 			}
@@ -12179,7 +12320,7 @@ func (ec *executionContext) _Subscription_configurationChanges(ctx context.Conte
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan []*model1.ConfigurationChange):
+		case res, ok := <-resTmp.(<-chan []*model.ConfigurationChange):
 			if !ok {
 				return nil
 			}
@@ -12254,7 +12395,7 @@ func (ec *executionContext) _Subscription_agentMetrics(ctx context.Context, fiel
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan *model1.GraphMetrics):
+		case res, ok := <-resTmp.(<-chan *model.GraphMetrics):
 			if !ok {
 				return nil
 			}
@@ -12327,7 +12468,7 @@ func (ec *executionContext) _Subscription_configurationMetrics(ctx context.Conte
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan *model1.GraphMetrics):
+		case res, ok := <-resTmp.(<-chan *model.GraphMetrics):
 			if !ok {
 				return nil
 			}
@@ -12400,7 +12541,7 @@ func (ec *executionContext) _Subscription_overviewMetrics(ctx context.Context, f
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan *model1.GraphMetrics):
+		case res, ok := <-resTmp.(<-chan *model.GraphMetrics):
 			if !ok {
 				return nil
 			}
@@ -14634,6 +14775,146 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputParameterInput(ctx context.Context, obj interface{}) (model1.Parameter, error) {
+	var it model1.Parameter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "value"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			it.Value, err = ec.unmarshalNAny2interface(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputProcessorInput(ctx context.Context, obj interface{}) (model1.ResourceConfiguration, error) {
+	var it model1.ResourceConfiguration
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "type", "parameters", "disabled"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "type":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			it.Type, err = ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "parameters":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parameters"))
+			it.Parameters, err = ec.unmarshalOParameterInput2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "disabled":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("disabled"))
+			it.Disabled, err = ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateProcessorsInput(ctx context.Context, obj interface{}) (model.UpdateProcessorsInput, error) {
+	var it model.UpdateProcessorsInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"configuration", "resourceType", "resourceIndex", "processors"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "configuration":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("configuration"))
+			it.Configuration, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "resourceType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceType"))
+			it.ResourceType, err = ec.unmarshalNResourceTypeKind2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐResourceTypeKind(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "resourceIndex":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceIndex"))
+			it.ResourceIndex, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "processors":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("processors"))
+			it.Processors, err = ec.unmarshalNProcessorInput2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfigurationᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -14644,7 +14925,7 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 var agentImplementors = []string{"Agent"}
 
-func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, obj *model.Agent) graphql.Marshaler {
+func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, obj *model1.Agent) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, agentImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -14839,7 +15120,7 @@ func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, ob
 
 var agentChangeImplementors = []string{"AgentChange"}
 
-func (ec *executionContext) _AgentChange(ctx context.Context, sel ast.SelectionSet, obj *model1.AgentChange) graphql.Marshaler {
+func (ec *executionContext) _AgentChange(ctx context.Context, sel ast.SelectionSet, obj *model.AgentChange) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, agentChangeImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -14874,7 +15155,7 @@ func (ec *executionContext) _AgentChange(ctx context.Context, sel ast.SelectionS
 
 var agentConfigurationImplementors = []string{"AgentConfiguration"}
 
-func (ec *executionContext) _AgentConfiguration(ctx context.Context, sel ast.SelectionSet, obj *model1.AgentConfiguration) graphql.Marshaler {
+func (ec *executionContext) _AgentConfiguration(ctx context.Context, sel ast.SelectionSet, obj *model.AgentConfiguration) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, agentConfigurationImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -14907,7 +15188,7 @@ func (ec *executionContext) _AgentConfiguration(ctx context.Context, sel ast.Sel
 
 var agentSelectorImplementors = []string{"AgentSelector"}
 
-func (ec *executionContext) _AgentSelector(ctx context.Context, sel ast.SelectionSet, obj *model.AgentSelector) graphql.Marshaler {
+func (ec *executionContext) _AgentSelector(ctx context.Context, sel ast.SelectionSet, obj *model1.AgentSelector) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, agentSelectorImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -14945,7 +15226,7 @@ func (ec *executionContext) _AgentSelector(ctx context.Context, sel ast.Selectio
 
 var agentUpgradeImplementors = []string{"AgentUpgrade"}
 
-func (ec *executionContext) _AgentUpgrade(ctx context.Context, sel ast.SelectionSet, obj *model.AgentUpgrade) graphql.Marshaler {
+func (ec *executionContext) _AgentUpgrade(ctx context.Context, sel ast.SelectionSet, obj *model1.AgentUpgrade) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, agentUpgradeImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -14997,7 +15278,7 @@ func (ec *executionContext) _AgentUpgrade(ctx context.Context, sel ast.Selection
 
 var agentsImplementors = []string{"Agents"}
 
-func (ec *executionContext) _Agents(ctx context.Context, sel ast.SelectionSet, obj *model1.Agents) graphql.Marshaler {
+func (ec *executionContext) _Agents(ctx context.Context, sel ast.SelectionSet, obj *model.Agents) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, agentsImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15040,7 +15321,7 @@ func (ec *executionContext) _Agents(ctx context.Context, sel ast.SelectionSet, o
 
 var componentsImplementors = []string{"Components"}
 
-func (ec *executionContext) _Components(ctx context.Context, sel ast.SelectionSet, obj *model1.Components) graphql.Marshaler {
+func (ec *executionContext) _Components(ctx context.Context, sel ast.SelectionSet, obj *model.Components) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, componentsImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15075,7 +15356,7 @@ func (ec *executionContext) _Components(ctx context.Context, sel ast.SelectionSe
 
 var configurationImplementors = []string{"Configuration"}
 
-func (ec *executionContext) _Configuration(ctx context.Context, sel ast.SelectionSet, obj *model.Configuration) graphql.Marshaler {
+func (ec *executionContext) _Configuration(ctx context.Context, sel ast.SelectionSet, obj *model1.Configuration) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, configurationImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15188,7 +15469,7 @@ func (ec *executionContext) _Configuration(ctx context.Context, sel ast.Selectio
 
 var configurationChangeImplementors = []string{"ConfigurationChange"}
 
-func (ec *executionContext) _ConfigurationChange(ctx context.Context, sel ast.SelectionSet, obj *model1.ConfigurationChange) graphql.Marshaler {
+func (ec *executionContext) _ConfigurationChange(ctx context.Context, sel ast.SelectionSet, obj *model.ConfigurationChange) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, configurationChangeImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15223,7 +15504,7 @@ func (ec *executionContext) _ConfigurationChange(ctx context.Context, sel ast.Se
 
 var configurationSpecImplementors = []string{"ConfigurationSpec"}
 
-func (ec *executionContext) _ConfigurationSpec(ctx context.Context, sel ast.SelectionSet, obj *model.ConfigurationSpec) graphql.Marshaler {
+func (ec *executionContext) _ConfigurationSpec(ctx context.Context, sel ast.SelectionSet, obj *model1.ConfigurationSpec) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, configurationSpecImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15264,7 +15545,7 @@ func (ec *executionContext) _ConfigurationSpec(ctx context.Context, sel ast.Sele
 
 var configurationsImplementors = []string{"Configurations"}
 
-func (ec *executionContext) _Configurations(ctx context.Context, sel ast.SelectionSet, obj *model1.Configurations) graphql.Marshaler {
+func (ec *executionContext) _Configurations(ctx context.Context, sel ast.SelectionSet, obj *model.Configurations) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, configurationsImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15300,7 +15581,7 @@ func (ec *executionContext) _Configurations(ctx context.Context, sel ast.Selecti
 
 var destinationImplementors = []string{"Destination"}
 
-func (ec *executionContext) _Destination(ctx context.Context, sel ast.SelectionSet, obj *model.Destination) graphql.Marshaler {
+func (ec *executionContext) _Destination(ctx context.Context, sel ast.SelectionSet, obj *model1.Destination) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, destinationImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15362,7 +15643,7 @@ func (ec *executionContext) _Destination(ctx context.Context, sel ast.SelectionS
 
 var destinationTypeImplementors = []string{"DestinationType"}
 
-func (ec *executionContext) _DestinationType(ctx context.Context, sel ast.SelectionSet, obj *model.DestinationType) graphql.Marshaler {
+func (ec *executionContext) _DestinationType(ctx context.Context, sel ast.SelectionSet, obj *model1.DestinationType) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, destinationTypeImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15424,7 +15705,7 @@ func (ec *executionContext) _DestinationType(ctx context.Context, sel ast.Select
 
 var destinationWithTypeImplementors = []string{"DestinationWithType"}
 
-func (ec *executionContext) _DestinationWithType(ctx context.Context, sel ast.SelectionSet, obj *model1.DestinationWithType) graphql.Marshaler {
+func (ec *executionContext) _DestinationWithType(ctx context.Context, sel ast.SelectionSet, obj *model.DestinationWithType) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, destinationWithTypeImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15453,7 +15734,7 @@ func (ec *executionContext) _DestinationWithType(ctx context.Context, sel ast.Se
 
 var documentationLinkImplementors = []string{"DocumentationLink"}
 
-func (ec *executionContext) _DocumentationLink(ctx context.Context, sel ast.SelectionSet, obj *model.DocumentationLink) graphql.Marshaler {
+func (ec *executionContext) _DocumentationLink(ctx context.Context, sel ast.SelectionSet, obj *model1.DocumentationLink) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, documentationLinkImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15586,7 +15867,7 @@ func (ec *executionContext) _Graph(ctx context.Context, sel ast.SelectionSet, ob
 
 var graphMetricImplementors = []string{"GraphMetric"}
 
-func (ec *executionContext) _GraphMetric(ctx context.Context, sel ast.SelectionSet, obj *model1.GraphMetric) graphql.Marshaler {
+func (ec *executionContext) _GraphMetric(ctx context.Context, sel ast.SelectionSet, obj *model.GraphMetric) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, graphMetricImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15646,7 +15927,7 @@ func (ec *executionContext) _GraphMetric(ctx context.Context, sel ast.SelectionS
 
 var graphMetricsImplementors = []string{"GraphMetrics"}
 
-func (ec *executionContext) _GraphMetrics(ctx context.Context, sel ast.SelectionSet, obj *model1.GraphMetrics) graphql.Marshaler {
+func (ec *executionContext) _GraphMetrics(ctx context.Context, sel ast.SelectionSet, obj *model.GraphMetrics) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, graphMetricsImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15715,7 +15996,7 @@ func (ec *executionContext) _Log(ctx context.Context, sel ast.SelectionSet, obj 
 
 var metadataImplementors = []string{"Metadata"}
 
-func (ec *executionContext) _Metadata(ctx context.Context, sel ast.SelectionSet, obj *model.Metadata) graphql.Marshaler {
+func (ec *executionContext) _Metadata(ctx context.Context, sel ast.SelectionSet, obj *model1.Metadata) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, metadataImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15828,7 +16109,7 @@ func (ec *executionContext) _Metric(ctx context.Context, sel ast.SelectionSet, o
 
 var metricCategoryImplementors = []string{"MetricCategory"}
 
-func (ec *executionContext) _MetricCategory(ctx context.Context, sel ast.SelectionSet, obj *model.MetricCategory) graphql.Marshaler {
+func (ec *executionContext) _MetricCategory(ctx context.Context, sel ast.SelectionSet, obj *model1.MetricCategory) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, metricCategoryImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15870,7 +16151,7 @@ func (ec *executionContext) _MetricCategory(ctx context.Context, sel ast.Selecti
 
 var metricOptionImplementors = []string{"MetricOption"}
 
-func (ec *executionContext) _MetricOption(ctx context.Context, sel ast.SelectionSet, obj *model.MetricOption) graphql.Marshaler {
+func (ec *executionContext) _MetricOption(ctx context.Context, sel ast.SelectionSet, obj *model1.MetricOption) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, metricOptionImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15892,6 +16173,42 @@ func (ec *executionContext) _MetricOption(ctx context.Context, sel ast.Selection
 		case "kpi":
 
 			out.Values[i] = ec._MetricOption_kpi(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var mutationImplementors = []string{"Mutation"}
+
+func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mutationImplementors)
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
+		Object: "Mutation",
+	})
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
+			Object: field.Name,
+			Field:  field,
+		})
+
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Mutation")
+		case "updateProcessors":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateProcessors(ctx, field)
+			})
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -15955,7 +16272,7 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 
 var overviewPageImplementors = []string{"OverviewPage"}
 
-func (ec *executionContext) _OverviewPage(ctx context.Context, sel ast.SelectionSet, obj *model1.OverviewPage) graphql.Marshaler {
+func (ec *executionContext) _OverviewPage(ctx context.Context, sel ast.SelectionSet, obj *model.OverviewPage) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, overviewPageImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -15983,7 +16300,7 @@ func (ec *executionContext) _OverviewPage(ctx context.Context, sel ast.Selection
 
 var parameterImplementors = []string{"Parameter"}
 
-func (ec *executionContext) _Parameter(ctx context.Context, sel ast.SelectionSet, obj *model.Parameter) graphql.Marshaler {
+func (ec *executionContext) _Parameter(ctx context.Context, sel ast.SelectionSet, obj *model1.Parameter) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, parameterImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -16018,7 +16335,7 @@ func (ec *executionContext) _Parameter(ctx context.Context, sel ast.SelectionSet
 
 var parameterDefinitionImplementors = []string{"ParameterDefinition"}
 
-func (ec *executionContext) _ParameterDefinition(ctx context.Context, sel ast.SelectionSet, obj *model.ParameterDefinition) graphql.Marshaler {
+func (ec *executionContext) _ParameterDefinition(ctx context.Context, sel ast.SelectionSet, obj *model1.ParameterDefinition) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, parameterDefinitionImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -16114,7 +16431,7 @@ func (ec *executionContext) _ParameterDefinition(ctx context.Context, sel ast.Se
 
 var parameterOptionsImplementors = []string{"ParameterOptions"}
 
-func (ec *executionContext) _ParameterOptions(ctx context.Context, sel ast.SelectionSet, obj *model.ParameterOptions) graphql.Marshaler {
+func (ec *executionContext) _ParameterOptions(ctx context.Context, sel ast.SelectionSet, obj *model1.ParameterOptions) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, parameterOptionsImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -16159,7 +16476,7 @@ func (ec *executionContext) _ParameterOptions(ctx context.Context, sel ast.Selec
 
 var parameterizedSpecImplementors = []string{"ParameterizedSpec"}
 
-func (ec *executionContext) _ParameterizedSpec(ctx context.Context, sel ast.SelectionSet, obj *model.ParameterizedSpec) graphql.Marshaler {
+func (ec *executionContext) _ParameterizedSpec(ctx context.Context, sel ast.SelectionSet, obj *model1.ParameterizedSpec) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, parameterizedSpecImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -16202,7 +16519,7 @@ func (ec *executionContext) _ParameterizedSpec(ctx context.Context, sel ast.Sele
 
 var processorImplementors = []string{"Processor"}
 
-func (ec *executionContext) _Processor(ctx context.Context, sel ast.SelectionSet, obj *model.Processor) graphql.Marshaler {
+func (ec *executionContext) _Processor(ctx context.Context, sel ast.SelectionSet, obj *model1.Processor) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, processorImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -16264,7 +16581,7 @@ func (ec *executionContext) _Processor(ctx context.Context, sel ast.SelectionSet
 
 var processorTypeImplementors = []string{"ProcessorType"}
 
-func (ec *executionContext) _ProcessorType(ctx context.Context, sel ast.SelectionSet, obj *model.ProcessorType) graphql.Marshaler {
+func (ec *executionContext) _ProcessorType(ctx context.Context, sel ast.SelectionSet, obj *model1.ProcessorType) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, processorTypeImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -16873,7 +17190,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 
 var relevantIfConditionImplementors = []string{"RelevantIfCondition"}
 
-func (ec *executionContext) _RelevantIfCondition(ctx context.Context, sel ast.SelectionSet, obj *model.RelevantIfCondition) graphql.Marshaler {
+func (ec *executionContext) _RelevantIfCondition(ctx context.Context, sel ast.SelectionSet, obj *model1.RelevantIfCondition) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, relevantIfConditionImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -16928,7 +17245,7 @@ func (ec *executionContext) _RelevantIfCondition(ctx context.Context, sel ast.Se
 
 var resourceConfigurationImplementors = []string{"ResourceConfiguration"}
 
-func (ec *executionContext) _ResourceConfiguration(ctx context.Context, sel ast.SelectionSet, obj *model.ResourceConfiguration) graphql.Marshaler {
+func (ec *executionContext) _ResourceConfiguration(ctx context.Context, sel ast.SelectionSet, obj *model1.ResourceConfiguration) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, resourceConfigurationImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -16972,7 +17289,7 @@ func (ec *executionContext) _ResourceConfiguration(ctx context.Context, sel ast.
 
 var resourceTypeSpecImplementors = []string{"ResourceTypeSpec"}
 
-func (ec *executionContext) _ResourceTypeSpec(ctx context.Context, sel ast.SelectionSet, obj *model.ResourceTypeSpec) graphql.Marshaler {
+func (ec *executionContext) _ResourceTypeSpec(ctx context.Context, sel ast.SelectionSet, obj *model1.ResourceTypeSpec) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, resourceTypeSpecImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -17021,7 +17338,7 @@ func (ec *executionContext) _ResourceTypeSpec(ctx context.Context, sel ast.Selec
 
 var snapshotImplementors = []string{"Snapshot"}
 
-func (ec *executionContext) _Snapshot(ctx context.Context, sel ast.SelectionSet, obj *model1.Snapshot) graphql.Marshaler {
+func (ec *executionContext) _Snapshot(ctx context.Context, sel ast.SelectionSet, obj *model.Snapshot) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, snapshotImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -17063,7 +17380,7 @@ func (ec *executionContext) _Snapshot(ctx context.Context, sel ast.SelectionSet,
 
 var sourceImplementors = []string{"Source"}
 
-func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, obj *model.Source) graphql.Marshaler {
+func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, obj *model1.Source) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, sourceImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -17125,7 +17442,7 @@ func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, o
 
 var sourceTypeImplementors = []string{"SourceType"}
 
-func (ec *executionContext) _SourceType(ctx context.Context, sel ast.SelectionSet, obj *model.SourceType) graphql.Marshaler {
+func (ec *executionContext) _SourceType(ctx context.Context, sel ast.SelectionSet, obj *model1.SourceType) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, sourceTypeImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -17619,7 +17936,7 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAgent2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Agent) graphql.Marshaler {
+func (ec *executionContext) marshalNAgent2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.Agent) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -17663,7 +17980,7 @@ func (ec *executionContext) marshalNAgent2ᚕᚖgithubᚗcomᚋobserviqᚋbindpl
 	return ret
 }
 
-func (ec *executionContext) marshalNAgent2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgent(ctx context.Context, sel ast.SelectionSet, v *model.Agent) graphql.Marshaler {
+func (ec *executionContext) marshalNAgent2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgent(ctx context.Context, sel ast.SelectionSet, v *model1.Agent) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17673,7 +17990,7 @@ func (ec *executionContext) marshalNAgent2ᚖgithubᚗcomᚋobserviqᚋbindplane
 	return ec._Agent(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNAgentChange2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgentChangeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.AgentChange) graphql.Marshaler {
+func (ec *executionContext) marshalNAgentChange2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgentChangeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AgentChange) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -17717,7 +18034,7 @@ func (ec *executionContext) marshalNAgentChange2ᚕᚖgithubᚗcomᚋobserviqᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNAgentChange2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgentChange(ctx context.Context, sel ast.SelectionSet, v *model1.AgentChange) graphql.Marshaler {
+func (ec *executionContext) marshalNAgentChange2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgentChange(ctx context.Context, sel ast.SelectionSet, v *model.AgentChange) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17727,21 +18044,21 @@ func (ec *executionContext) marshalNAgentChange2ᚖgithubᚗcomᚋobserviqᚋbin
 	return ec._AgentChange(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNAgentChangeType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgentChangeType(ctx context.Context, v interface{}) (model1.AgentChangeType, error) {
-	var res model1.AgentChangeType
+func (ec *executionContext) unmarshalNAgentChangeType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgentChangeType(ctx context.Context, v interface{}) (model.AgentChangeType, error) {
+	var res model.AgentChangeType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNAgentChangeType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgentChangeType(ctx context.Context, sel ast.SelectionSet, v model1.AgentChangeType) graphql.Marshaler {
+func (ec *executionContext) marshalNAgentChangeType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgentChangeType(ctx context.Context, sel ast.SelectionSet, v model.AgentChangeType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNAgents2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgents(ctx context.Context, sel ast.SelectionSet, v model1.Agents) graphql.Marshaler {
+func (ec *executionContext) marshalNAgents2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgents(ctx context.Context, sel ast.SelectionSet, v model.Agents) graphql.Marshaler {
 	return ec._Agents(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAgents2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgents(ctx context.Context, sel ast.SelectionSet, v *model1.Agents) graphql.Marshaler {
+func (ec *executionContext) marshalNAgents2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgents(ctx context.Context, sel ast.SelectionSet, v *model.Agents) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17787,11 +18104,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNComponents2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐComponents(ctx context.Context, sel ast.SelectionSet, v model1.Components) graphql.Marshaler {
+func (ec *executionContext) marshalNComponents2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐComponents(ctx context.Context, sel ast.SelectionSet, v model.Components) graphql.Marshaler {
 	return ec._Components(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNComponents2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐComponents(ctx context.Context, sel ast.SelectionSet, v *model1.Components) graphql.Marshaler {
+func (ec *executionContext) marshalNComponents2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐComponents(ctx context.Context, sel ast.SelectionSet, v *model.Components) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17801,7 +18118,7 @@ func (ec *executionContext) marshalNComponents2ᚖgithubᚗcomᚋobserviqᚋbind
 	return ec._Components(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNConfiguration2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfigurationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Configuration) graphql.Marshaler {
+func (ec *executionContext) marshalNConfiguration2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfigurationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.Configuration) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -17845,7 +18162,7 @@ func (ec *executionContext) marshalNConfiguration2ᚕᚖgithubᚗcomᚋobserviq�
 	return ret
 }
 
-func (ec *executionContext) marshalNConfiguration2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfiguration(ctx context.Context, sel ast.SelectionSet, v *model.Configuration) graphql.Marshaler {
+func (ec *executionContext) marshalNConfiguration2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfiguration(ctx context.Context, sel ast.SelectionSet, v *model1.Configuration) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17855,7 +18172,7 @@ func (ec *executionContext) marshalNConfiguration2ᚖgithubᚗcomᚋobserviqᚋb
 	return ec._Configuration(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNConfigurationChange2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐConfigurationChangeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.ConfigurationChange) graphql.Marshaler {
+func (ec *executionContext) marshalNConfigurationChange2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐConfigurationChangeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ConfigurationChange) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -17899,7 +18216,7 @@ func (ec *executionContext) marshalNConfigurationChange2ᚕᚖgithubᚗcomᚋobs
 	return ret
 }
 
-func (ec *executionContext) marshalNConfigurationChange2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐConfigurationChange(ctx context.Context, sel ast.SelectionSet, v *model1.ConfigurationChange) graphql.Marshaler {
+func (ec *executionContext) marshalNConfigurationChange2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐConfigurationChange(ctx context.Context, sel ast.SelectionSet, v *model.ConfigurationChange) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17909,15 +18226,15 @@ func (ec *executionContext) marshalNConfigurationChange2ᚖgithubᚗcomᚋobserv
 	return ec._ConfigurationChange(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNConfigurationSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfigurationSpec(ctx context.Context, sel ast.SelectionSet, v model.ConfigurationSpec) graphql.Marshaler {
+func (ec *executionContext) marshalNConfigurationSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfigurationSpec(ctx context.Context, sel ast.SelectionSet, v model1.ConfigurationSpec) graphql.Marshaler {
 	return ec._ConfigurationSpec(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNConfigurations2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐConfigurations(ctx context.Context, sel ast.SelectionSet, v model1.Configurations) graphql.Marshaler {
+func (ec *executionContext) marshalNConfigurations2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐConfigurations(ctx context.Context, sel ast.SelectionSet, v model.Configurations) graphql.Marshaler {
 	return ec._Configurations(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNConfigurations2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐConfigurations(ctx context.Context, sel ast.SelectionSet, v *model1.Configurations) graphql.Marshaler {
+func (ec *executionContext) marshalNConfigurations2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐConfigurations(ctx context.Context, sel ast.SelectionSet, v *model.Configurations) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17927,7 +18244,7 @@ func (ec *executionContext) marshalNConfigurations2ᚖgithubᚗcomᚋobserviqᚋ
 	return ec._Configurations(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDestination2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Destination) graphql.Marshaler {
+func (ec *executionContext) marshalNDestination2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.Destination) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -17971,7 +18288,7 @@ func (ec *executionContext) marshalNDestination2ᚕᚖgithubᚗcomᚋobserviqᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNDestination2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestination(ctx context.Context, sel ast.SelectionSet, v *model.Destination) graphql.Marshaler {
+func (ec *executionContext) marshalNDestination2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestination(ctx context.Context, sel ast.SelectionSet, v *model1.Destination) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -17981,7 +18298,7 @@ func (ec *executionContext) marshalNDestination2ᚖgithubᚗcomᚋobserviqᚋbin
 	return ec._Destination(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDestinationType2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DestinationType) graphql.Marshaler {
+func (ec *executionContext) marshalNDestinationType2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.DestinationType) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18025,7 +18342,7 @@ func (ec *executionContext) marshalNDestinationType2ᚕᚖgithubᚗcomᚋobservi
 	return ret
 }
 
-func (ec *executionContext) marshalNDestinationType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationType(ctx context.Context, sel ast.SelectionSet, v *model.DestinationType) graphql.Marshaler {
+func (ec *executionContext) marshalNDestinationType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationType(ctx context.Context, sel ast.SelectionSet, v *model1.DestinationType) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -18035,11 +18352,11 @@ func (ec *executionContext) marshalNDestinationType2ᚖgithubᚗcomᚋobserviq�
 	return ec._DestinationType(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDestinationWithType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐDestinationWithType(ctx context.Context, sel ast.SelectionSet, v model1.DestinationWithType) graphql.Marshaler {
+func (ec *executionContext) marshalNDestinationWithType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐDestinationWithType(ctx context.Context, sel ast.SelectionSet, v model.DestinationWithType) graphql.Marshaler {
 	return ec._DestinationWithType(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDestinationWithType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐDestinationWithType(ctx context.Context, sel ast.SelectionSet, v *model1.DestinationWithType) graphql.Marshaler {
+func (ec *executionContext) marshalNDestinationWithType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐDestinationWithType(ctx context.Context, sel ast.SelectionSet, v *model.DestinationWithType) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -18049,7 +18366,7 @@ func (ec *executionContext) marshalNDestinationWithType2ᚖgithubᚗcomᚋobserv
 	return ec._DestinationWithType(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDocumentationLink2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDocumentationLink(ctx context.Context, sel ast.SelectionSet, v model.DocumentationLink) graphql.Marshaler {
+func (ec *executionContext) marshalNDocumentationLink2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDocumentationLink(ctx context.Context, sel ast.SelectionSet, v model1.DocumentationLink) graphql.Marshaler {
 	return ec._DocumentationLink(ctx, sel, &v)
 }
 
@@ -18107,13 +18424,13 @@ func (ec *executionContext) marshalNEdge2ᚖgithubᚗcomᚋobserviqᚋbindplane�
 	return ec._Edge(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNEventType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐEventType(ctx context.Context, v interface{}) (model1.EventType, error) {
-	var res model1.EventType
+func (ec *executionContext) unmarshalNEventType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐEventType(ctx context.Context, v interface{}) (model.EventType, error) {
+	var res model.EventType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNEventType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐEventType(ctx context.Context, sel ast.SelectionSet, v model1.EventType) graphql.Marshaler {
+func (ec *executionContext) marshalNEventType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐEventType(ctx context.Context, sel ast.SelectionSet, v model.EventType) graphql.Marshaler {
 	return v
 }
 
@@ -18142,7 +18459,7 @@ func (ec *executionContext) marshalNGraph2ᚖgithubᚗcomᚋobserviqᚋbindplane
 	return ec._Graph(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNGraphMetric2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetricᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.GraphMetric) graphql.Marshaler {
+func (ec *executionContext) marshalNGraphMetric2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetricᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GraphMetric) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18186,7 +18503,7 @@ func (ec *executionContext) marshalNGraphMetric2ᚕᚖgithubᚗcomᚋobserviqᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNGraphMetric2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetric(ctx context.Context, sel ast.SelectionSet, v *model1.GraphMetric) graphql.Marshaler {
+func (ec *executionContext) marshalNGraphMetric2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetric(ctx context.Context, sel ast.SelectionSet, v *model.GraphMetric) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -18196,11 +18513,11 @@ func (ec *executionContext) marshalNGraphMetric2ᚖgithubᚗcomᚋobserviqᚋbin
 	return ec._GraphMetric(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNGraphMetrics2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx context.Context, sel ast.SelectionSet, v model1.GraphMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalNGraphMetrics2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx context.Context, sel ast.SelectionSet, v model.GraphMetrics) graphql.Marshaler {
 	return ec._GraphMetrics(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNGraphMetrics2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx context.Context, sel ast.SelectionSet, v *model1.GraphMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalNGraphMetrics2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐGraphMetrics(ctx context.Context, sel ast.SelectionSet, v *model.GraphMetrics) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -18315,7 +18632,7 @@ func (ec *executionContext) marshalNMap2map(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNMetadata2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetadata(ctx context.Context, sel ast.SelectionSet, v model.Metadata) graphql.Marshaler {
+func (ec *executionContext) marshalNMetadata2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetadata(ctx context.Context, sel ast.SelectionSet, v model1.Metadata) graphql.Marshaler {
 	return ec._Metadata(ctx, sel, &v)
 }
 
@@ -18373,15 +18690,15 @@ func (ec *executionContext) marshalNMetric2ᚖgithubᚗcomᚋobserviqᚋbindplan
 	return ec._Metric(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMetricCategory2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricCategory(ctx context.Context, sel ast.SelectionSet, v model.MetricCategory) graphql.Marshaler {
+func (ec *executionContext) marshalNMetricCategory2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricCategory(ctx context.Context, sel ast.SelectionSet, v model1.MetricCategory) graphql.Marshaler {
 	return ec._MetricCategory(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMetricOption2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricOption(ctx context.Context, sel ast.SelectionSet, v model.MetricOption) graphql.Marshaler {
+func (ec *executionContext) marshalNMetricOption2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricOption(ctx context.Context, sel ast.SelectionSet, v model1.MetricOption) graphql.Marshaler {
 	return ec._MetricOption(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMetricOption2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricOptionᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MetricOption) graphql.Marshaler {
+func (ec *executionContext) marshalNMetricOption2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricOptionᚄ(ctx context.Context, sel ast.SelectionSet, v []model1.MetricOption) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18479,11 +18796,11 @@ func (ec *executionContext) marshalNNode2ᚖgithubᚗcomᚋobserviqᚋbindplane�
 	return ec._Node(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNOverviewPage2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐOverviewPage(ctx context.Context, sel ast.SelectionSet, v model1.OverviewPage) graphql.Marshaler {
+func (ec *executionContext) marshalNOverviewPage2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐOverviewPage(ctx context.Context, sel ast.SelectionSet, v model.OverviewPage) graphql.Marshaler {
 	return ec._OverviewPage(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNOverviewPage2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐOverviewPage(ctx context.Context, sel ast.SelectionSet, v *model1.OverviewPage) graphql.Marshaler {
+func (ec *executionContext) marshalNOverviewPage2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐOverviewPage(ctx context.Context, sel ast.SelectionSet, v *model.OverviewPage) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -18493,15 +18810,15 @@ func (ec *executionContext) marshalNOverviewPage2ᚖgithubᚗcomᚋobserviqᚋbi
 	return ec._OverviewPage(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNParameter2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameter(ctx context.Context, sel ast.SelectionSet, v model.Parameter) graphql.Marshaler {
+func (ec *executionContext) marshalNParameter2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameter(ctx context.Context, sel ast.SelectionSet, v model1.Parameter) graphql.Marshaler {
 	return ec._Parameter(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNParameterDefinition2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterDefinition(ctx context.Context, sel ast.SelectionSet, v model.ParameterDefinition) graphql.Marshaler {
+func (ec *executionContext) marshalNParameterDefinition2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterDefinition(ctx context.Context, sel ast.SelectionSet, v model1.ParameterDefinition) graphql.Marshaler {
 	return ec._ParameterDefinition(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNParameterDefinition2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterDefinitionᚄ(ctx context.Context, sel ast.SelectionSet, v []model.ParameterDefinition) graphql.Marshaler {
+func (ec *executionContext) marshalNParameterDefinition2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterDefinitionᚄ(ctx context.Context, sel ast.SelectionSet, v []model1.ParameterDefinition) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18545,21 +18862,26 @@ func (ec *executionContext) marshalNParameterDefinition2ᚕgithubᚗcomᚋobserv
 	return ret
 }
 
-func (ec *executionContext) marshalNParameterOptions2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterOptions(ctx context.Context, sel ast.SelectionSet, v model.ParameterOptions) graphql.Marshaler {
+func (ec *executionContext) unmarshalNParameterInput2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameter(ctx context.Context, v interface{}) (model1.Parameter, error) {
+	res, err := ec.unmarshalInputParameterInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNParameterOptions2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterOptions(ctx context.Context, sel ast.SelectionSet, v model1.ParameterOptions) graphql.Marshaler {
 	return ec._ParameterOptions(ctx, sel, &v)
 }
 
-func (ec *executionContext) unmarshalNParameterType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐParameterType(ctx context.Context, v interface{}) (model1.ParameterType, error) {
-	var res model1.ParameterType
+func (ec *executionContext) unmarshalNParameterType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐParameterType(ctx context.Context, v interface{}) (model.ParameterType, error) {
+	var res model.ParameterType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNParameterType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐParameterType(ctx context.Context, sel ast.SelectionSet, v model1.ParameterType) graphql.Marshaler {
+func (ec *executionContext) marshalNParameterType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐParameterType(ctx context.Context, sel ast.SelectionSet, v model.ParameterType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNParameterizedSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterizedSpec(ctx context.Context, sel ast.SelectionSet, v model.ParameterizedSpec) graphql.Marshaler {
+func (ec *executionContext) marshalNParameterizedSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterizedSpec(ctx context.Context, sel ast.SelectionSet, v model1.ParameterizedSpec) graphql.Marshaler {
 	return ec._ParameterizedSpec(ctx, sel, &v)
 }
 
@@ -18640,7 +18962,7 @@ func (ec *executionContext) marshalNPipelineType2ᚕgithubᚗcomᚋobserviqᚋbi
 	return ret
 }
 
-func (ec *executionContext) marshalNProcessor2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessorᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Processor) graphql.Marshaler {
+func (ec *executionContext) marshalNProcessor2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessorᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.Processor) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18684,7 +19006,7 @@ func (ec *executionContext) marshalNProcessor2ᚕᚖgithubᚗcomᚋobserviqᚋbi
 	return ret
 }
 
-func (ec *executionContext) marshalNProcessor2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessor(ctx context.Context, sel ast.SelectionSet, v *model.Processor) graphql.Marshaler {
+func (ec *executionContext) marshalNProcessor2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessor(ctx context.Context, sel ast.SelectionSet, v *model1.Processor) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -18694,7 +19016,29 @@ func (ec *executionContext) marshalNProcessor2ᚖgithubᚗcomᚋobserviqᚋbindp
 	return ec._Processor(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNProcessorType2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessorTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ProcessorType) graphql.Marshaler {
+func (ec *executionContext) unmarshalNProcessorInput2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfigurationᚄ(ctx context.Context, v interface{}) ([]*model1.ResourceConfiguration, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model1.ResourceConfiguration, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNProcessorInput2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfiguration(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNProcessorInput2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfiguration(ctx context.Context, v interface{}) (*model1.ResourceConfiguration, error) {
+	res, err := ec.unmarshalInputProcessorInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNProcessorType2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessorTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.ProcessorType) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18738,7 +19082,7 @@ func (ec *executionContext) marshalNProcessorType2ᚕᚖgithubᚗcomᚋobserviq�
 	return ret
 }
 
-func (ec *executionContext) marshalNProcessorType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessorType(ctx context.Context, sel ast.SelectionSet, v *model.ProcessorType) graphql.Marshaler {
+func (ec *executionContext) marshalNProcessorType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessorType(ctx context.Context, sel ast.SelectionSet, v *model1.ProcessorType) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -18748,33 +19092,43 @@ func (ec *executionContext) marshalNProcessorType2ᚖgithubᚗcomᚋobserviqᚋb
 	return ec._ProcessorType(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRelevantIfCondition2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐRelevantIfCondition(ctx context.Context, sel ast.SelectionSet, v model.RelevantIfCondition) graphql.Marshaler {
+func (ec *executionContext) marshalNRelevantIfCondition2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐRelevantIfCondition(ctx context.Context, sel ast.SelectionSet, v model1.RelevantIfCondition) graphql.Marshaler {
 	return ec._RelevantIfCondition(ctx, sel, &v)
 }
 
-func (ec *executionContext) unmarshalNRelevantIfOperatorType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐRelevantIfOperatorType(ctx context.Context, v interface{}) (model1.RelevantIfOperatorType, error) {
-	var res model1.RelevantIfOperatorType
+func (ec *executionContext) unmarshalNRelevantIfOperatorType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐRelevantIfOperatorType(ctx context.Context, v interface{}) (model.RelevantIfOperatorType, error) {
+	var res model.RelevantIfOperatorType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNRelevantIfOperatorType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐRelevantIfOperatorType(ctx context.Context, sel ast.SelectionSet, v model1.RelevantIfOperatorType) graphql.Marshaler {
+func (ec *executionContext) marshalNRelevantIfOperatorType2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐRelevantIfOperatorType(ctx context.Context, sel ast.SelectionSet, v model.RelevantIfOperatorType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNResourceConfiguration2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfiguration(ctx context.Context, sel ast.SelectionSet, v model.ResourceConfiguration) graphql.Marshaler {
+func (ec *executionContext) marshalNResourceConfiguration2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfiguration(ctx context.Context, sel ast.SelectionSet, v model1.ResourceConfiguration) graphql.Marshaler {
 	return ec._ResourceConfiguration(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNResourceTypeSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceTypeSpec(ctx context.Context, sel ast.SelectionSet, v model.ResourceTypeSpec) graphql.Marshaler {
+func (ec *executionContext) unmarshalNResourceTypeKind2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐResourceTypeKind(ctx context.Context, v interface{}) (model.ResourceTypeKind, error) {
+	var res model.ResourceTypeKind
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNResourceTypeKind2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐResourceTypeKind(ctx context.Context, sel ast.SelectionSet, v model.ResourceTypeKind) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNResourceTypeSpec2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceTypeSpec(ctx context.Context, sel ast.SelectionSet, v model1.ResourceTypeSpec) graphql.Marshaler {
 	return ec._ResourceTypeSpec(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSnapshot2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐSnapshot(ctx context.Context, sel ast.SelectionSet, v model1.Snapshot) graphql.Marshaler {
+func (ec *executionContext) marshalNSnapshot2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐSnapshot(ctx context.Context, sel ast.SelectionSet, v model.Snapshot) graphql.Marshaler {
 	return ec._Snapshot(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSnapshot2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐSnapshot(ctx context.Context, sel ast.SelectionSet, v *model1.Snapshot) graphql.Marshaler {
+func (ec *executionContext) marshalNSnapshot2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐSnapshot(ctx context.Context, sel ast.SelectionSet, v *model.Snapshot) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -18784,7 +19138,7 @@ func (ec *executionContext) marshalNSnapshot2ᚖgithubᚗcomᚋobserviqᚋbindpl
 	return ec._Snapshot(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Source) graphql.Marshaler {
+func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.Source) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18828,7 +19182,7 @@ func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋobserviqᚋbindp
 	return ret
 }
 
-func (ec *executionContext) marshalNSource2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSource(ctx context.Context, sel ast.SelectionSet, v *model.Source) graphql.Marshaler {
+func (ec *executionContext) marshalNSource2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSource(ctx context.Context, sel ast.SelectionSet, v *model1.Source) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -18838,7 +19192,7 @@ func (ec *executionContext) marshalNSource2ᚖgithubᚗcomᚋobserviqᚋbindplan
 	return ec._Source(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSourceType2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SourceType) graphql.Marshaler {
+func (ec *executionContext) marshalNSourceType2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.SourceType) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -18882,7 +19236,7 @@ func (ec *executionContext) marshalNSourceType2ᚕᚖgithubᚗcomᚋobserviqᚋb
 	return ret
 }
 
-func (ec *executionContext) marshalNSourceType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceType(ctx context.Context, sel ast.SelectionSet, v *model.SourceType) graphql.Marshaler {
+func (ec *executionContext) marshalNSourceType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceType(ctx context.Context, sel ast.SelectionSet, v *model1.SourceType) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -19001,6 +19355,11 @@ func (ec *executionContext) marshalNTrace2ᚖgithubᚗcomᚋobserviqᚋbindplane
 		return graphql.Null
 	}
 	return ec._Trace(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUpdateProcessorsInput2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐUpdateProcessorsInput(ctx context.Context, v interface{}) (model.UpdateProcessorsInput, error) {
+	res, err := ec.unmarshalInputUpdateProcessorsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -19256,25 +19615,25 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAgent2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgent(ctx context.Context, sel ast.SelectionSet, v *model.Agent) graphql.Marshaler {
+func (ec *executionContext) marshalOAgent2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgent(ctx context.Context, sel ast.SelectionSet, v *model1.Agent) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Agent(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOAgentConfiguration2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgentConfiguration(ctx context.Context, sel ast.SelectionSet, v *model1.AgentConfiguration) graphql.Marshaler {
+func (ec *executionContext) marshalOAgentConfiguration2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐAgentConfiguration(ctx context.Context, sel ast.SelectionSet, v *model.AgentConfiguration) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._AgentConfiguration(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOAgentSelector2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgentSelector(ctx context.Context, sel ast.SelectionSet, v model.AgentSelector) graphql.Marshaler {
+func (ec *executionContext) marshalOAgentSelector2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgentSelector(ctx context.Context, sel ast.SelectionSet, v model1.AgentSelector) graphql.Marshaler {
 	return ec._AgentSelector(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOAgentUpgrade2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgentUpgrade(ctx context.Context, sel ast.SelectionSet, v *model.AgentUpgrade) graphql.Marshaler {
+func (ec *executionContext) marshalOAgentUpgrade2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐAgentUpgrade(ctx context.Context, sel ast.SelectionSet, v *model1.AgentUpgrade) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19323,28 +19682,28 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOConfiguration2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfiguration(ctx context.Context, sel ast.SelectionSet, v *model.Configuration) graphql.Marshaler {
+func (ec *executionContext) marshalOConfiguration2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfiguration(ctx context.Context, sel ast.SelectionSet, v *model1.Configuration) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Configuration(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODestination2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestination(ctx context.Context, sel ast.SelectionSet, v *model.Destination) graphql.Marshaler {
+func (ec *executionContext) marshalODestination2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestination(ctx context.Context, sel ast.SelectionSet, v *model1.Destination) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Destination(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODestinationType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationType(ctx context.Context, sel ast.SelectionSet, v *model.DestinationType) graphql.Marshaler {
+func (ec *executionContext) marshalODestinationType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationType(ctx context.Context, sel ast.SelectionSet, v *model1.DestinationType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DestinationType(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODocumentationLink2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDocumentationLinkᚄ(ctx context.Context, sel ast.SelectionSet, v []model.DocumentationLink) graphql.Marshaler {
+func (ec *executionContext) marshalODocumentationLink2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDocumentationLinkᚄ(ctx context.Context, sel ast.SelectionSet, v []model1.DocumentationLink) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19484,7 +19843,7 @@ func (ec *executionContext) marshalOMap2map(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalOMetricCategory2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MetricCategory) graphql.Marshaler {
+func (ec *executionContext) marshalOMetricCategory2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐMetricCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []model1.MetricCategory) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19531,7 +19890,7 @@ func (ec *executionContext) marshalOMetricCategory2ᚕgithubᚗcomᚋobserviqᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalOParameter2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Parameter) graphql.Marshaler {
+func (ec *executionContext) marshalOParameter2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterᚄ(ctx context.Context, sel ast.SelectionSet, v []model1.Parameter) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19578,21 +19937,41 @@ func (ec *executionContext) marshalOParameter2ᚕgithubᚗcomᚋobserviqᚋbindp
 	return ret
 }
 
-func (ec *executionContext) marshalOProcessor2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessor(ctx context.Context, sel ast.SelectionSet, v *model.Processor) graphql.Marshaler {
+func (ec *executionContext) unmarshalOParameterInput2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameterᚄ(ctx context.Context, v interface{}) ([]model1.Parameter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]model1.Parameter, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNParameterInput2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐParameter(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOProcessor2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessor(ctx context.Context, sel ast.SelectionSet, v *model1.Processor) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Processor(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOProcessorType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessorType(ctx context.Context, sel ast.SelectionSet, v *model.ProcessorType) graphql.Marshaler {
+func (ec *executionContext) marshalOProcessorType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐProcessorType(ctx context.Context, sel ast.SelectionSet, v *model1.ProcessorType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._ProcessorType(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalORelevantIfCondition2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐRelevantIfConditionᚄ(ctx context.Context, sel ast.SelectionSet, v []model.RelevantIfCondition) graphql.Marshaler {
+func (ec *executionContext) marshalORelevantIfCondition2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐRelevantIfConditionᚄ(ctx context.Context, sel ast.SelectionSet, v []model1.RelevantIfCondition) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19639,7 +20018,7 @@ func (ec *executionContext) marshalORelevantIfCondition2ᚕgithubᚗcomᚋobserv
 	return ret
 }
 
-func (ec *executionContext) marshalOResourceConfiguration2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfigurationᚄ(ctx context.Context, sel ast.SelectionSet, v []model.ResourceConfiguration) graphql.Marshaler {
+func (ec *executionContext) marshalOResourceConfiguration2ᚕgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐResourceConfigurationᚄ(ctx context.Context, sel ast.SelectionSet, v []model1.ResourceConfiguration) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -19686,14 +20065,14 @@ func (ec *executionContext) marshalOResourceConfiguration2ᚕgithubᚗcomᚋobse
 	return ret
 }
 
-func (ec *executionContext) marshalOSource2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSource(ctx context.Context, sel ast.SelectionSet, v *model.Source) graphql.Marshaler {
+func (ec *executionContext) marshalOSource2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSource(ctx context.Context, sel ast.SelectionSet, v *model1.Source) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Source(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOSourceType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceType(ctx context.Context, sel ast.SelectionSet, v *model.SourceType) graphql.Marshaler {
+func (ec *executionContext) marshalOSourceType2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceType(ctx context.Context, sel ast.SelectionSet, v *model1.SourceType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
