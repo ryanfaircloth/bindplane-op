@@ -33,6 +33,9 @@ var staticFS embed.FS
 
 // AddRoutes serves the static file system for the UI React App.
 func AddRoutes(router gin.IRouter, bindplane server.BindPlane) {
+
+	router.GET("/js/_globals.js", func(ctx *gin.Context) { globalJS(ctx, bindplane) })
+
 	embeddedBuildFolder := newStaticFileSystem(bindplane.Logger())
 	fallbackFileSystem := newFallbackFileSystem(embeddedBuildFolder, bindplane.Logger())
 	router.Use(static.Serve("/", embeddedBuildFolder))

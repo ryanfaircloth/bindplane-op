@@ -14,8 +14,8 @@ import { StyledEngineProvider, ThemeProvider } from "@mui/material";
 import { ViewConfiguration } from "./pages/configurations/configuration";
 import { NewRawConfigurationPage } from "./pages/configurations/new-raw";
 import { SnackbarProvider } from "notistack";
-import { DestinationsPage } from"./pages/destinations/DestinationsPage";
-import { Version } from "./components/Version";
+import { DestinationsPage } from "./pages/destinations/DestinationsPage";
+import { BindplaneVersion } from "./components/BindplaneVersion";
 import { LoginPage } from "./pages/login";
 import { OverviewPage } from "./pages/overview/OverviewPage";
 
@@ -52,7 +52,7 @@ export const App: React.FC = () => {
               </Routes>
 
               <footer>
-                <Version />
+                <BindplaneVersion />
               </footer>
             </BrowserRouter>
           </SnackbarProvider>
