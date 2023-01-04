@@ -1724,3 +1724,95 @@ func TestConfigurationType(t *testing.T) {
 		require.Equal(t, ConfigurationTypeModular, c.Type())
 	})
 }
+
+func TestEvalConfiguration_FileLogStorage(t *testing.T) {
+	t.Parallel()
+	store := newTestResourceStore()
+	config := newTestConfiguration()
+
+	macos := testResource[*SourceType](t, "sourcetype-macos.yaml")
+	store.sourceTypes[macos.Name()] = macos
+
+	filelog := testResource[*SourceType](t, "sourcetype-filelog-storage.yaml")
+	store.sourceTypes[filelog.Name()] = filelog
+
+	googleCloudType := testResource[*DestinationType](t, "destinationtype-googlecloud.yaml")
+	store.destinationTypes[googleCloudType.Name()] = googleCloudType
+
+	googleCloud := testResource[*Destination](t, "destination-googlecloud.yaml")
+	store.destinations[googleCloud.Name()] = googleCloud
+
+	configuration := testResource[*Configuration](t, "configuration-filelog-storage.yaml")
+	result, err := configuration.Render(context.TODO(), nil, config, store)
+	require.NoError(t, err)
+
+	expect := strings.TrimLeft(`
+receivers:
+    plugin/source0:
+        parameters:
+            encoding: utf-8
+            file_path:
+                - /foo/bar/baz.log
+            log_type: file
+            multiline_line_start_pattern: ""
+            parse_format: none
+            start_at: end
+            storage: file_storage/source0
+        path: $OIQ_OTEL_COLLECTOR_HOME/plugins/file_logs.yaml
+    plugin/source1:
+        parameters:
+            encoding: utf-8
+            file_path:
+                - /foo/bar/baz2.log
+            log_type: file
+            multiline_line_start_pattern: ""
+            parse_format: none
+            start_at: end
+            storage: file_storage/source1
+        path: $OIQ_OTEL_COLLECTOR_HOME/plugins/file_logs.yaml
+processors:
+    batch/googlecloud: null
+    resourcedetection/source0:
+        detectors:
+            - system
+        system:
+            hostname_sources:
+                - os
+    resourcedetection/source1:
+        detectors:
+            - system
+        system:
+            hostname_sources:
+                - os
+exporters:
+    googlecloud/googlecloud: null
+extensions:
+    file_storage/source0:
+        directory: /tmp/offset_storage_dir
+    file_storage/source1:
+        directory: /tmp/offset_storage_dir
+service:
+    extensions:
+        - file_storage/source0
+        - file_storage/source1
+    pipelines:
+        logs/source0__googlecloud:
+            receivers:
+                - plugin/source0
+            processors:
+                - resourcedetection/source0
+                - batch/googlecloud
+            exporters:
+                - googlecloud/googlecloud
+        logs/source1__googlecloud:
+            receivers:
+                - plugin/source1
+            processors:
+                - resourcedetection/source1
+                - batch/googlecloud
+            exporters:
+                - googlecloud/googlecloud
+`, "\n")
+
+	require.Equal(t, expect, result)
+}

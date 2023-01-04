@@ -147,12 +147,20 @@ func (rt *ResourceType) evalOutput(output *ResourceTypeOutput, resource paramete
 const (
 	templateFuncHasCategoryMetricsEnabled = "bpHasCategoryMetricsEnabled"
 	templateFuncDisabledCategoryMetrics   = "bpDisabledCategoryMetrics"
+	templateFuncComponentID               = "bpComponentID"
 )
 
-func (rt *ResourceType) templateFuncMap() template.FuncMap {
+func (rt *ResourceType) templateFuncMap(nameProvider otel.ComponentIDProvider) template.FuncMap {
 	return template.FuncMap{
 		templateFuncHasCategoryMetricsEnabled: rt.templateFuncHasCategoryMetricsEnabled,
 		templateFuncDisabledCategoryMetrics:   rt.templateFuncDisabledCategoryMetrics,
+		templateFuncComponentID:               rt.templateFuncComponentID(nameProvider),
+	}
+}
+
+func (rt *ResourceType) templateFuncComponentID(nameProvider otel.ComponentIDProvider) func(componentName string) (string, error) {
+	return func(componentName string) (string, error) {
+		return string(nameProvider.ComponentID(componentName)), nil
 	}
 }
 
@@ -213,7 +221,7 @@ func (rt *ResourceType) evalTemplate(r ResourceTypeTemplate, nameProvider otel.C
 	t, err := template.New(rt.Name()).
 		Option("missingkey=error").
 		Funcs(template.FuncMap(sprig.FuncMap())).
-		Funcs(rt.templateFuncMap()).
+		Funcs(rt.templateFuncMap(nameProvider)).
 		Parse(string(r))
 	if err != nil {
 		errorHandler(err)
@@ -381,6 +389,9 @@ func bpTemplateFuncMap() template.FuncMap {
 		},
 		templateFuncDisabledCategoryMetrics: func(parameterValue []any, parameterName, metricCategory string) ([]string, error) {
 			return nil, nil
+		},
+		templateFuncComponentID: func(name string) (string, error) {
+			return name, nil
 		},
 	}
 }

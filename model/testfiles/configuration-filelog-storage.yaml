@@ -1,0 +1,19 @@
+apiVersion: bindplane.observiq.com/v1
+kind: Configuration
+metadata:
+  name: filelog-storage
+spec:
+  contentType: text/yaml
+  sources:
+    - type: file
+      parameters:
+        - name: file_path
+          value:
+            - /foo/bar/baz.log
+    - type: file
+      parameters:
+        - name: file_path
+          value:
+            - /foo/bar/baz2.log
+  destinations:
+    - name: googlecloud
