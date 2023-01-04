@@ -31,11 +31,6 @@ type Agents struct {
 	LatestVersion string               `json:"latestVersion"`
 }
 
-type Components struct {
-	Sources      []*model.Source      `json:"sources"`
-	Destinations []*model.Destination `json:"destinations"`
-}
-
 type ConfigurationChange struct {
 	Configuration *model.Configuration `json:"configuration"`
 	EventType     EventType            `json:"eventType"`

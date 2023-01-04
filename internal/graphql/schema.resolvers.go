@@ -1,4 +1,4 @@
-// Copyright observIQ, Inc.
+// Copyright  observIQ, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -387,30 +387,6 @@ func (r *queryResolver) DestinationTypes(ctx context.Context) ([]*model.Destinat
 // DestinationType is the resolver for the destinationType field.
 func (r *queryResolver) DestinationType(ctx context.Context, name string) (*model.DestinationType, error) {
 	return r.bindplane.Store().DestinationType(ctx, name)
-}
-
-// Components is the resolver for the components field.
-func (r *queryResolver) Components(ctx context.Context) (*model1.Components, error) {
-	sources, err := r.bindplane.Store().Sources(ctx)
-	if err != nil {
-		return &model1.Components{
-			Destinations: nil,
-			Sources:      sources,
-		}, err
-	}
-
-	destinations, err := r.bindplane.Store().Destinations(ctx)
-	if err != nil {
-		return &model1.Components{
-			Destinations: destinations,
-			Sources:      sources,
-		}, err
-	}
-
-	return &model1.Components{
-		Destinations: destinations,
-		Sources:      sources,
-	}, nil
 }
 
 // Snapshot is the resolver for the snapshot field.

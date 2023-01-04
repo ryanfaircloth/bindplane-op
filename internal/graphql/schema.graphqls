@@ -336,11 +336,6 @@ type ParameterizedSpec {
   disabled: Boolean!
 }
 
-type Components {
-  sources: [Source!]!
-  destinations: [Destination!]!
-}
-
 # ----------------------------------------------------------------------
 # telemetry
 
@@ -435,8 +430,6 @@ type Query {
 
   destinationTypes: [DestinationType!]!
   destinationType(name: String!): DestinationType
-
-  components: Components!
 
   snapshot(agentID: String!, pipelineType: PipelineType!): Snapshot!
 

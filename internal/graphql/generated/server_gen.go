@@ -117,11 +117,6 @@ type ComplexityRoot struct {
 		Suggestions   func(childComplexity int) int
 	}
 
-	Components struct {
-		Destinations func(childComplexity int) int
-		Sources      func(childComplexity int) int
-	}
-
 	Configuration struct {
 		APIVersion func(childComplexity int) int
 		AgentCount func(childComplexity int) int
@@ -309,7 +304,6 @@ type ComplexityRoot struct {
 		Agent                func(childComplexity int, id string) int
 		AgentMetrics         func(childComplexity int, period string, ids []string) int
 		Agents               func(childComplexity int, selector *string, query *string) int
-		Components           func(childComplexity int) int
 		Configuration        func(childComplexity int, name string) int
 		ConfigurationMetrics func(childComplexity int, period string, name *string) int
 		Configurations       func(childComplexity int, selector *string, query *string) int
@@ -461,7 +455,6 @@ type QueryResolver interface {
 	DestinationWithType(ctx context.Context, name string) (*model.DestinationWithType, error)
 	DestinationTypes(ctx context.Context) ([]*model1.DestinationType, error)
 	DestinationType(ctx context.Context, name string) (*model1.DestinationType, error)
-	Components(ctx context.Context) (*model.Components, error)
 	Snapshot(ctx context.Context, agentID string, pipelineType otel.PipelineType) (*model.Snapshot, error)
 	AgentMetrics(ctx context.Context, period string, ids []string) (*model.GraphMetrics, error)
 	ConfigurationMetrics(ctx context.Context, period string, name *string) (*model.GraphMetrics, error)
@@ -736,20 +729,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Agents.Suggestions(childComplexity), true
-
-	case "Components.destinations":
-		if e.complexity.Components.Destinations == nil {
-			break
-		}
-
-		return e.complexity.Components.Destinations(childComplexity), true
-
-	case "Components.sources":
-		if e.complexity.Components.Sources == nil {
-			break
-		}
-
-		return e.complexity.Components.Sources(childComplexity), true
 
 	case "Configuration.apiVersion":
 		if e.complexity.Configuration.APIVersion == nil {
@@ -1526,13 +1505,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Agents(childComplexity, args["selector"].(*string), args["query"].(*string)), true
-
-	case "Query.components":
-		if e.complexity.Query.Components == nil {
-			break
-		}
-
-		return e.complexity.Query.Components(childComplexity), true
 
 	case "Query.configuration":
 		if e.complexity.Query.Configuration == nil {
@@ -2444,11 +2416,6 @@ type ParameterizedSpec {
   disabled: Boolean!
 }
 
-type Components {
-  sources: [Source!]!
-  destinations: [Destination!]!
-}
-
 # ----------------------------------------------------------------------
 # telemetry
 
@@ -2543,8 +2510,6 @@ type Query {
 
   destinationTypes: [DestinationType!]!
   destinationType(name: String!): DestinationType
-
-  components: Components!
 
   snapshot(agentID: String!, pipelineType: PipelineType!): Snapshot!
 
@@ -4610,114 +4575,6 @@ func (ec *executionContext) fieldContext_Agents_latestVersion(ctx context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Components_sources(ctx context.Context, field graphql.CollectedField, obj *model.Components) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Components_sources(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Sources, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model1.Source)
-	fc.Result = res
-	return ec.marshalNSource2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐSourceᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Components_sources(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Components",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "apiVersion":
-				return ec.fieldContext_Source_apiVersion(ctx, field)
-			case "kind":
-				return ec.fieldContext_Source_kind(ctx, field)
-			case "metadata":
-				return ec.fieldContext_Source_metadata(ctx, field)
-			case "spec":
-				return ec.fieldContext_Source_spec(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Source", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Components_destinations(ctx context.Context, field graphql.CollectedField, obj *model.Components) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Components_destinations(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Destinations, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model1.Destination)
-	fc.Result = res
-	return ec.marshalNDestination2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Components_destinations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Components",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "apiVersion":
-				return ec.fieldContext_Destination_apiVersion(ctx, field)
-			case "kind":
-				return ec.fieldContext_Destination_kind(ctx, field)
-			case "metadata":
-				return ec.fieldContext_Destination_metadata(ctx, field)
-			case "spec":
-				return ec.fieldContext_Destination_spec(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Destination", field.Name)
 		},
 	}
 	return fc, nil
@@ -10662,56 +10519,6 @@ func (ec *executionContext) fieldContext_Query_destinationType(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_components(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_components(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Components(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Components)
-	fc.Result = res
-	return ec.marshalNComponents2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐComponents(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_components(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "sources":
-				return ec.fieldContext_Components_sources(ctx, field)
-			case "destinations":
-				return ec.fieldContext_Components_destinations(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Components", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_snapshot(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_snapshot(ctx, field)
 	if err != nil {
@@ -15319,41 +15126,6 @@ func (ec *executionContext) _Agents(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
-var componentsImplementors = []string{"Components"}
-
-func (ec *executionContext) _Components(ctx context.Context, sel ast.SelectionSet, obj *model.Components) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, componentsImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Components")
-		case "sources":
-
-			out.Values[i] = ec._Components_sources(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "destinations":
-
-			out.Values[i] = ec._Components_destinations(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var configurationImplementors = []string{"Configuration"}
 
 func (ec *executionContext) _Configuration(ctx context.Context, sel ast.SelectionSet, obj *model1.Configuration) graphql.Marshaler {
@@ -17050,29 +16822,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "components":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_components(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
 		case "snapshot":
 			field := field
 
@@ -18102,20 +17851,6 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNComponents2githubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐComponents(ctx context.Context, sel ast.SelectionSet, v model.Components) graphql.Marshaler {
-	return ec._Components(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNComponents2ᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋinternalᚋgraphqlᚋmodelᚐComponents(ctx context.Context, sel ast.SelectionSet, v *model.Components) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Components(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNConfiguration2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐConfigurationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.Configuration) graphql.Marshaler {

@@ -80,7 +80,7 @@ export const DestinationsPageContent: React.FC = () => {
     setEditingDestination(null);
   }
 
-  async function deleteComponents() {
+  async function deleteDestinations() {
     try {
       const items = resourcesFromSelected(selected);
       const { updates } = await deleteResources(items);
@@ -126,7 +126,7 @@ export const DestinationsPageContent: React.FC = () => {
       <ConfirmDeleteResourceDialog
         open={open}
         onClose={() => setOpen(false)}
-        onDelete={deleteComponents}
+        onDelete={deleteDestinations}
         onCancel={() => setOpen(false)}
         action={"delete"}
       >

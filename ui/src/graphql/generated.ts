@@ -82,12 +82,6 @@ export type Agents = {
   suggestions?: Maybe<Array<Suggestion>>;
 };
 
-export type Components = {
-  __typename?: 'Components';
-  destinations: Array<Destination>;
-  sources: Array<Source>;
-};
-
 export type Configuration = {
   __typename?: 'Configuration';
   agentCount?: Maybe<Scalars['Int']>;
@@ -345,7 +339,6 @@ export type Query = {
   agent?: Maybe<Agent>;
   agentMetrics: GraphMetrics;
   agents: Agents;
-  components: Components;
   configuration?: Maybe<Configuration>;
   configurationMetrics: GraphMetrics;
   configurations: Configurations;
