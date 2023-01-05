@@ -11,6 +11,7 @@ interface EditProcessorViewProps {
   editingIndex: number;
   onEditProcessorSave: (values: FormValues) => void;
   onBack: () => void;
+  onTogglePause: () => void;
   onRemove: (removeIndex: number) => void;
 }
 
@@ -20,6 +21,7 @@ export const EditProcessorView: React.FC<EditProcessorViewProps> = ({
   onEditProcessorSave,
   onBack,
   onRemove,
+  onTogglePause,
 }) => {
   // Get the processor type
   const type = processors[editingIndex].type;
@@ -51,6 +53,8 @@ export const EditProcessorView: React.FC<EditProcessorViewProps> = ({
         onSave={onEditProcessorSave}
         onBack={onBack}
         onDelete={() => onRemove(editingIndex)}
+        paused={processors[editingIndex].disabled}
+        onTogglePause={onTogglePause}
       />
     </>
   );

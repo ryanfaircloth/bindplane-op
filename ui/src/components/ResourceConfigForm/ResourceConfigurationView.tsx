@@ -1,6 +1,6 @@
 import { Maybe } from "graphql/jsutils/Maybe";
 import { isEqual } from "lodash";
-import { memo } from "react";
+import { memo, useState } from "react";
 import {
   initFormValues,
   ConfigureResourceView,
@@ -94,10 +94,19 @@ const ResourceConfigurationViewComponent: React.FC<ComponentProps> = ({
   initValues,
 }) => {
   const { formValues } = useResourceFormValues();
+  const [togglePauseCalled, setTogglePauseCalled] = useState(false);
+
+  function handleTogglePause() {
+    if (onTogglePause != null) {
+      setTogglePauseCalled(!togglePauseCalled);
+      onTogglePause();
+    }
+  }
 
   // This is passed down to determine whether to enable the primary save button.
   // If no parameters are passed down, then the form is new and is "dirty".
-  const isDirty = parameters == null || !isEqual(initValues, formValues);
+  const isDirty =
+    parameters == null || !isEqual(initValues, formValues) || togglePauseCalled;
 
   return (
     <ConfigureResourceView
@@ -114,7 +123,7 @@ const ResourceConfigurationViewComponent: React.FC<ComponentProps> = ({
       onDelete={onDelete}
       disableSave={!isDirty}
       paused={paused}
-      onTogglePause={onTogglePause}
+      onTogglePause={handleTogglePause}
     />
   );
 };

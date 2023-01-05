@@ -118,6 +118,8 @@ export const ProcessorDialogComponent: React.FC<ProcessorDialogProps> = ({
   } = usePipelineGraph();
 
   const [processors, setProcessors] = useState(processorsProp);
+  const [processorsBeforeEdit, setProcessorsBeforeEdit] =
+    useState<ResourceConfiguration[] | null>(null);
   const [view, setView] = useState<Page>(Page.MAIN);
   const [newProcessorType, setNewProcessorType] =
     useState<ProcessorType | null>(null);
@@ -230,6 +232,18 @@ export const ProcessorDialogComponent: React.FC<ProcessorDialogProps> = ({
   function handleReturnToAll() {
     setView(Page.MAIN);
     setNewProcessorType(null);
+
+    if (processorsBeforeEdit != null) {
+      setProcessorsBeforeEdit(null);
+    }
+  }
+
+  function handleBackFromEdit() {
+    if (processorsBeforeEdit != null) {
+      setProcessors([...processorsBeforeEdit]);
+    }
+
+    handleReturnToAll();
   }
 
   // handleClose is called when a user clicks off the dialog or the "X" button
@@ -262,6 +276,7 @@ export const ProcessorDialogComponent: React.FC<ProcessorDialogProps> = ({
     const processorConfig = new BPResourceConfiguration();
     processorConfig.setParamsFromMap(formValues);
     processorConfig.type = processors[editingProcessorIndex].type;
+    processorConfig.disabled = processors[editingProcessorIndex].disabled;
 
     const newProcessors = [...processors];
     newProcessors[editingProcessorIndex] = processorConfig;
@@ -282,6 +297,7 @@ export const ProcessorDialogComponent: React.FC<ProcessorDialogProps> = ({
   // handleEditProcessorClick sets the editing index and switches to the edit page
   function handleEditProcessorClick(index: number) {
     setEditingProcessorIndex(index);
+    setProcessorsBeforeEdit([...processors]);
     setView(Page.EDIT_PROCESSOR);
   }
 
@@ -304,6 +320,17 @@ export const ProcessorDialogComponent: React.FC<ProcessorDialogProps> = ({
         },
       },
     });
+  }
+
+  function handleProcessorTogglePause() {
+    const processorConfig = new BPResourceConfiguration(
+      processors[editingProcessorIndex]
+    );
+    processorConfig.disabled = !processors[editingProcessorIndex].disabled;
+
+    const newProcessors = [...processors];
+    newProcessors[editingProcessorIndex] = processorConfig;
+    setProcessors(newProcessors);
   }
 
   // displayName for sources is the sourceType name, for destinations it's the destination name
@@ -370,8 +397,9 @@ export const ProcessorDialogComponent: React.FC<ProcessorDialogProps> = ({
           processors={processors}
           editingIndex={editingProcessorIndex}
           onEditProcessorSave={handleSaveExisting}
-          onBack={handleReturnToAll}
+          onBack={handleBackFromEdit}
           onRemove={handleRemoveProcessor}
+          onTogglePause={handleProcessorTogglePause}
         />
       );
   }

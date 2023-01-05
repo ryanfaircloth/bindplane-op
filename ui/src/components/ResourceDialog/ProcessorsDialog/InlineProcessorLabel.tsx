@@ -10,6 +10,7 @@ import {
 import { MenuIcon, EditIcon } from "../../Icons";
 
 import styles from "./inline-processor-label.module.scss";
+import mixins from "../../../styles/mixins.module.scss"
 
 interface Props {
   index: number;
@@ -17,7 +18,6 @@ interface Props {
   onEdit: () => void;
   // Move processor should change the components order state
   moveProcessor: (dragIndex: number, dropIndex: number) => void;
-
   onDrop: () => void;
 }
 
@@ -159,14 +159,32 @@ export const InlineProcessorLabel: React.FC<Props> = ({
         spacing={1}
         justifyContent={"space-between"}
       >
-        <Stack direction={"row"} spacing={1}>
+        <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="space-between">
+
           <MenuIcon className={styles["hover-icon"]} />
           <Typography>{data?.processorType?.metadata.displayName}</Typography>
+
+          
         </Stack>
 
+        <Stack flexDirection={"row"}>
+        {processor.disabled && 
+                (<Typography
+                  component="div"
+                  fontWeight={400}
+                  fontSize={14}
+                  variant="overline"
+                  className={mixins["mr-2"]}
+                > 
+                  Paused
+                </Typography>)
+                }
         <IconButton onClick={onEdit} data-testid={`edit-processor-${index}`}>
           <EditIcon width={15} height={15} style={{ float: "right" }} />
         </IconButton>
+        </Stack>
+
+
       </Stack>
     </Card>
   );

@@ -183,13 +183,27 @@ export const ConfigureResourceContent: React.FC<ConfigureResourceViewProps> = ({
         <DialogActions>
           {paused != null &&
             (paused ? (
-              <Button disabled={true} startIcon={<PauseIcon />}>
-                Paused
-              </Button>
+              <Stack direction="row" alignItems={"center"}>
+                <PauseIcon />
+
+                <Typography
+                  color="disabled"
+                  sx={{
+                    marginLeft: 1,
+                    marginRight: 2,
+                    opacity: 0.4,
+                  }}
+                >
+                  Paused
+                </Typography>
+              </Stack>
             ) : (
-              <Button disabled={true} startIcon={<PlayIcon />}>
-                Running
-              </Button>
+              <Stack direction="row" alignItems={"center"}>
+                <PlayIcon />
+                <Typography marginLeft={1} marginRight={2}>
+                  Running
+                </Typography>
+              </Stack>
             ))}
           {togglePauseButton}
         </DialogActions>

@@ -793,6 +793,199 @@ describe("ProcessorDialogComponent", () => {
     screen.getByText("Save").click();
     await waitFor(() => expect(saveCalled).toBe(true));
   });
+
+  it("can pause and resume a processor", async () => {
+    var saveCalled: boolean = false;
+
+    const mutationMock: MockedResponse = {
+      request: {
+        query: UpdateProcessorsDocument,
+        variables: {
+          input: {
+            configuration: "test",
+            resourceType: "DESTINATION",
+            resourceIndex: 0,
+            processors: [
+              {
+                type: "custom",
+                disabled: true,
+                parameters: [
+                  { name: "telemetry_types", value: [] },
+                  { name: "configuration", value: "blah" },
+                ],
+              },
+            ],
+          },
+        },
+      },
+      result: () => {
+        saveCalled = true;
+        return {
+          data: {
+            updateProcessors: null,
+          },
+        };
+      },
+    };
+
+    render(
+      <MockedProvider
+        mocks={[PROCESSOR_TYPES_MOCK, GET_PROCESSOR_TYPE_MOCK, mutationMock]}
+      >
+        <SnackbarProvider>
+          <PipelineContext.Provider
+            value={{
+              refetchConfiguration: () => {},
+              selectedTelemetryType: "logs",
+              hoveredSet: [],
+              setHoveredNodeAndEdgeSet: () => {},
+              configuration: CONFIG_WITH_PROCESSORS,
+              editProcessors: () => {},
+              closeProcessorDialog: () => {},
+              editProcessorsInfo: { resourceType: "destination", index: 0 },
+              editProcessorsOpen: true,
+            }}
+          >
+            <ProcessorDialogComponent
+              open={true}
+              processors={[
+                {
+                  type: "custom",
+                  disabled: false,
+                  parameters: [
+                    { name: "telemetry_types", value: [] },
+                    { name: "configuration", value: "blah" },
+                  ],
+                },
+              ]}
+            />
+          </PipelineContext.Provider>
+        </SnackbarProvider>
+      </MockedProvider>
+    );
+
+    // Edit the processor
+    const editButton = await screen.findByTestId("edit-processor-0");
+    editButton.click();
+
+    // Verify Running state and Pause button present
+    await screen.findByText("Running");
+    const pauseButton = screen.getByText("Pause");
+    pauseButton.click();
+
+    // Verify state changed to Paused
+    await screen.findByText("Paused");
+    screen.getByText("Resume");
+
+    screen.getByText("Save").click();
+
+    // Make sure we're on the first screen
+    await screen.findByTestId("edit-processor-0");
+
+    // Paused is present on the screen
+    screen.getByText("Paused");
+
+    // Save the processors
+    screen.getByText("Save").click();
+
+    await waitFor(() => expect(saveCalled).toEqual(true));
+  });
+});
+
+it("can reset processor state on back", async () => {
+  var saveCalled: boolean = false;
+
+  const mutationMock: MockedResponse = {
+    request: {
+      query: UpdateProcessorsDocument,
+      variables: {
+        input: {
+          configuration: "test",
+          resourceType: "DESTINATION",
+          resourceIndex: 0,
+          processors: [
+            {
+              type: "custom",
+              disabled: false,
+              parameters: [
+                { name: "telemetry_types", value: [] },
+                { name: "configuration", value: "blah" },
+              ],
+            },
+          ],
+        },
+      },
+    },
+    result: () => {
+      saveCalled = true;
+      return {
+        data: {
+          updateProcessors: null,
+        },
+      };
+    },
+  };
+
+  render(
+    <MockedProvider
+      mocks={[PROCESSOR_TYPES_MOCK, GET_PROCESSOR_TYPE_MOCK, mutationMock]}
+    >
+      <SnackbarProvider>
+        <PipelineContext.Provider
+          value={{
+            refetchConfiguration: () => {},
+            selectedTelemetryType: "logs",
+            hoveredSet: [],
+            setHoveredNodeAndEdgeSet: () => {},
+            configuration: CONFIG_WITH_PROCESSORS,
+            editProcessors: () => {},
+            closeProcessorDialog: () => {},
+            editProcessorsInfo: { resourceType: "destination", index: 0 },
+            editProcessorsOpen: true,
+          }}
+        >
+          <ProcessorDialogComponent
+            open={true}
+            processors={[
+              {
+                type: "custom",
+                disabled: false,
+                parameters: [
+                  { name: "telemetry_types", value: [] },
+                  { name: "configuration", value: "blah" },
+                ],
+              },
+            ]}
+          />
+        </PipelineContext.Provider>
+      </SnackbarProvider>
+    </MockedProvider>
+  );
+
+  // Edit the processor
+  const editButton = await screen.findByTestId("edit-processor-0");
+  editButton.click();
+
+  // Verify Running state and Pause button present
+  await screen.findByText("Running");
+  const pauseButton = screen.getByText("Pause");
+  pauseButton.click();
+
+  // Verify state changed to Paused
+  await screen.findByText("Paused");
+  screen.getByText("Resume");
+
+  screen.getByText("Back").click();
+
+  // Make sure we're on the first screen
+  await screen.findByTestId("edit-processor-0");
+
+  expect(screen.queryByText("Paused")).not.toBeInTheDocument();
+
+  // Save the processors
+  screen.getByText("Save").click();
+
+  await waitFor(() => expect(saveCalled).toEqual(true));
 });
 
 /* ---------------------------- Helper functions ---------------------------- */
