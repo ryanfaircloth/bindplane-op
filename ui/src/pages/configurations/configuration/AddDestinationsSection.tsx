@@ -1,13 +1,10 @@
-import { Button, Stack, Typography } from "@mui/material";
 import { memo } from "react";
-import { CardContainer } from "../../../components/CardContainer";
 import {
   DestinationType,
   ResourceConfiguration,
   SourceType,
   useDestinationsAndTypesQuery,
 } from "../../../graphql/generated";
-import { PlusCircleIcon } from "../../../components/Icons";
 import {
   DialogResource,
   NewResourceDialog,
@@ -16,20 +13,11 @@ import { applyResources } from "../../../utils/rest/apply-resources";
 import { useSnackbar } from "notistack";
 import { ShowPageConfig } from ".";
 import { UpdateStatus } from "../../../types/resources";
-import {
-  BPConfiguration,
-  BPDestination,
-  BPResourceConfiguration,
-} from "../../../utils/classes";
-import { ResourceDestinationCard } from "../../../components/Cards/ResourceDestinationCard";
-
-import styles from "./configuration-page.module.scss";
-import mixins from "../../../styles/mixins.module.scss";
-import { InlineDestinationCard } from "../../../components/Cards/InlineDestinationCard";
+import { BPConfiguration, BPDestination } from "../../../utils/classes";
 
 type ResourceType = SourceType | DestinationType;
 
-const DestinationsSectionComponent: React.FC<{
+const AddDestinationsComponent: React.FC<{
   configuration: NonNullable<ShowPageConfig>;
   destinations: ResourceConfiguration[];
   refetch: () => {};
@@ -73,7 +61,10 @@ const DestinationsSectionComponent: React.FC<{
     destination.setParamsFromMap(values);
 
     const updatedConfiguration = new BPConfiguration(configuration);
-    updatedConfiguration.addDestination({ name: destination.name(), disabled: destination.spec.disabled });
+    updatedConfiguration.addDestination({
+      name: destination.name(),
+      disabled: destination.spec.disabled,
+    });
 
     try {
       const { updates } = await applyResources([
@@ -148,51 +139,16 @@ const DestinationsSectionComponent: React.FC<{
   }
 
   return (
-    <>
-      <CardContainer>
-        <div className={styles["title-button-row"]}>
-          <Typography variant="h5">Destinations</Typography>
-          <Button
-            onClick={() => setAddDialogOpen(true)}
-            variant="contained"
-            classes={{ root: mixins["float-right"] }}
-            startIcon={<PlusCircleIcon />}
-          >
-            Add Destination
-          </Button>
-        </div>
-
-        <Stack direction="row" spacing={2}>
-          {destinations.map((d, ix) => {
-            const destinationConfig = new BPResourceConfiguration(d);
-
-            return destinationConfig.isInline() ? (
-              <InlineDestinationCard
-                key={`destination${ix}`}
-                id={`destination${ix}`}
-              />
-            ) : (
-              <ResourceDestinationCard
-                key={d.name!}
-                name={d.name!}
-                enableProcessors
-              />
-            );
-          })}
-        </Stack>
-      </CardContainer>
-
-      <NewResourceDialog
-        kind="destination"
-        resources={data?.destinations ?? []}
-        resourceTypes={data?.destinationTypes ?? []}
-        open={addDialogOpen}
-        onSaveNew={onNewDestinationSave}
-        onSaveExisting={addExistingDestination}
-        onClose={() => setAddDialogOpen(false)}
-      />
-    </>
+    <NewResourceDialog
+      kind="destination"
+      resources={data?.destinations ?? []}
+      resourceTypes={data?.destinationTypes ?? []}
+      open={addDialogOpen}
+      onSaveNew={onNewDestinationSave}
+      onSaveExisting={addExistingDestination}
+      onClose={() => setAddDialogOpen(false)}
+    />
   );
 };
 
-export const DestinationsSection = memo(DestinationsSectionComponent);
+export const AddDestinationsSection = memo(AddDestinationsComponent);

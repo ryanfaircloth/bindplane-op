@@ -11,27 +11,19 @@ import { PlusCircleIcon } from "../Icons";
 import styles from "./cards.module.scss";
 
 interface AddResourceCardProps {
-  activateControl: React.Dispatch<React.SetStateAction<boolean>>;
+  onClick: React.Dispatch<React.SetStateAction<boolean>>;
   buttonText: string;
 }
 
 export const AddResourceCard: React.FC<AddResourceCardProps> = ({
-  activateControl,
+  onClick,
   buttonText,
 }) => {
   return (
-    <Card
-      className={styles["ui-control-card"]}
-      onClick={() => activateControl(true)}
-    >
+    <Card className={styles["ui-control-card"]} onClick={() => onClick(true)}>
       <CardActionArea>
         <CardContent>
-          <Stack
-            direction="row"
-            justifyContent="center"
-            alignItems="center"
-            spacing={1}
-          >
+          <Stack justifyContent="center" alignItems="center" gap={1}>
             <PlusCircleIcon className={styles["ui-control-icon"]} />
             <Typography className={styles["ui-control-text"]}>
               {buttonText}

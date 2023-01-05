@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 import { IconButton, Stack, Typography } from "@mui/material";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CardContainer } from "../../../components/CardContainer";
 import {
@@ -15,8 +15,8 @@ import { selectorString } from "../../../types/configuration";
 import { ApplyConfigDialog } from "./ApplyConfigDialog";
 import { DetailsSection } from "./DetailsSection";
 import { ConfigurationSection } from "./ConfigurationSection";
-import { SourcesSection } from "./SourcesSection";
-import { DestinationsSection } from "./DestinationsSection";
+import { AddSourcesSection } from "./AddSourcesSection";
+import { AddDestinationsSection } from "./AddDestinationsSection";
 import { useSnackbar } from "notistack";
 import { withRequireLogin } from "../../../contexts/RequireLogin";
 import { withNavBar } from "../../../components/NavBar";
@@ -131,20 +131,6 @@ const ConfigPageContent: React.FC = () => {
   const { enqueueSnackbar } = useSnackbar();
 
   const isRaw = (data?.configuration?.spec?.raw?.length || 0) > 0;
-  const hasPipeline = useMemo(() => {
-    if (
-      data?.configuration?.spec == null ||
-      data?.configuration.spec.sources == null ||
-      data?.configuration.spec.destinations == null
-    ) {
-      return false;
-    }
-
-    return (
-      data.configuration.spec.sources.length > 0 &&
-      data.configuration.spec.destinations.length > 0
-    );
-  }, [data?.configuration?.spec]);
 
   function openApplyDialog() {
     setShowApply(true);
@@ -202,7 +188,7 @@ const ConfigPageContent: React.FC = () => {
         </section>
       )}
 
-      {!isRaw && hasPipeline && (
+      {!isRaw && (
         <CardContainer>
           <Stack spacing={2}>
             <RawOrTopologyControl
@@ -222,7 +208,7 @@ const ConfigPageContent: React.FC = () => {
 
       {!isRaw && (
         <section>
-          <SourcesSection
+          <AddSourcesSection
             configuration={data.configuration}
             refetch={refetch}
             setAddDialogOpen={setAddSourceDialogOpen}
@@ -233,7 +219,7 @@ const ConfigPageContent: React.FC = () => {
 
       {!isRaw && (
         <section>
-          <DestinationsSection
+          <AddDestinationsSection
             configuration={data.configuration}
             destinations={data.configuration.spec.destinations ?? []}
             refetch={refetch}

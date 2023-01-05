@@ -199,7 +199,10 @@ export const OverviewGraph: React.FC = () => {
     data!.overviewPage.graph,
     700,
     null,
-    () => {}
+    () => {},
+    () => {},
+    () => {},
+    false
   );
   updateMetricData(
     Page.Overview,

@@ -20,6 +20,8 @@ import { useConfigurationMetricsSubscription } from "../../graphql/generated";
 import OverviewEdge from "../../pages/overview/OverviewEdge";
 import ConfigurationEdge from "./Nodes/ConfigurationEdge";
 import { MinimumRequiredConfig } from "./PipelineGraph";
+import { useConfigurationPage } from "../../pages/configurations/configuration/ConfigurationPageContext";
+import { DummyProcessorNode } from "./Nodes/DummyProcessorNode";
 
 import globals from "../../styles/global.module.scss";
 
@@ -46,6 +48,7 @@ const nodeTypes = {
   destinationNode: DestinationNode,
   uiControlNode: UIControlNode,
   processorNode: ProcessorNode,
+  dummyProcessorNode: DummyProcessorNode,
 };
 
 const edgeTypes = {
@@ -71,12 +74,19 @@ export const ConfigurationFlow: React.FC<ConfigurationFlowProps> = ({
   agent,
 }) => {
   const reactFlowInstance = useReactFlow();
+
+  const { setAddSourceDialogOpen, setAddDestDialogOpen } =
+    useConfigurationPage();
+
   const { nodes, edges } = getNodesAndEdges(
     Page.Configuration,
     configuration?.graph!,
     TARGET_OFFSET_MULTIPLIER,
     configuration,
-    refetchConfiguration
+    refetchConfiguration,
+    setAddSourceDialogOpen,
+    setAddDestDialogOpen,
+    agent === "" ? true : false
   );
 
   const { data } = useConfigurationMetricsSubscription({

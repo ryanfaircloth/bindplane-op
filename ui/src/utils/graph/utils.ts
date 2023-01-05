@@ -5,7 +5,7 @@ import { MinimumRequiredConfig } from "../../components/PipelineGraph/PipelineGr
 import { Graph, GraphMetric } from "../../graphql/generated";
 
 export const GRAPH_NODE_OFFSET = 160;
-export const GRAPH_PADDING = 120;
+export const GRAPH_PADDING = 300;
 
 export const enum Page {
   Overview,
@@ -25,7 +25,10 @@ export function getNodesAndEdges(
   graph: Graph,
   targetOffsetMultiplier: number,
   configuration: MinimumRequiredConfig,
-  refetchConfiguration: () => void
+  refetchConfiguration: () => void,
+  setAddSourceDialogOpen: (b: boolean) => void,
+  setAddDestDialogOpen: (b: boolean) => void,
+  isConfigurationPage: boolean
 ): {
   nodes: Node[];
   edges: Edge[];
@@ -49,29 +52,99 @@ export function getNodesAndEdges(
   const processorYoffset = 35;
   const targetProcOffsetMultiplier = 270;
 
+  // if there's only one source or one destination we need to layout add source and add destination cards
+  // we also need to add edges between the source/destination and the add source/add destination cards
+
+  const addSourceCard = graph.sources?.length === 0;
+  const addDestinationCard = graph.targets?.length === 0;
+
   // layout sources
-  for (let i = 0; i < (graph.sources ?? []).length; i++) {
-    const n = graph.sources[i];
-    const x = offsets[n.id] * sourceOffsetMultiplier;
+  if (addSourceCard) {
+    nodes.push({
+      id: "add-source",
+      data: {
+        id: "add-source",
+        buttonText: "Add Source",
+        onClick: setAddSourceDialogOpen,
+        handlePosition: Position.Right,
+        handleType: "source",
+      },
+      position: { x: 0, y },
+      type: "uiControlNode",
+    });
 
     nodes.push({
-      id: n.id,
+      id: "add-source-proc",
       data: {
-        id: n.id,
-        label: n.label,
-        attributes: n.attributes,
-        connectedNodesAndEdges: [n.id],
+        id: "add-source-proc",
+        attributes: null,
         configuration: configuration,
         refetchConfiguration: refetchConfiguration,
       },
-      position: { x, y },
-      sourcePosition: Position.Right,
-      type: n.type,
+      position: { x: sourceOffsetMultiplier, y: y + processorYoffset },
+      type: "dummyProcessorNode",
     });
-
     y += offset;
-  }
 
+    var edge: Edge<any> & { key: string } = {
+      key: "add-source_add-source-proc",
+      id: "add-source_add-source-proc",
+      source: "add-source",
+      target: "add-source-proc",
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+      },
+      data: {
+        connectedNodesAndEdges: [],
+      },
+      type: "configurationEdge",
+    };
+    edges.push(edge);
+    // connect add-source-proc to all the destination processors
+    for (let i = 0; i < (graph.intermediates ?? []).length; i++) {
+      const n = graph.intermediates[i];
+      if (!isSourceID(n.id)) {
+        edge = {
+          key: `${n.id}_add-source-proc`,
+          id: `${n.id}_add-source-proc`,
+          target: `${n.id}`,
+          source: "add-source-proc",
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+          },
+          data: {
+            connectedNodesAndEdges: [],
+          },
+          type: "configurationEdge",
+        };
+        edges.push(edge);
+      }
+    }
+  } else {
+    for (let i = 0; i < (graph.sources ?? []).length; i++) {
+      const n = graph.sources[i];
+      const x = offsets[n.id] * sourceOffsetMultiplier;
+
+      nodes.push({
+        id: n.id,
+        data: {
+          id: n.id,
+          label: n.label,
+          attributes: n.attributes,
+          connectedNodesAndEdges: [n.id],
+          configuration: configuration,
+          refetchConfiguration: refetchConfiguration,
+        },
+        position: { x, y },
+        sourcePosition: Position.Right,
+        type: n.type,
+      });
+
+      y += offset;
+    }
+  }
+  // save the y position to align the add source & add destination buttons
+  var bottomY = y;
   y = 0;
 
   // layout source processors
@@ -104,7 +177,9 @@ export function getNodesAndEdges(
   for (let i = 0; i < (graph.intermediates ?? []).length; i++) {
     const n = graph.intermediates[i];
 
-    const x = offsets[n.id] * targetProcOffsetMultiplier;
+    const x =
+      (isConfigurationPage && offsets[n.id] < 2 ? 2 : offsets[n.id]) *
+      targetProcOffsetMultiplier;
 
     if (!isSourceID(n.id)) {
       nodes.push({
@@ -122,33 +197,100 @@ export function getNodesAndEdges(
     }
   }
 
-  // save the y position to align the add source & add destination buttons
-  const bottomY = y;
-
   y =
     (((graph.sources?.length || 1) - (graph.targets?.length || 1)) * offset) /
     2;
-  for (let i = 0; i < (graph.targets ?? []).length; i++) {
-    const n = graph.targets[i];
-    const x = offsets[n.id] * targetOffsetMultiplier;
 
+  // Lay out destinations
+  if (addDestinationCard) {
     nodes.push({
-      id: n.id,
+      id: "add-destination",
       data: {
-        id: n.id,
-        label: n.label,
-        attributes: n.attributes,
-        connectedNodesAndEdges: [n.id],
+        id: "add-destination",
+        buttonText: "Add Destination",
+        onClick: setAddDestDialogOpen,
+        handlePosition: Position.Left,
+        handleType: "target",
+        isButton: false,
+      },
+      position: { x: 3 * targetOffsetMultiplier, y },
+      type: "uiControlNode",
+    });
+    nodes.push({
+      id: "add-destination-proc",
+      data: {
+        id: "add-destination-proc",
+        attributes: null,
         configuration: configuration,
         refetchConfiguration: refetchConfiguration,
       },
-      position: { x, y },
-      targetPosition: Position.Left,
-      type: n.type,
+      position: {
+        x: 2 * targetProcOffsetMultiplier,
+        y: y + processorYoffset,
+      },
+      type: "dummyProcessorNode",
     });
-    y += offset;
+    edge = {
+      key: "add-destination-proc_add-destination",
+      id: "add-destination-proc_add-destination",
+      source: "add-destination-proc",
+      target: "add-destination",
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+      },
+      data: {
+        connectedNodesAndEdges: [],
+      },
+      type: "configurationEdge",
+    };
+    edges.push(edge);
+    // connect dummy processor to all the source processors
+    for (let i = 0; i < (graph.intermediates ?? []).length; i++) {
+      const n = graph.intermediates[i];
+      if (isSourceID(n.id)) {
+        edge = {
+          key: `${n.id}_add-destination-proc`,
+          id: `${n.id}_add-destination-proc`,
+          source: `${n.id}`,
+          target: "add-destination-proc",
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+          },
+          data: {
+            connectedNodesAndEdges: [],
+          },
+          type: "configurationEdge",
+        };
+        edges.push(edge);
+      }
+    }
+  } else {
+    for (let i = 0; i < (graph.targets ?? []).length; i++) {
+      const n = graph.targets[i];
+      const x =
+        (isConfigurationPage && offsets[n.id] < 3 ? 3 : offsets[n.id]) *
+        targetOffsetMultiplier;
+
+      nodes.push({
+        id: n.id,
+        data: {
+          id: n.id,
+          label: n.label,
+          attributes: n.attributes,
+          connectedNodesAndEdges: [n.id],
+          configuration: configuration,
+          refetchConfiguration: refetchConfiguration,
+        },
+        position: { x, y },
+        targetPosition: Position.Left,
+        type: n.type,
+      });
+      y += offset;
+    }
   }
 
+  bottomY = Math.max(bottomY, y);
+  y += offset / 4;
   // find max pipeline position
   let max = 0;
 
@@ -159,8 +301,59 @@ export function getNodesAndEdges(
     }
   }
 
-  y = Math.max(bottomY, y);
-  y += offset / 4;
+  // Add the add source and add destination buttons
+  if (isConfigurationPage) {
+    if (max < 3) {
+      max = 3;
+    }
+
+    if (!addSourceCard) {
+      nodes.push({
+        id: "add-source",
+        data: {
+          id: "add-source",
+          buttonText: "Add Source",
+          onClick: setAddSourceDialogOpen,
+          handlePosition: Position.Right,
+          handleType: "source",
+          isButton: true,
+        },
+        position: { x: 0, y: bottomY },
+        type: "uiControlNode",
+      });
+    }
+    if (!addDestinationCard) {
+      nodes.push({
+        id: "add-destination",
+        data: {
+          id: "add-destination",
+          buttonText: "Add Destination",
+          onClick: setAddDestDialogOpen,
+          handlePosition: Position.Left,
+          handleType: "target",
+          isButton: true,
+        },
+        position: { x: max * targetOffsetMultiplier, y: bottomY },
+        type: "uiControlNode",
+      });
+    }
+    if (addDestinationCard && addSourceCard) {
+      edge = {
+        key: "add-source-proc_add-destination-proc",
+        id: "add-source-proc_add-destination-proc",
+        source: "add-source-proc",
+        target: "add-destination-proc",
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+        },
+        data: {
+          connectedNodesAndEdges: [],
+        },
+        type: "configurationEdge",
+      };
+      edges.push(edge);
+    }
+  }
 
   for (const e of graph.edges || []) {
     const edge: Edge<any> & { key: string } = {

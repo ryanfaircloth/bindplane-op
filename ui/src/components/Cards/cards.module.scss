@@ -2,20 +2,29 @@
 
 .ui-control-card {
   cursor: pointer;
+  width: 150px;
+  height: 120px;
+  cursor: pointer;
+
+  border-radius: 4px;
 
   background-color: colors.$summer-sky;
-  border-radius: 2ch;
+  display: inline-flex;
 }
 
 .ui-control-text {
   color: #fff;
   font-weight: 700;
-
+  white-space: nowrap;
   transition: background-color 0.2s ease-in-out;
 }
 
 .ui-control-icon {
   stroke: #fff;
+  background-size: 30px;
+
+  width: 40px;
+  height: 40px;
 }
 
 .ui-control-card:hover {
