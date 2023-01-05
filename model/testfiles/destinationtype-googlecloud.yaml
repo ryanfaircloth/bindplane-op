@@ -8,7 +8,6 @@ spec:
   parameters:
   metrics:
     processors: |
-      - normalizesums:
       - batch:
   logs+traces:
     processors: |

@@ -253,7 +253,6 @@ receivers:
             name: macos
 processors:
     batch/destination0: null
-    normalizesums/destination0: null
 exporters:
     googlecloud/destination0: null
 service:
@@ -278,7 +277,6 @@ service:
             receivers:
                 - hostmetrics/source0
             processors:
-                - normalizesums/destination0
                 - batch/destination0
             exporters:
                 - googlecloud/destination0
@@ -286,7 +284,6 @@ service:
             receivers:
                 - hostmetrics/source1
             processors:
-                - normalizesums/destination0
                 - batch/destination0
             exporters:
                 - googlecloud/destination0
@@ -435,7 +432,6 @@ receivers:
             name: macos
 processors:
     batch/googlecloud: null
-    normalizesums/googlecloud: null
     resourceattributetransposer/source0__processor0:
         operations:
             - from: from.attribute
@@ -464,7 +460,6 @@ service:
             processors:
                 - resourceattributetransposer/source0__processor0
                 - resourceattributetransposer/source0__processor1
-                - normalizesums/googlecloud
                 - batch/googlecloud
             exporters:
                 - googlecloud/googlecloud
@@ -518,7 +513,6 @@ receivers:
             name: macos
 processors:
     batch/googlecloud: null
-    normalizesums/googlecloud: null
     resourceattributetransposer/googlecloud__processor0:
         operations:
             - from: from.attribute3
@@ -559,7 +553,6 @@ service:
                 - resourceattributetransposer/source0__processor1
                 - resourceattributetransposer/googlecloud__processor0
                 - resourceattributetransposer/googlecloud__processor1
-                - normalizesums/googlecloud
                 - batch/googlecloud
             exporters:
                 - googlecloud/googlecloud
@@ -635,7 +628,6 @@ receivers:
 processors:
     batch/_agent_metrics: null
     batch/googlecloud: null
-    normalizesums/googlecloud: null
     resourceattributetransposer/googlecloud__processor0:
         operations:
             - from: from.attribute3
@@ -719,7 +711,6 @@ service:
                 - resourceattributetransposer/googlecloud__processor0
                 - resourceattributetransposer/googlecloud__processor1
                 - throughputmeasurement/_d1_metrics_googlecloud
-                - normalizesums/googlecloud
                 - batch/googlecloud
                 - snapshotprocessor
             exporters:
@@ -802,7 +793,6 @@ processors:
     batch/_agent_metrics: null
     batch/cabin-production-logs: null
     batch/googlecloud: null
-    normalizesums/googlecloud: null
     resourceattributetransposer/source0__processor0:
         operations:
             - from: from.attribute
@@ -897,7 +887,6 @@ service:
                 - throughputmeasurement/_s1_metrics_source0
                 - throughputmeasurement/_d0_metrics_googlecloud
                 - throughputmeasurement/_d1_metrics_googlecloud
-                - normalizesums/googlecloud
                 - batch/googlecloud
                 - snapshotprocessor
             exporters:
@@ -1180,7 +1169,6 @@ processors:
         metric_name: custom.metric.count
         metric_unit: '{logs}'
         route: builtin
-    normalizesums/googlecloud: null
     resourcedetection/source0:
         detectors:
             - system
@@ -1239,7 +1227,6 @@ service:
             processors:
                 - throughputmeasurement/_d0_metrics_googlecloud
                 - throughputmeasurement/_d1_metrics_googlecloud
-                - normalizesums/googlecloud
                 - batch/googlecloud
                 - snapshotprocessor
             exporters:
@@ -1294,7 +1281,6 @@ receivers:
             name: macos
 processors:
     batch/googlecloud: null
-    normalizesums/googlecloud: null
 exporters:
     googlecloud/googlecloud: null
 service:
@@ -1311,7 +1297,6 @@ service:
             receivers:
                 - hostmetrics/source0
             processors:
-                - normalizesums/googlecloud
                 - batch/googlecloud
             exporters:
                 - googlecloud/googlecloud
@@ -1498,7 +1483,6 @@ processors:
         metric_name: http.request.duration
         metric_unit: ms
         route: builtin
-    normalizesums/googlecloud: null
     resourcedetection/source0:
         detectors:
             - system
@@ -1557,7 +1541,6 @@ service:
             processors:
                 - throughputmeasurement/_d0_metrics_googlecloud
                 - throughputmeasurement/_d1_metrics_googlecloud
-                - normalizesums/googlecloud
                 - batch/googlecloud
                 - snapshotprocessor
             exporters:

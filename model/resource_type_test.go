@@ -63,7 +63,7 @@ func TestEvalGoogleCloud(t *testing.T) {
 	require.Len(t, values[otel.Logs].Exporters, 1)
 	require.Len(t, values[otel.Logs].Extensions, 0)
 	require.Len(t, values[otel.Metrics].Receivers, 0)
-	require.Len(t, values[otel.Metrics].Processors, 2)
+	require.Len(t, values[otel.Metrics].Processors, 1)
 	require.Len(t, values[otel.Metrics].Exporters, 1)
 	require.Len(t, values[otel.Metrics].Extensions, 0)
 	require.Len(t, values[otel.Traces].Receivers, 0)

@@ -52,7 +52,6 @@ ReadOnlyLimitHeight.args = {
           name: macos
 processors:
   batch/googlecloud__destination0: null
-  normalizesums/googlecloud__destination0: null
   resourceattributetransposer/macOS__source0:
       operations:
           - from: host.name
@@ -80,7 +79,6 @@ service:
           processors:
               - resourcedetection/macOS__source0
               - resourceattributetransposer/macOS__source0
-              - normalizesums/googlecloud__destination0
               - batch/googlecloud__destination0
           exporters:
               - googlecloud/googlecloud__destination0
@@ -154,7 +152,6 @@ receivers:
 processors:
   batch/googlecloud__destination0: null
   batch/newrelic_otlp__destination1: null
-  normalizesums/googlecloud__destination0: null
   resourceattributetransposer/elasticsearch__source1:
       operations:
           - from: host.name
@@ -226,7 +223,6 @@ service:
           processors:
               - resourcedetection/elasticsearch__source1
               - resourceattributetransposer/elasticsearch__source1
-              - normalizesums/googlecloud__destination0
               - batch/googlecloud__destination0
           exporters:
               - googlecloud/googlecloud__destination0
@@ -245,7 +241,6 @@ service:
           processors:
               - resourcedetection/macOS__source0
               - resourceattributetransposer/macOS__source0
-              - normalizesums/googlecloud__destination0
               - batch/googlecloud__destination0
           exporters:
               - googlecloud/googlecloud__destination0
@@ -264,7 +259,6 @@ service:
           processors:
               - resourcedetection/redis__source2
               - resourceattributetransposer/redis__source2
-              - normalizesums/googlecloud__destination0
               - batch/googlecloud__destination0
           exporters:
               - googlecloud/googlecloud__destination0
