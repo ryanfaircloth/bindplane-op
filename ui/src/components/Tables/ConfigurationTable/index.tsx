@@ -1,5 +1,5 @@
 import { gql } from "@apollo/client";
-import { Button, FormControl, Typography } from "@mui/material";
+import { Button, FormControl, Stack, Typography } from "@mui/material";
 import { GridSelectionModel } from "@mui/x-data-grid";
 import { debounce } from "lodash";
 import React, { useEffect, useMemo, useState } from "react";
@@ -13,12 +13,23 @@ import {
 } from "../../../graphql/generated";
 import mixins from "../../../styles/mixins.module.scss";
 import { SearchBar } from "../../SearchBar";
-import { ConfigurationsDataGrid } from "./ConfigurationsDataGrid";
+import {
+  ConfigurationsDataGrid,
+  ConfigurationsTableField,
+} from "./ConfigurationsDataGrid";
 import { DeleteDialog } from "./DeleteDialog";
 
 gql`
-  query GetConfigurationTable($selector: String, $query: String) {
-    configurations(selector: $selector, query: $query) {
+  query GetConfigurationTable(
+    $selector: String
+    $query: String
+    $onlyDeployedConfigurations: Boolean
+  ) {
+    configurations(
+      selector: $selector
+      query: $query
+      onlyDeployedConfigurations: $onlyDeployedConfigurations
+    ) {
       configurations {
         metadata {
           name
@@ -95,16 +106,31 @@ function mergeConfigs(
 interface ConfigurationTableProps {
   selector?: string;
   initQuery?: string;
+  columns?: ConfigurationsTableField[];
+  setSelected: (selected: GridSelectionModel) => void;
+  selected: GridSelectionModel;
+  enableDelete?: boolean;
+  minHeight?: string;
+  onlyDeployedConfigurations?: boolean;
 }
 
 export const ConfigurationsTable: React.FC<ConfigurationTableProps> = ({
   initQuery = "",
   selector,
+  setSelected,
+  selected,
+  columns,
+  enableDelete = true,
+  minHeight,
+  onlyDeployedConfigurations = false,
+  ...dataGridProps
 }) => {
   const { data, loading, refetch, subscribeToMore } =
     useGetConfigurationTableQuery({
-      variables: { selector, query: initQuery },
-      fetchPolicy: "network-only",
+      variables: { selector, query: initQuery, onlyDeployedConfigurations },
+      fetchPolicy: onlyDeployedConfigurations
+        ? "cache-and-network"
+        : "network-only",
       nextFetchPolicy: "cache-only",
     });
 
@@ -113,8 +139,6 @@ export const ConfigurationsTable: React.FC<ConfigurationTableProps> = ({
       variables: { period: "1m" },
     });
 
-  // Selected is an array of names of configurations.
-  const [selected, setSelected] = useState<GridSelectionModel>([]);
   // Used to control the delete confirmation modal.
   const [open, setOpen] = useState<boolean>(false);
 
@@ -171,7 +195,7 @@ export const ConfigurationsTable: React.FC<ConfigurationTableProps> = ({
         <Typography variant="h5" className={mixins["mb-5"]}>
           Configurations
         </Typography>
-        {selected.length > 0 && (
+        {selected.length > 0 && enableDelete && (
           <FormControl classes={{ root: mixins["ml-5"] }}>
             <Button variant="contained" color="error" onClick={openModal}>
               Delete {selected.length} Configuration
@@ -181,22 +205,25 @@ export const ConfigurationsTable: React.FC<ConfigurationTableProps> = ({
         )}
       </div>
 
-      <SearchBar
-        suggestions={data?.configurations.suggestions}
-        onQueryChange={onQueryChange}
-        suggestionQuery={data?.configurations.query}
-        initialQuery={initQuery}
-      />
+      <Stack spacing={1}>
+        <SearchBar
+          suggestions={data?.configurations.suggestions}
+          onQueryChange={onQueryChange}
+          suggestionQuery={data?.configurations.query}
+          initialQuery={initQuery}
+        />
 
-      <ConfigurationsDataGrid
-        onConfigurationsSelected={(newSelectionModel) => {
-          setSelected(newSelectionModel);
-        }}
-        loading={loading}
-        configurations={data?.configurations.configurations ?? []}
-        configurationMetrics={configurationMetrics}
-      />
-
+        <ConfigurationsDataGrid
+          {...dataGridProps}
+          setSelectionModel={setSelected}
+          loading={loading}
+          configurations={data?.configurations.configurations ?? []}
+          configurationMetrics={configurationMetrics}
+          columnFields={columns}
+          selectionModel={selected}
+          minHeight={minHeight}
+        />
+      </Stack>
       <DeleteDialog
         onClose={closeModal}
         selected={selected}

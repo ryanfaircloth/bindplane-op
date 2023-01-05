@@ -347,6 +347,7 @@ export type Query = {
   destinationTypes: Array<DestinationType>;
   destinationWithType: DestinationWithType;
   destinations: Array<Destination>;
+  destinationsInConfigs: Array<Destination>;
   overviewMetrics: GraphMetrics;
   overviewPage: OverviewPage;
   processor?: Maybe<Processor>;
@@ -390,6 +391,7 @@ export type QueryConfigurationMetricsArgs = {
 
 
 export type QueryConfigurationsArgs = {
+  onlyDeployedConfigurations?: InputMaybe<Scalars['Boolean']>;
   query?: InputMaybe<Scalars['String']>;
   selector?: InputMaybe<Scalars['String']>;
 };
@@ -411,7 +413,17 @@ export type QueryDestinationWithTypeArgs = {
 
 
 export type QueryOverviewMetricsArgs = {
+  configIDs?: InputMaybe<Array<Scalars['ID']>>;
+  destinationIDs?: InputMaybe<Array<Scalars['ID']>>;
   period: Scalars['String'];
+};
+
+
+export type QueryOverviewPageArgs = {
+  configIDs?: InputMaybe<Array<Scalars['ID']>>;
+  destinationIDs?: InputMaybe<Array<Scalars['ID']>>;
+  period: Scalars['String'];
+  telemetryType: Scalars['String'];
 };
 
 
@@ -534,6 +546,8 @@ export type SubscriptionConfigurationMetricsArgs = {
 
 
 export type SubscriptionOverviewMetricsArgs = {
+  configIDs?: InputMaybe<Array<Scalars['ID']>>;
+  destinationIDs?: InputMaybe<Array<Scalars['ID']>>;
   period: Scalars['String'];
 };
 
@@ -652,6 +666,7 @@ export type AgentsTableMetricsSubscription = { __typename?: 'Subscription', agen
 export type GetConfigurationTableQueryVariables = Exact<{
   selector?: InputMaybe<Scalars['String']>;
   query?: InputMaybe<Scalars['String']>;
+  onlyDeployedConfigurations?: InputMaybe<Scalars['Boolean']>;
 }>;
 
 
@@ -733,17 +748,29 @@ export type DestinationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type DestinationsQuery = { __typename?: 'Query', destinations: Array<{ __typename?: 'Destination', kind: string, metadata: { __typename?: 'Metadata', name: string }, spec: { __typename?: 'ParameterizedSpec', type: string } }> };
 
-export type GetOverviewPageQueryVariables = Exact<{ [key: string]: never; }>;
+export type GetOverviewPageQueryVariables = Exact<{
+  configIDs?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
+  destinationIDs?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
+  period: Scalars['String'];
+  telemetryType: Scalars['String'];
+}>;
 
 
 export type GetOverviewPageQuery = { __typename?: 'Query', overviewPage: { __typename?: 'OverviewPage', graph: { __typename?: 'Graph', attributes: any, sources: Array<{ __typename?: 'Node', id: string, label: string, type: string, attributes: any }>, intermediates: Array<{ __typename?: 'Node', id: string, label: string, type: string, attributes: any }>, targets: Array<{ __typename?: 'Node', id: string, label: string, type: string, attributes: any }>, edges: Array<{ __typename?: 'Edge', id: string, source: string, target: string }> } } };
 
 export type OverviewMetricsSubscriptionVariables = Exact<{
   period: Scalars['String'];
+  configIDs?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
+  destinationIDs?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
 }>;
 
 
 export type OverviewMetricsSubscription = { __typename?: 'Subscription', overviewMetrics: { __typename?: 'GraphMetrics', metrics: Array<{ __typename?: 'GraphMetric', name: string, nodeID: string, pipelineType: string, value: number, unit: string }> } };
+
+export type DestinationsInConfigsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type DestinationsInConfigsQuery = { __typename?: 'Query', destinationsInConfigs: Array<{ __typename?: 'Destination', kind: string, metadata: { __typename?: 'Metadata', name: string }, spec: { __typename?: 'ParameterizedSpec', type: string } }> };
 
 
 export const DestinationTypeDocument = gql`
@@ -1471,8 +1498,12 @@ export function useAgentsTableMetricsSubscription(baseOptions: Apollo.Subscripti
 export type AgentsTableMetricsSubscriptionHookResult = ReturnType<typeof useAgentsTableMetricsSubscription>;
 export type AgentsTableMetricsSubscriptionResult = Apollo.SubscriptionResult<AgentsTableMetricsSubscription>;
 export const GetConfigurationTableDocument = gql`
-    query GetConfigurationTable($selector: String, $query: String) {
-  configurations(selector: $selector, query: $query) {
+    query GetConfigurationTable($selector: String, $query: String, $onlyDeployedConfigurations: Boolean) {
+  configurations(
+    selector: $selector
+    query: $query
+    onlyDeployedConfigurations: $onlyDeployedConfigurations
+  ) {
     configurations {
       metadata {
         name
@@ -1504,6 +1535,7 @@ export const GetConfigurationTableDocument = gql`
  *   variables: {
  *      selector: // value for 'selector'
  *      query: // value for 'query'
+ *      onlyDeployedConfigurations: // value for 'onlyDeployedConfigurations'
  *   },
  * });
  */
@@ -2203,8 +2235,13 @@ export type DestinationsQueryHookResult = ReturnType<typeof useDestinationsQuery
 export type DestinationsLazyQueryHookResult = ReturnType<typeof useDestinationsLazyQuery>;
 export type DestinationsQueryResult = Apollo.QueryResult<DestinationsQuery, DestinationsQueryVariables>;
 export const GetOverviewPageDocument = gql`
-    query getOverviewPage {
-  overviewPage {
+    query getOverviewPage($configIDs: [ID!], $destinationIDs: [ID!], $period: String!, $telemetryType: String!) {
+  overviewPage(
+    configIDs: $configIDs
+    destinationIDs: $destinationIDs
+    period: $period
+    telemetryType: $telemetryType
+  ) {
     graph {
       attributes
       sources {
@@ -2247,10 +2284,14 @@ export const GetOverviewPageDocument = gql`
  * @example
  * const { data, loading, error } = useGetOverviewPageQuery({
  *   variables: {
+ *      configIDs: // value for 'configIDs'
+ *      destinationIDs: // value for 'destinationIDs'
+ *      period: // value for 'period'
+ *      telemetryType: // value for 'telemetryType'
  *   },
  * });
  */
-export function useGetOverviewPageQuery(baseOptions?: Apollo.QueryHookOptions<GetOverviewPageQuery, GetOverviewPageQueryVariables>) {
+export function useGetOverviewPageQuery(baseOptions: Apollo.QueryHookOptions<GetOverviewPageQuery, GetOverviewPageQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<GetOverviewPageQuery, GetOverviewPageQueryVariables>(GetOverviewPageDocument, options);
       }
@@ -2262,8 +2303,12 @@ export type GetOverviewPageQueryHookResult = ReturnType<typeof useGetOverviewPag
 export type GetOverviewPageLazyQueryHookResult = ReturnType<typeof useGetOverviewPageLazyQuery>;
 export type GetOverviewPageQueryResult = Apollo.QueryResult<GetOverviewPageQuery, GetOverviewPageQueryVariables>;
 export const OverviewMetricsDocument = gql`
-    subscription OverviewMetrics($period: String!) {
-  overviewMetrics(period: $period) {
+    subscription OverviewMetrics($period: String!, $configIDs: [ID!], $destinationIDs: [ID!]) {
+  overviewMetrics(
+    period: $period
+    configIDs: $configIDs
+    destinationIDs: $destinationIDs
+  ) {
     metrics {
       name
       nodeID
@@ -2288,6 +2333,8 @@ export const OverviewMetricsDocument = gql`
  * const { data, loading, error } = useOverviewMetricsSubscription({
  *   variables: {
  *      period: // value for 'period'
+ *      configIDs: // value for 'configIDs'
+ *      destinationIDs: // value for 'destinationIDs'
  *   },
  * });
  */
@@ -2297,3 +2344,43 @@ export function useOverviewMetricsSubscription(baseOptions: Apollo.SubscriptionH
       }
 export type OverviewMetricsSubscriptionHookResult = ReturnType<typeof useOverviewMetricsSubscription>;
 export type OverviewMetricsSubscriptionResult = Apollo.SubscriptionResult<OverviewMetricsSubscription>;
+export const DestinationsInConfigsDocument = gql`
+    query DestinationsInConfigs {
+  destinationsInConfigs {
+    kind
+    metadata {
+      name
+    }
+    spec {
+      type
+    }
+  }
+}
+    `;
+
+/**
+ * __useDestinationsInConfigsQuery__
+ *
+ * To run a query within a React component, call `useDestinationsInConfigsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDestinationsInConfigsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDestinationsInConfigsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useDestinationsInConfigsQuery(baseOptions?: Apollo.QueryHookOptions<DestinationsInConfigsQuery, DestinationsInConfigsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DestinationsInConfigsQuery, DestinationsInConfigsQueryVariables>(DestinationsInConfigsDocument, options);
+      }
+export function useDestinationsInConfigsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DestinationsInConfigsQuery, DestinationsInConfigsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DestinationsInConfigsQuery, DestinationsInConfigsQueryVariables>(DestinationsInConfigsDocument, options);
+        }
+export type DestinationsInConfigsQueryHookResult = ReturnType<typeof useDestinationsInConfigsQuery>;
+export type DestinationsInConfigsLazyQueryHookResult = ReturnType<typeof useDestinationsInConfigsLazyQuery>;
+export type DestinationsInConfigsQueryResult = Apollo.QueryResult<DestinationsInConfigsQuery, DestinationsInConfigsQueryVariables>;

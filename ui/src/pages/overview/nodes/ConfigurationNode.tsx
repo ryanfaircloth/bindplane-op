@@ -1,5 +1,6 @@
 import { Handle, Position } from "react-flow-renderer";
 import { ConfigurationCard } from "../../../components/Cards/ConfigurationCard";
+import { DEFAULT_TELEMETRY_TYPE } from "../../../components/MeasurementControlBar/MeasurementControlBar";
 import { isNodeDisabled } from "../../../components/PipelineGraph/Nodes/nodeUtils";
 import { useOverviewPage } from "../OverviewPageContext";
 
@@ -15,7 +16,10 @@ export function ConfigurationNode(params: {
   const { hoveredSet, setHoveredNodeAndEdgeSet, selectedTelemetry } =
     useOverviewPage();
 
-  const isDisabled = isNodeDisabled(selectedTelemetry, params.data.attributes);
+  const isDisabled = isNodeDisabled(
+    selectedTelemetry || DEFAULT_TELEMETRY_TYPE,
+    params.data.attributes
+  );
   const isNotInHoverSet =
     hoveredSet.length > 0 &&
     !hoveredSet.find((elem) => elem === params.data.id);

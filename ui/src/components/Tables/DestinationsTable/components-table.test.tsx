@@ -35,7 +35,7 @@ describe("DestinationsDataGrid", () => {
       <DestinationsDataGrid
         loading={false}
         queryData={{ destinations: destinationData }}
-        onDestinationsSelected={() => {}}
+        setSelectionModel={() => {}}
         disableSelectionOnClick
         checkboxSelection
         onEditDestination={() => {}}
@@ -48,7 +48,7 @@ describe("DestinationsDataGrid", () => {
       <DestinationsDataGrid
         loading={false}
         queryData={{ destinations: destinationData }}
-        onDestinationsSelected={() => {}}
+        setSelectionModel={() => {}}
         disableSelectionOnClick
         checkboxSelection
         onEditDestination={() => {}}
@@ -70,7 +70,7 @@ describe("DestinationsDataGrid", () => {
       <DestinationsDataGrid
         loading={false}
         queryData={{ destinations: destinationData }}
-        onDestinationsSelected={onDestinationsSelected}
+        setSelectionModel={onDestinationsSelected}
         disableSelectionOnClick
         checkboxSelection
         onEditDestination={() => {}}
@@ -89,7 +89,7 @@ describe("DestinationsDataGrid", () => {
       <DestinationsDataGrid
         loading={false}
         queryData={{ destinations: destinationData }}
-        onDestinationsSelected={() => {}}
+        setSelectionModel={() => {}}
         disableSelectionOnClick
         checkboxSelection
         onEditDestination={onEditDestination}

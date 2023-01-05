@@ -17,6 +17,7 @@ package graphql
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/observiq/bindplane-op/internal/eventbus"
@@ -183,8 +184,6 @@ func (r *Resolver) hasAgentConfigurationChanges(updates *store.Updates) bool {
 	return false
 }
 
-
-
 func configurationNodeIDResolver(metric *record.Metric, position model.MeasurementPosition, pipelineType bpotel.PipelineType, resourceName string) string {
 	switch position {
 	case model.MeasurementPositionSourceBeforeProcessors:
@@ -199,7 +198,7 @@ func configurationNodeIDResolver(metric *record.Metric, position model.Measureme
 	return resourceName
 }
 
-func overviewMetrics(ctx context.Context, bindplane server.BindPlane, period string) (*model1.GraphMetrics, error) {
+func overviewMetrics(ctx context.Context, bindplane server.BindPlane, period string, configIDs []string, destinationIDs []string) (*model1.GraphMetrics, error) {
 	if period == "" {
 		period = "1m"
 	}
@@ -210,6 +209,34 @@ func overviewMetrics(ctx context.Context, bindplane server.BindPlane, period str
 	metrics, err := bindplane.Store().Measurements().OverviewMetrics(ctx, stats.WithPeriod(d))
 	if err != nil {
 		return nil, err
+	}
+
+	everythingOrSelected := func(resourceKey, resourceType string) string {
+		resourcesSelected := []string{}
+		switch resourceType {
+		case "configuration":
+			if configIDs == nil {
+				return fmt.Sprintf("%s/%s", resourceType, resourceKey)
+			}
+			resourcesSelected = configIDs
+		case "destination":
+			if destinationIDs == nil {
+				return fmt.Sprintf("%s/%s", resourceType, resourceKey)
+			}
+			resourcesSelected = destinationIDs
+		}
+
+		inEverything := true
+		for _, resourceID := range resourcesSelected {
+			if strings.HasSuffix(resourceID, resourceKey) {
+				inEverything = false
+			}
+		}
+
+		if inEverything {
+			return fmt.Sprintf("everything/%s", resourceType)
+		}
+		return fmt.Sprintf("%s/%s", resourceType, resourceKey)
 	}
 
 	includeMetric := func(metricMap map[string]*model1.GraphMetric, pipelineType string, nodeID string, metric *record.Metric) {
@@ -237,7 +264,7 @@ func overviewMetrics(ctx context.Context, bindplane server.BindPlane, period str
 	// map of processor (includes type and name) => metric
 	destinationMetrics := map[string]*model1.GraphMetric{}
 	includeDestination := func(metric *record.Metric, pipelineType, destinationName string) {
-		nodeID := fmt.Sprintf("destination/%s", destinationName)
+		nodeID := everythingOrSelected(destinationName, "destination")
 		includeMetric(destinationMetrics, pipelineType, nodeID, metric)
 	}
 
@@ -245,7 +272,7 @@ func overviewMetrics(ctx context.Context, bindplane server.BindPlane, period str
 	configurationMetrics := map[string]*model1.GraphMetric{}
 	includeConfiguration := func(metric *record.Metric, pipelineType string) {
 		configurationName := stats.Configuration(metric)
-		nodeID := fmt.Sprintf("configuration/%s", configurationName)
+		nodeID := everythingOrSelected(configurationName, "configuration")
 		includeMetric(configurationMetrics, pipelineType, nodeID, metric)
 	}
 

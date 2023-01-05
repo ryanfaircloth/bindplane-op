@@ -84,6 +84,25 @@ export const ChevronRight: React.FC<IconProps> = (props) => {
   );
 };
 
+export const ChevronLeft: React.FC<IconProps> = (props) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+  );
+};
+
 export const EditIcon: React.FC<IconProps> = (props) => {
   return (
     <svg
@@ -243,9 +262,39 @@ export const MenuIcon: React.FC<IconProps> = (props) => {
   );
 };
 
+export const OtherDestinationsIcon: React.FC<IconProps> = (props) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      version="1.1"
+      width="96"
+      height="48"
+      viewBox="0 0 1024 512"
+      stroke="currentColor"
+      fill="currentColor"
+      {...props}
+    >
+      <path
+        strokeWidth="32.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+        d="M 516.3078 68.69225 L 987.4129 68.69225 L 987.4129 437.00138 L 516.3078 437.00138 Z "
+      />
+      <path
+        stroke="currentColor"
+        fill="currentColor"
+        transform="matrix(1,0,0,-1,0,512)"
+        d="M 26.61157 237.7464 L 348.5715 237.7464 C 360.4457 237.7464 370.0715 247.3723 370.0715 259.2464 C 370.0715 271.1206 360.4457 280.7464 348.5715 280.7464 L 26.61157 280.7464 C 14.73744 280.7464 5.111565 271.1206 5.111565 259.2464 C 5.111565 247.3723 14.73744 237.7464 26.61157 237.7464 Z M 341.4769 200.4725 L 483.3696 259.2464 L 341.4769 318.0203 Z M 341.4769 200.4725 "
+      />
+    </svg>
+  );
+};
+
 export const PauseIcon: React.FC<IconProps> = (props) => {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg"
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
       viewBox="0 0 24 24"
@@ -265,7 +314,8 @@ export const PauseIcon: React.FC<IconProps> = (props) => {
 
 export const PlayIcon: React.FC<IconProps> = (props) => {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg"
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
       viewBox="0 0 24 24"
@@ -279,8 +329,8 @@ export const PlayIcon: React.FC<IconProps> = (props) => {
     >
       <polygon points="5 3 19 12 5 21 5 3"></polygon>
     </svg>
-  )
-}
+  );
+};
 
 export const PlusCircleIcon: React.FC<IconProps> = (props) => {
   return (

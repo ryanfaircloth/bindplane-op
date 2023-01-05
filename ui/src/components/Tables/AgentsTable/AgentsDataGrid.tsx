@@ -11,7 +11,6 @@ import {
 } from "@mui/x-data-grid";
 import React, { memo, useEffect, useState } from "react";
 import { renderAgentLabels, renderAgentStatus } from "../utils";
-import { Link } from "react-router-dom";
 import { AgentsTableMetricsSubscription } from "../../../graphql/generated";
 import { AgentStatus } from "../../../types/agents";
 import { isFunction } from "lodash";
@@ -22,6 +21,7 @@ import {
   TELEMETRY_SIZE_METRICS,
   TELEMETRY_TYPES,
 } from "../../MeasurementControlBar/MeasurementControlBar";
+import { SearchLink } from "../../../utils/state";
 
 export enum AgentsTableField {
   NAME = "name",
@@ -165,13 +165,23 @@ function renderConfigurationCell(cellParams: GridCellParams<string>) {
   if (configName == null) {
     return <></>;
   }
-  return <Link to={`/configurations/${configName}`}>{configName}</Link>;
+  return (
+    <SearchLink
+      path={`/configurations/${configName}`}
+      displayName={configName}
+    />
+  );
 }
 
 function renderNameDataCell(
   cellParams: GridCellParams<{ name: string; id: string }, AgentsTableAgent>
 ): JSX.Element {
-  return <Link to={`/agents/${cellParams.row.id}`}>{cellParams.row.name}</Link>;
+  return (
+    <SearchLink
+      path={`/agents/${cellParams.row.id}`}
+      displayName={cellParams.row.name}
+    />
+  );
 }
 
 function renderLabelDataCell(

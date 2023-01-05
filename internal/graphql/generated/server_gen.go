@@ -301,28 +301,29 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Agent                func(childComplexity int, id string) int
-		AgentMetrics         func(childComplexity int, period string, ids []string) int
-		Agents               func(childComplexity int, selector *string, query *string) int
-		Configuration        func(childComplexity int, name string) int
-		ConfigurationMetrics func(childComplexity int, period string, name *string) int
-		Configurations       func(childComplexity int, selector *string, query *string) int
-		Destination          func(childComplexity int, name string) int
-		DestinationType      func(childComplexity int, name string) int
-		DestinationTypes     func(childComplexity int) int
-		DestinationWithType  func(childComplexity int, name string) int
-		Destinations         func(childComplexity int) int
-		OverviewMetrics      func(childComplexity int, period string) int
-		OverviewPage         func(childComplexity int) int
-		Processor            func(childComplexity int, name string) int
-		ProcessorType        func(childComplexity int, name string) int
-		ProcessorTypes       func(childComplexity int) int
-		Processors           func(childComplexity int) int
-		Snapshot             func(childComplexity int, agentID string, pipelineType otel.PipelineType) int
-		Source               func(childComplexity int, name string) int
-		SourceType           func(childComplexity int, name string) int
-		SourceTypes          func(childComplexity int) int
-		Sources              func(childComplexity int) int
+		Agent                 func(childComplexity int, id string) int
+		AgentMetrics          func(childComplexity int, period string, ids []string) int
+		Agents                func(childComplexity int, selector *string, query *string) int
+		Configuration         func(childComplexity int, name string) int
+		ConfigurationMetrics  func(childComplexity int, period string, name *string) int
+		Configurations        func(childComplexity int, selector *string, query *string, onlyDeployedConfigurations *bool) int
+		Destination           func(childComplexity int, name string) int
+		DestinationType       func(childComplexity int, name string) int
+		DestinationTypes      func(childComplexity int) int
+		DestinationWithType   func(childComplexity int, name string) int
+		Destinations          func(childComplexity int) int
+		DestinationsInConfigs func(childComplexity int) int
+		OverviewMetrics       func(childComplexity int, period string, configIDs []string, destinationIDs []string) int
+		OverviewPage          func(childComplexity int, configIDs []string, destinationIDs []string, period string, telemetryType string) int
+		Processor             func(childComplexity int, name string) int
+		ProcessorType         func(childComplexity int, name string) int
+		ProcessorTypes        func(childComplexity int) int
+		Processors            func(childComplexity int) int
+		Snapshot              func(childComplexity int, agentID string, pipelineType otel.PipelineType) int
+		Source                func(childComplexity int, name string) int
+		SourceType            func(childComplexity int, name string) int
+		SourceTypes           func(childComplexity int) int
+		Sources               func(childComplexity int) int
 	}
 
 	RelevantIfCondition struct {
@@ -371,7 +372,7 @@ type ComplexityRoot struct {
 		AgentMetrics         func(childComplexity int, period string, ids []string) int
 		ConfigurationChanges func(childComplexity int, selector *string, query *string) int
 		ConfigurationMetrics func(childComplexity int, period string, name *string, agent *string) int
-		OverviewMetrics      func(childComplexity int, period string) int
+		OverviewMetrics      func(childComplexity int, period string, configIDs []string, destinationIDs []string) int
 	}
 
 	Suggestion struct {
@@ -437,10 +438,10 @@ type ProcessorTypeResolver interface {
 	Kind(ctx context.Context, obj *model1.ProcessorType) (string, error)
 }
 type QueryResolver interface {
-	OverviewPage(ctx context.Context) (*model.OverviewPage, error)
+	OverviewPage(ctx context.Context, configIDs []string, destinationIDs []string, period string, telemetryType string) (*model.OverviewPage, error)
 	Agents(ctx context.Context, selector *string, query *string) (*model.Agents, error)
 	Agent(ctx context.Context, id string) (*model1.Agent, error)
-	Configurations(ctx context.Context, selector *string, query *string) (*model.Configurations, error)
+	Configurations(ctx context.Context, selector *string, query *string, onlyDeployedConfigurations *bool) (*model.Configurations, error)
 	Configuration(ctx context.Context, name string) (*model1.Configuration, error)
 	Sources(ctx context.Context) ([]*model1.Source, error)
 	Source(ctx context.Context, name string) (*model1.Source, error)
@@ -453,12 +454,13 @@ type QueryResolver interface {
 	Destinations(ctx context.Context) ([]*model1.Destination, error)
 	Destination(ctx context.Context, name string) (*model1.Destination, error)
 	DestinationWithType(ctx context.Context, name string) (*model.DestinationWithType, error)
+	DestinationsInConfigs(ctx context.Context) ([]*model1.Destination, error)
 	DestinationTypes(ctx context.Context) ([]*model1.DestinationType, error)
 	DestinationType(ctx context.Context, name string) (*model1.DestinationType, error)
 	Snapshot(ctx context.Context, agentID string, pipelineType otel.PipelineType) (*model.Snapshot, error)
 	AgentMetrics(ctx context.Context, period string, ids []string) (*model.GraphMetrics, error)
 	ConfigurationMetrics(ctx context.Context, period string, name *string) (*model.GraphMetrics, error)
-	OverviewMetrics(ctx context.Context, period string) (*model.GraphMetrics, error)
+	OverviewMetrics(ctx context.Context, period string, configIDs []string, destinationIDs []string) (*model.GraphMetrics, error)
 }
 type RelevantIfConditionResolver interface {
 	Operator(ctx context.Context, obj *model1.RelevantIfCondition) (model.RelevantIfOperatorType, error)
@@ -474,7 +476,7 @@ type SubscriptionResolver interface {
 	ConfigurationChanges(ctx context.Context, selector *string, query *string) (<-chan []*model.ConfigurationChange, error)
 	AgentMetrics(ctx context.Context, period string, ids []string) (<-chan *model.GraphMetrics, error)
 	ConfigurationMetrics(ctx context.Context, period string, name *string, agent *string) (<-chan *model.GraphMetrics, error)
-	OverviewMetrics(ctx context.Context, period string) (<-chan *model.GraphMetrics, error)
+	OverviewMetrics(ctx context.Context, period string, configIDs []string, destinationIDs []string) (<-chan *model.GraphMetrics, error)
 }
 
 type executableSchema struct {
@@ -1540,7 +1542,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Configurations(childComplexity, args["selector"].(*string), args["query"].(*string)), true
+		return e.complexity.Query.Configurations(childComplexity, args["selector"].(*string), args["query"].(*string), args["onlyDeployedConfigurations"].(*bool)), true
 
 	case "Query.destination":
 		if e.complexity.Query.Destination == nil {
@@ -1592,6 +1594,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Destinations(childComplexity), true
 
+	case "Query.destinationsInConfigs":
+		if e.complexity.Query.DestinationsInConfigs == nil {
+			break
+		}
+
+		return e.complexity.Query.DestinationsInConfigs(childComplexity), true
+
 	case "Query.overviewMetrics":
 		if e.complexity.Query.OverviewMetrics == nil {
 			break
@@ -1602,14 +1611,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.OverviewMetrics(childComplexity, args["period"].(string)), true
+		return e.complexity.Query.OverviewMetrics(childComplexity, args["period"].(string), args["configIDs"].([]string), args["destinationIDs"].([]string)), true
 
 	case "Query.overviewPage":
 		if e.complexity.Query.OverviewPage == nil {
 			break
 		}
 
-		return e.complexity.Query.OverviewPage(childComplexity), true
+		args, err := ec.field_Query_overviewPage_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.OverviewPage(childComplexity, args["configIDs"].([]string), args["destinationIDs"].([]string), args["period"].(string), args["telemetryType"].(string)), true
 
 	case "Query.processor":
 		if e.complexity.Query.Processor == nil {
@@ -1918,7 +1932,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Subscription.OverviewMetrics(childComplexity, args["period"].(string)), true
+		return e.complexity.Subscription.OverviewMetrics(childComplexity, args["period"].(string), args["configIDs"].([]string), args["destinationIDs"].([]string)), true
 
 	case "Suggestion.label":
 		if e.complexity.Suggestion.Label == nil {
@@ -2484,12 +2498,21 @@ type GraphMetrics {
 # queries
 
 type Query {
-  overviewPage: OverviewPage!
+  overviewPage(
+    configIDs: [ID!]
+    destinationIDs: [ID!]
+    period: String!
+    telemetryType: String!
+  ): OverviewPage!
 
   agents(selector: String, query: String): Agents!
   agent(id: ID!): Agent
 
-  configurations(selector: String, query: String): Configurations!
+  configurations(
+    selector: String
+    query: String
+    onlyDeployedConfigurations: Boolean
+  ): Configurations!
   configuration(name: String!): Configuration
 
   sources: [Source!]!
@@ -2507,6 +2530,7 @@ type Query {
   destinations: [Destination!]!
   destination(name: String!): Destination
   destinationWithType(name: String!): DestinationWithType!
+  destinationsInConfigs: [Destination!]!
 
   destinationTypes: [DestinationType!]!
   destinationType(name: String!): DestinationType
@@ -2515,7 +2539,11 @@ type Query {
 
   agentMetrics(period: String!, ids: [ID!]): GraphMetrics!
   configurationMetrics(period: String!, name: String): GraphMetrics!
-  overviewMetrics(period: String!): GraphMetrics!
+  overviewMetrics(
+    period: String!
+    configIDs: [ID!]
+    destinationIDs: [ID!]
+  ): GraphMetrics!
 }
 
 # ----------------------------------------------------------------------
@@ -2531,7 +2559,11 @@ type Subscription {
     name: String
     agent: String
   ): GraphMetrics!
-  overviewMetrics(period: String!): GraphMetrics!
+  overviewMetrics(
+    period: String!
+    configIDs: [ID!]
+    destinationIDs: [ID!]
+  ): GraphMetrics!
 }
 
 # ----------------------------------------------------------------------
@@ -2725,6 +2757,15 @@ func (ec *executionContext) field_Query_configurations_args(ctx context.Context,
 		}
 	}
 	args["query"] = arg1
+	var arg2 *bool
+	if tmp, ok := rawArgs["onlyDeployedConfigurations"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onlyDeployedConfigurations"))
+		arg2, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["onlyDeployedConfigurations"] = arg2
 	return args, nil
 }
 
@@ -2785,6 +2826,66 @@ func (ec *executionContext) field_Query_overviewMetrics_args(ctx context.Context
 		}
 	}
 	args["period"] = arg0
+	var arg1 []string
+	if tmp, ok := rawArgs["configIDs"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("configIDs"))
+		arg1, err = ec.unmarshalOID2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["configIDs"] = arg1
+	var arg2 []string
+	if tmp, ok := rawArgs["destinationIDs"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("destinationIDs"))
+		arg2, err = ec.unmarshalOID2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["destinationIDs"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_overviewPage_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []string
+	if tmp, ok := rawArgs["configIDs"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("configIDs"))
+		arg0, err = ec.unmarshalOID2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["configIDs"] = arg0
+	var arg1 []string
+	if tmp, ok := rawArgs["destinationIDs"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("destinationIDs"))
+		arg1, err = ec.unmarshalOID2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["destinationIDs"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["period"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["telemetryType"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("telemetryType"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["telemetryType"] = arg3
 	return args, nil
 }
 
@@ -2989,6 +3090,24 @@ func (ec *executionContext) field_Subscription_overviewMetrics_args(ctx context.
 		}
 	}
 	args["period"] = arg0
+	var arg1 []string
+	if tmp, ok := rawArgs["configIDs"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("configIDs"))
+		arg1, err = ec.unmarshalOID2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["configIDs"] = arg1
+	var arg2 []string
+	if tmp, ok := rawArgs["destinationIDs"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("destinationIDs"))
+		arg2, err = ec.unmarshalOID2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["destinationIDs"] = arg2
 	return args, nil
 }
 
@@ -9436,7 +9555,7 @@ func (ec *executionContext) _Query_overviewPage(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().OverviewPage(rctx)
+		return ec.resolvers.Query().OverviewPage(rctx, fc.Args["configIDs"].([]string), fc.Args["destinationIDs"].([]string), fc.Args["period"].(string), fc.Args["telemetryType"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9466,6 +9585,17 @@ func (ec *executionContext) fieldContext_Query_overviewPage(ctx context.Context,
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OverviewPage", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_overviewPage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -9645,7 +9775,7 @@ func (ec *executionContext) _Query_configurations(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Configurations(rctx, fc.Args["selector"].(*string), fc.Args["query"].(*string))
+		return ec.resolvers.Query().Configurations(rctx, fc.Args["selector"].(*string), fc.Args["query"].(*string), fc.Args["onlyDeployedConfigurations"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10403,6 +10533,60 @@ func (ec *executionContext) fieldContext_Query_destinationWithType(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_destinationsInConfigs(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_destinationsInConfigs(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DestinationsInConfigs(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model1.Destination)
+	fc.Result = res
+	return ec.marshalNDestination2ᚕᚖgithubᚗcomᚋobserviqᚋbindplaneᚑopᚋmodelᚐDestinationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_destinationsInConfigs(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "apiVersion":
+				return ec.fieldContext_Destination_apiVersion(ctx, field)
+			case "kind":
+				return ec.fieldContext_Destination_kind(ctx, field)
+			case "metadata":
+				return ec.fieldContext_Destination_metadata(ctx, field)
+			case "spec":
+				return ec.fieldContext_Destination_spec(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Destination", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_destinationTypes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_destinationTypes(ctx, field)
 	if err != nil {
@@ -10714,7 +10898,7 @@ func (ec *executionContext) _Query_overviewMetrics(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().OverviewMetrics(rctx, fc.Args["period"].(string))
+		return ec.resolvers.Query().OverviewMetrics(rctx, fc.Args["period"].(string), fc.Args["configIDs"].([]string), fc.Args["destinationIDs"].([]string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -12334,7 +12518,7 @@ func (ec *executionContext) _Subscription_overviewMetrics(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().OverviewMetrics(rctx, fc.Args["period"].(string))
+		return ec.resolvers.Subscription().OverviewMetrics(rctx, fc.Args["period"].(string), fc.Args["configIDs"].([]string), fc.Args["destinationIDs"].([]string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -16766,6 +16950,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_destinationWithType(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "destinationsInConfigs":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_destinationsInConfigs(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

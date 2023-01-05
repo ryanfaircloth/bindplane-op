@@ -1,5 +1,5 @@
 import { Button } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { CardContainer } from "../../components/CardContainer";
 import { ConfigurationsTable } from "../../components/Tables/ConfigurationTable";
@@ -8,8 +8,11 @@ import { withRequireLogin } from "../../contexts/RequireLogin";
 import { withNavBar } from "../../components/NavBar";
 
 import mixins from "../../styles/mixins.module.scss";
+import { GridSelectionModel } from "@mui/x-data-grid";
 
 const ConfigurationsPageContent: React.FC = () => {
+  // Selected is an array of names of configurations.
+  const [selected, setSelected] = useState<GridSelectionModel>([]);
   return (
     <CardContainer>
       <Button
@@ -22,7 +25,11 @@ const ConfigurationsPageContent: React.FC = () => {
         New Configuration
       </Button>
 
-      <ConfigurationsTable />
+      <ConfigurationsTable
+        selected={selected}
+        setSelected={setSelected}
+        enableDelete={true}
+      />
     </CardContainer>
   );
 };

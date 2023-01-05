@@ -1,5 +1,4 @@
 import { Card, Paper } from "@mui/material";
-import { useState } from "react";
 import { ReactFlowProvider } from "react-flow-renderer";
 import { ShowPageConfig } from "../../pages/configurations/configuration";
 import {
@@ -13,7 +12,14 @@ import { firstActiveTelemetry } from "./Nodes/nodeUtils";
 import { YamlEditor } from "../YamlEditor";
 import { ProcessorDialog } from "../ResourceDialog/ProcessorsDialog";
 
+import { useQueryParam, StringParam } from "use-query-params";
+
 import styles from "./pipeline-graph.module.scss";
+import {
+  PERIOD_PARAM_NAME,
+  TELEMETRY_TYPE_PARAM_NAME,
+} from "../../utils/state";
+import { useEffect } from "react";
 
 export type MinimumRequiredConfig = Partial<ShowPageConfig>;
 interface PipelineGraphProps {
@@ -31,31 +37,53 @@ export const PipelineGraph: React.FC<PipelineGraphProps> = ({
   yamlValue,
   rawOrTopology,
 }) => {
-  const [selectedTelemetry, setTelemetry] = useState(
-    firstActiveTelemetry(configuration?.graph?.attributes) ??
-      DEFAULT_TELEMETRY_TYPE
+  const [selectedPeriod, setPeriodURL] = useQueryParam(
+    PERIOD_PARAM_NAME,
+    StringParam
   );
-  const [selectedPeriod, setPeriod] = useState(DEFAULT_PERIOD);
+  const setPeriod = (p: string) => {
+    setPeriodURL(p, "replaceIn");
+  };
+
+  const [selectedTelemetry, setSelectedTelemetryURL] = useQueryParam(
+    TELEMETRY_TYPE_PARAM_NAME,
+    StringParam
+  );
+  const setSelectedTelemetry = (t: string) => {
+    setSelectedTelemetryURL(t, "replaceIn");
+  };
+
+  const activeTelemetry =
+    firstActiveTelemetry(configuration?.graph?.attributes) ??
+    DEFAULT_TELEMETRY_TYPE;
+  useEffect(() => {
+    if (!selectedPeriod) {
+      setPeriod(DEFAULT_PERIOD);
+    }
+    if (!selectedTelemetry) {
+      setSelectedTelemetry(activeTelemetry);
+    }
+  });
 
   if (rawOrTopology === "topology") {
     return (
       <PipelineGraphProvider
-        selectedTelemetryType={selectedTelemetry}
+        selectedTelemetryType={selectedTelemetry || DEFAULT_PERIOD}
         configuration={configuration}
         refetchConfiguration={refetchConfiguration}
       >
         <GraphContainer>
           <Card style={{ border: 0 }}>
             <MeasurementControlBar
-              telemetry={selectedTelemetry}
-              onTelemetryTypeChange={(t: string) => setTelemetry(t)}
-              period={selectedPeriod}
-              onPeriodChange={(r: string) => setPeriod(r)}
+              telemetry={selectedTelemetry || activeTelemetry}
+              onTelemetryTypeChange={setSelectedTelemetry}
+              period={selectedPeriod || DEFAULT_PERIOD}
+              onPeriodChange={setPeriod}
             />
             <ReactFlowProvider>
               <ConfigurationFlow
-                period={selectedPeriod}
-                selectedTelemetry={selectedTelemetry}
+                period={selectedPeriod || DEFAULT_PERIOD}
+                selectedTelemetry={selectedTelemetry || activeTelemetry}
                 configuration={configuration}
                 refetchConfiguration={refetchConfiguration}
                 agent={agent}

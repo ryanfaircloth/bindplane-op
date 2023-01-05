@@ -1,6 +1,7 @@
 import { Chip, Stack } from "@mui/material";
 import {
   DataGrid,
+  DataGridProps,
   GridCellParams,
   GridColumns,
   GridDensityTypes,
@@ -10,12 +11,13 @@ import {
 } from "@mui/x-data-grid";
 import { isFunction } from "lodash";
 import React, { memo } from "react";
-import { Link } from "react-router-dom";
 import {
   ConfigurationTableMetricsSubscription,
   GetConfigurationTableQuery,
 } from "../../../graphql/generated";
 import { formatMetric } from "../../../utils/graph/utils";
+import { SearchLink } from "../../../utils/state";
+import { NoMaxWidthTooltip } from "../../Custom/NoMaxWidthTooltip";
 import {
   DEFAULT_CONFIGURATION_TABLE_PERIOD,
   TELEMETRY_SIZE_METRICS,
@@ -34,23 +36,29 @@ export enum ConfigurationsTableField {
 
 type Configurations =
   GetConfigurationTableQuery["configurations"]["configurations"];
-interface ConfigurationsDataGridProps {
-  onConfigurationsSelected?: (configurationIds: GridSelectionModel) => void;
+interface ConfigurationsDataGridProps
+  extends Omit<DataGridProps, "columns" | "rows"> {
+  setSelectionModel?: (configurationIds: GridSelectionModel) => void;
   density?: GridDensityTypes;
   loading: boolean;
-  configurations?: Configurations;
+  configurations: Configurations;
   configurationMetrics?: ConfigurationTableMetricsSubscription;
   columnFields?: ConfigurationsTableField[];
+  minHeight?: string;
+  selectionModel?: GridSelectionModel;
 }
 
 const ConfigurationsDataGridComponent: React.FC<ConfigurationsDataGridProps> =
   ({
-    onConfigurationsSelected,
+    setSelectionModel,
     loading,
     configurations,
     configurationMetrics,
     columnFields,
     density = GridDensityTypes.Standard,
+    minHeight,
+    selectionModel,
+    ...dataGridProps
   }) => {
     const columns: GridColumns = (columnFields || []).map((field) => {
       switch (field) {
@@ -91,7 +99,7 @@ const ConfigurationsDataGridComponent: React.FC<ConfigurationsDataGridProps> =
           return {
             field: ConfigurationsTableField.NAME,
             headerName: "Name",
-            width: 400,
+            width: 300,
             valueGetter: (params: GridValueGetterParams) =>
               params.row.metadata.name,
             renderCell: renderNameDataCell,
@@ -99,19 +107,11 @@ const ConfigurationsDataGridComponent: React.FC<ConfigurationsDataGridProps> =
       }
     });
 
-    function handleSelect(s: GridSelectionModel) {
-      if (!isFunction(onConfigurationsSelected)) {
-        return;
-      }
-
-      onConfigurationsSelected(s);
-    }
-
     return (
       <DataGrid
-        checkboxSelection={isFunction(onConfigurationsSelected)}
-        onSelectionModelChange={handleSelect}
-        density={density}
+        {...dataGridProps}
+        checkboxSelection={isFunction(setSelectionModel)}
+        onSelectionModelChange={setSelectionModel}
         components={{
           NoRowsOverlay: () => (
             <Stack height="100%" alignItems="center" justifyContent="center">
@@ -119,12 +119,13 @@ const ConfigurationsDataGridComponent: React.FC<ConfigurationsDataGridProps> =
             </Stack>
           ),
         }}
+        style={{ minHeight }}
         disableSelectionOnClick
         autoHeight
-        loading={loading}
         getRowId={(row) => row.metadata.name}
         columns={columns}
-        rows={configurations ?? []}
+        rows={configurations}
+        selectionModel={selectionModel}
       />
     );
   };
@@ -142,9 +143,25 @@ function renderLabels(
   );
 }
 
+function abreviateName(limit: number, name?: string): string {
+  if (!name) return "";
+  return name.length > limit ? name.substring(0, limit) + "..." : name;
+}
+
 function renderNameDataCell(cellParams: GridCellParams<string>): JSX.Element {
   return (
-    <Link to={`/configurations/${cellParams.value}`}>{cellParams.value}</Link>
+    <NoMaxWidthTooltip
+      title={`${cellParams.value} (Click to view configuration)`}
+      enterDelay={1000}
+      placement="top-start"
+    >
+      <div>
+        <SearchLink
+          path={`/configurations/${cellParams.value || ""}`}
+          displayName={abreviateName(40, cellParams.value)}
+        />
+      </div>
+    </NoMaxWidthTooltip>
   );
 }
 
@@ -194,6 +211,7 @@ function createMetricRateColumn(
 }
 
 ConfigurationsDataGridComponent.defaultProps = {
+  minHeight: "calc(100vh - 300px)",
   density: undefined,
   columnFields: [
     ConfigurationsTableField.NAME,

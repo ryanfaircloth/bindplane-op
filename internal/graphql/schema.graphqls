@@ -404,12 +404,21 @@ type GraphMetrics {
 # queries
 
 type Query {
-  overviewPage: OverviewPage!
+  overviewPage(
+    configIDs: [ID!]
+    destinationIDs: [ID!]
+    period: String!
+    telemetryType: String!
+  ): OverviewPage!
 
   agents(selector: String, query: String): Agents!
   agent(id: ID!): Agent
 
-  configurations(selector: String, query: String): Configurations!
+  configurations(
+    selector: String
+    query: String
+    onlyDeployedConfigurations: Boolean
+  ): Configurations!
   configuration(name: String!): Configuration
 
   sources: [Source!]!
@@ -427,6 +436,7 @@ type Query {
   destinations: [Destination!]!
   destination(name: String!): Destination
   destinationWithType(name: String!): DestinationWithType!
+  destinationsInConfigs: [Destination!]!
 
   destinationTypes: [DestinationType!]!
   destinationType(name: String!): DestinationType
@@ -435,7 +445,11 @@ type Query {
 
   agentMetrics(period: String!, ids: [ID!]): GraphMetrics!
   configurationMetrics(period: String!, name: String): GraphMetrics!
-  overviewMetrics(period: String!): GraphMetrics!
+  overviewMetrics(
+    period: String!
+    configIDs: [ID!]
+    destinationIDs: [ID!]
+  ): GraphMetrics!
 }
 
 # ----------------------------------------------------------------------
@@ -451,7 +465,11 @@ type Subscription {
     name: String
     agent: String
   ): GraphMetrics!
-  overviewMetrics(period: String!): GraphMetrics!
+  overviewMetrics(
+    period: String!
+    configIDs: [ID!]
+    destinationIDs: [ID!]
+  ): GraphMetrics!
 }
 
 # ----------------------------------------------------------------------

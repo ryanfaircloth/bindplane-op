@@ -49,7 +49,7 @@ export const ApplyConfigDialog: React.FC<ApplyConfigDialogProps> = ({
         );
       }
 
-      const ids = [];
+      const ids: string[] = [];
       for (const id of agentsToApply) {
         if (typeof id === "string") {
           ids.push(id);

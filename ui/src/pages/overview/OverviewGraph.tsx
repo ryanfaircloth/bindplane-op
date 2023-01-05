@@ -1,13 +1,7 @@
 import { gql } from "@apollo/client";
-import {
-  Button,
-  Card,
-  CircularProgress,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Button, CircularProgress, Stack, Typography } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import ReactFlow, {
   Controls,
   useReactFlow,
@@ -15,9 +9,9 @@ import ReactFlow, {
 } from "react-flow-renderer";
 import { useNavigate } from "react-router-dom";
 import {
-  DEFAULT_PERIOD,
+  DEFAULT_OVERVIEW_GRAPH_PERIOD,
   DEFAULT_TELEMETRY_TYPE,
-  MeasurementControlBar,
+  TELEMETRY_SIZE_METRICS,
 } from "../../components/MeasurementControlBar/MeasurementControlBar";
 import { firstActiveTelemetry } from "../../components/PipelineGraph/Nodes/nodeUtils";
 import {
@@ -36,8 +30,18 @@ import { useOverviewPage } from "./OverviewPageContext";
 import global from "../../styles/global.module.scss";
 
 gql`
-  query getOverviewPage {
-    overviewPage {
+  query getOverviewPage(
+    $configIDs: [ID!]
+    $destinationIDs: [ID!]
+    $period: String!
+    $telemetryType: String!
+  ) {
+    overviewPage(
+      configIDs: $configIDs
+      destinationIDs: $destinationIDs
+      period: $period
+      telemetryType: $telemetryType
+    ) {
       graph {
         attributes
         sources {
@@ -70,8 +74,16 @@ gql`
     }
   }
 
-  subscription OverviewMetrics($period: String!) {
-    overviewMetrics(period: $period) {
+  subscription OverviewMetrics(
+    $period: String!
+    $configIDs: [ID!]
+    $destinationIDs: [ID!]
+  ) {
+    overviewMetrics(
+      period: $period
+      configIDs: $configIDs
+      destinationIDs: $destinationIDs
+    ) {
       metrics {
         name
         nodeID
@@ -93,19 +105,41 @@ const edgeTypes = {
 };
 
 export const OverviewGraph: React.FC = () => {
-  const [selectedPeriod, setPeriod] = useState(DEFAULT_PERIOD);
-  const { selectedTelemetry, onTelemetryTypeChange } = useOverviewPage();
+  const {
+    selectedTelemetry,
+    setSelectedTelemetry,
+    selectedPeriod,
+    selectedConfigs,
+    selectedDestinations,
+  } = useOverviewPage();
   const { enqueueSnackbar } = useSnackbar();
   const reactFlowInstance = useReactFlow();
   const navigate = useNavigate();
 
+  // map the selectedDestinations to an array of strings
+  const destinationIDs = selectedDestinations.map((id) => id.toString());
+
+  // map the selectedConfigs to an array of strings
+  const configIDs = selectedConfigs.map((id) => id.toString());
+
   const { data, error, loading } = useGetOverviewPageQuery({
     fetchPolicy: "network-only",
+    variables: {
+      configIDs: configIDs,
+      destinationIDs: destinationIDs,
+      period: selectedPeriod || DEFAULT_OVERVIEW_GRAPH_PERIOD,
+      telemetryType:
+        selectedTelemetry != null
+          ? TELEMETRY_SIZE_METRICS[selectedTelemetry]
+          : DEFAULT_TELEMETRY_TYPE,
+    },
   });
 
   const { data: overviewMetricsData } = useOverviewMetricsSubscription({
     variables: {
-      period: selectedPeriod,
+      period: selectedPeriod || DEFAULT_OVERVIEW_GRAPH_PERIOD,
+      configIDs: configIDs,
+      destinationIDs: destinationIDs,
     },
   });
 
@@ -120,13 +154,16 @@ export const OverviewGraph: React.FC = () => {
 
   useEffect(() => {
     // Set the first selected telemetry to the first active after we load.
-    if (data?.overviewPage?.graph?.attributes != null) {
-      onTelemetryTypeChange(
+    if (
+      data?.overviewPage?.graph?.attributes != null &&
+      selectedTelemetry == null
+    ) {
+      setSelectedTelemetry(
         firstActiveTelemetry(data.overviewPage.graph.attributes) ??
           DEFAULT_TELEMETRY_TYPE
       );
     }
-  }, [data?.overviewPage.graph.attributes, onTelemetryTypeChange]);
+  });
 
   const reactFlowWidth = useStore((state: { width: any }) => state.width);
   const reactFlowHeight = useStore((state: { height: any }) => state.height);
@@ -160,7 +197,7 @@ export const OverviewGraph: React.FC = () => {
   const { nodes, edges } = getNodesAndEdges(
     Page.Overview,
     data!.overviewPage.graph,
-    500,
+    700,
     null,
     () => {}
   );
@@ -169,43 +206,35 @@ export const OverviewGraph: React.FC = () => {
     nodes,
     edges,
     overviewMetricsData?.overviewMetrics.metrics ?? [],
-    selectedPeriod,
-    selectedTelemetry
+    selectedPeriod || DEFAULT_OVERVIEW_GRAPH_PERIOD,
+    selectedTelemetry || DEFAULT_TELEMETRY_TYPE
   );
 
   return hasPipeline ? (
-    <Card style={{ height: "calc(100vh - 120px)", width: "100%" }}>
-      <div style={{ height: "100%", width: "100%", paddingBottom: 50 }}>
-        <MeasurementControlBar
-          telemetry={selectedTelemetry}
-          onTelemetryTypeChange={onTelemetryTypeChange}
-          period={selectedPeriod}
-          onPeriodChange={(r: string) => setPeriod(r)}
-        />
-        <ReactFlow
-          defaultNodes={nodes}
-          defaultEdges={edges}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          nodesConnectable={false}
-          nodesDraggable={false}
-          proOptions={{ account: "paid-pro", hideAttribution: true }}
-          fitView={true}
-          deleteKeyCode={null}
-          zoomOnScroll={false}
-          panOnDrag={true}
-          minZoom={0.1}
-          maxZoom={1.75}
-          onWheel={(event) => {
-            window.scrollBy(event.deltaX, event.deltaY);
-          }}
-          onNodesChange={onNodesChange}
-          className={global["graph"]}
-        >
-          <Controls showZoom={false} showInteractive={false} />
-        </ReactFlow>
-      </div>
-    </Card>
+    <div style={{ height: "100%", width: "100%", paddingBottom: 75 }}>
+      <ReactFlow
+        defaultNodes={nodes}
+        defaultEdges={edges}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        nodesConnectable={false}
+        nodesDraggable={false}
+        proOptions={{ account: "paid-pro", hideAttribution: true }}
+        fitView={true}
+        deleteKeyCode={null}
+        zoomOnScroll={false}
+        panOnDrag={true}
+        minZoom={0.1}
+        maxZoom={1.75}
+        onWheel={(event) => {
+          window.scrollBy(event.deltaX, event.deltaY);
+        }}
+        onNodesChange={onNodesChange}
+        className={global["graph"]}
+      >
+        <Controls showZoom={false} showInteractive={false} />
+      </ReactFlow>
+    </div>
   ) : (
     <NoConfigurationMessage navigate={navigate} />
   );

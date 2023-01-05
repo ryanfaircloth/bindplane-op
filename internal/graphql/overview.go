@@ -17,20 +17,50 @@ package graphql
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
 
-	"github.com/observiq/bindplane-op/internal/store"
+	model1 "github.com/observiq/bindplane-op/internal/graphql/model"
+	"github.com/observiq/bindplane-op/internal/server"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/bindplane-op/model/graph"
 	"github.com/observiq/bindplane-op/model/otel"
 )
 
-func overviewGraph(ctx context.Context, store store.Store) (*graph.Graph, error) {
+func overviewGraph(ctx context.Context, b server.BindPlane, configsIDs []string, destinationIDs []string, period string, telemetryType string) (*graph.Graph, error) {
+	if configsIDs == nil {
+		configsIDs = []string{}
+	}
+	if destinationIDs == nil {
+		destinationIDs = []string{}
+	}
+
 	g := graph.NewGraph()
 	var activeFlags otel.PipelineTypeFlags
+
+	store := b.Store()
 
 	configs, err := store.Configurations(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	everythingOrSelected := func(resourceKey string, kind model.Kind) (string, bool) {
+		resourcesSelected := []string{}
+		switch kind {
+		case model.KindConfiguration:
+			resourcesSelected = configsIDs
+		case model.KindDestination:
+			resourcesSelected = destinationIDs
+		}
+		for _, resourceID := range resourcesSelected {
+			if strings.HasSuffix(resourceID, resourceKey) {
+				// resources is selected
+				return fmt.Sprintf("%s/%s", strings.ToLower(string(kind)), resourceKey), false
+			}
+		}
+		// resource is in the everything node
+		return fmt.Sprintf("everything/%s", strings.ToLower(string(kind))), true
 	}
 
 	// keep track of destinations and reuse them
@@ -39,7 +69,16 @@ func overviewGraph(ctx context.Context, store store.Store) (*graph.Graph, error)
 	destNodesSlice := make([]*graph.Node, 0)
 
 	edges := make([]*graph.Edge, 0)
-	configNodes := make([]*graph.Node, 0)
+
+	// track which edges we've drawn so far
+	edgesSlice := make(map[string]*graph.Edge, 0)
+
+	// keep track of configs and reuse them
+	configNodes := make(map[string]*graph.Node)
+
+	// Also keep an ordered slice of the nodes for consistent ordering
+	configNodesSlice := make([]*graph.Node, 0)
+
 	for _, c := range configs {
 		// don't include raw configurations because their destinations aren't configured
 		if c.Spec.Raw != "" {
@@ -57,20 +96,35 @@ func overviewGraph(ctx context.Context, store store.Store) (*graph.Graph, error)
 			continue
 		}
 
-		configNodeID := fmt.Sprintf("configuration/%s", c.Name())
-		configAttrs := graph.MakeAttributes(string(model.KindConfiguration), c.Name())
+		configNodeID, isEverything := everythingOrSelected(c.Name(), model.KindConfiguration)
+		configKey := ""
+		if isEverything {
+			configKey = configNodeID
+		} else {
+			configKey = c.Name()
+		}
 
 		configUsage := c.Usage(ctx, store)
-		configAttrs.AddAttribute("agentCount", len(agentIDs))
-		configAttrs.AddAttribute("activeTypeFlags", configUsage.ActiveFlags())
-		activeFlags = activeFlags | configUsage.ActiveFlags()
 
-		configNodes = append(configNodes, &graph.Node{
-			ID:         configNodeID,
-			Label:      c.Name(),
-			Type:       "configurationNode",
-			Attributes: configAttrs,
-		})
+		if configNode, ok := configNodes[configKey]; !ok {
+			configAttrs := graph.MakeAttributes(string(model.KindConfiguration), configKey)
+			configAttrs.AddAttribute("agentCount", len(agentIDs))
+			configAttrs.AddAttribute("activeTypeFlags", configUsage.ActiveFlags())
+
+			configNode := &graph.Node{
+				ID:         configNodeID,
+				Label:      configKey,
+				Type:       "configurationNode",
+				Attributes: configAttrs,
+			}
+
+			configNodes[configNodeID] = configNode
+			configNodesSlice = append(configNodesSlice, configNode)
+		} else {
+			configNode.Attributes["activeTypeFlags"] = configNode.Attributes["activeTypeFlags"].(otel.PipelineTypeFlags) | configUsage.ActiveFlags()
+			configNode.Attributes["agentCount"] = configNode.Attributes["agentCount"].(int) + len(agentIDs)
+		}
+		activeFlags = activeFlags | configUsage.ActiveFlags()
 
 		for _, d := range c.Spec.Destinations {
 			// ignore inline destinations which are not supported in the UI
@@ -78,30 +132,106 @@ func overviewGraph(ctx context.Context, store store.Store) (*graph.Graph, error)
 				continue
 			}
 
-			destNodeID := fmt.Sprintf("destination/%s", d.Name)
-			destNode, ok := destNodes[destNodeID]
-			if !ok {
-				destAttrs := graph.MakeAttributes(string(model.KindDestination), d.Name)
+			destNodeID, isEverything := everythingOrSelected(d.Name, model.KindDestination)
+
+			destinationKey := ""
+			if isEverything {
+				destinationKey = destNodeID
+			} else {
+				destinationKey = d.Name
+			}
+
+			if destNode, ok := destNodes[destinationKey]; !ok {
+				destAttrs := graph.MakeAttributes(string(model.KindDestination), destinationKey)
 				destAttrs.AddAttribute("agentCount", len(agentIDs))
 				destAttrs.AddAttribute("activeTypeFlags", configUsage.ActiveFlagsForDestination(d.Name))
 
-				node := &graph.Node{
+				destinationNode := &graph.Node{
 					ID:         destNodeID,
-					Label:      d.Name,
+					Label:      destinationKey,
 					Type:       "destinationNode",
 					Attributes: destAttrs,
 				}
-				destNodes[destNodeID] = node
-				destNodesSlice = append(destNodesSlice, node)
+				destNodes[destinationKey] = destinationNode
+				destNodesSlice = append(destNodesSlice, destinationNode)
 			} else {
 				// increment the agent count
+				destNode.Attributes["activeTypeFlags"] = destNode.Attributes["activeTypeFlags"].(otel.PipelineTypeFlags) | configUsage.ActiveFlagsForDestination(d.Name)
 				destNode.Attributes["agentCount"] = destNode.Attributes["agentCount"].(int) + len(agentIDs)
 			}
-			edges = append(edges, graph.NewEdge(configNodeID, destNodeID))
+
+			edgeKey := fmt.Sprintf("%s|%s", configNodeID, destNodeID)
+			if _, ok := edgesSlice[edgeKey]; !ok {
+				newEdge := graph.NewEdge(configNodeID, destNodeID)
+				edgesSlice[edgeKey] = newEdge
+				edges = append(edges, newEdge)
+			}
 		}
 	}
 
-	g.Sources = configNodes
+	// get the metrics for each config
+	if period == "" {
+		period = "10s"
+	}
+
+	metrics, err := overviewMetrics(ctx, b, period, configsIDs, destinationIDs)
+
+	if err != nil {
+		return nil, err
+	}
+
+	metricMap := make(map[string]*model1.GraphMetric)
+
+	for _, m := range metrics.Metrics {
+		if strings.Contains(m.Name, telemetryType) {
+			metricMap[m.NodeID] = m
+		}
+	}
+
+	// sort the configs by metrics
+	sort.SliceStable(configNodesSlice, func(i, j int) bool {
+		// always put the everything node last
+		if configNodesSlice[i].ID == "everything/configuration" {
+			return false
+		}
+		if configNodesSlice[j].ID == "everything/configuration" {
+			return true
+		}
+		// find metrics for each config
+		mi, ok := metricMap[configNodesSlice[i].ID]
+		if !ok {
+			mi = &model1.GraphMetric{}
+		}
+		mj, ok := metricMap[configNodesSlice[j].ID]
+		if !ok {
+			mj = &model1.GraphMetric{}
+		}
+
+		return mi.Value > mj.Value
+	})
+
+	// sort the destinations by metrics,
+	sort.SliceStable(destNodesSlice, func(i, j int) bool {
+		// always put the everything node last
+		if destNodesSlice[i].ID == "everything/destination" {
+			return false
+		}
+		if destNodesSlice[j].ID == "everything/destination" {
+			return true
+		}
+		// find metrics for each config
+		mi, ok := metricMap[destNodesSlice[i].ID]
+		if !ok {
+			mi = &model1.GraphMetric{}
+		}
+		mj, ok := metricMap[destNodesSlice[j].ID]
+		if !ok {
+			mj = &model1.GraphMetric{}
+		}
+		return mi.Value > mj.Value
+	})
+
+	g.Sources = configNodesSlice
 	g.Targets = destNodesSlice
 	g.Edges = edges
 	g.Attributes["activeTypeFlags"] = activeFlags

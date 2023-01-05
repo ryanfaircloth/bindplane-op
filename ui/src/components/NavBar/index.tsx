@@ -1,6 +1,6 @@
 import { AppBar, IconButton, Menu, MenuItem, Toolbar } from "@mui/material";
 import React, { SyntheticEvent, useEffect, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   AgentGridIcon,
   EmailIcon,
@@ -46,6 +46,7 @@ export const NavBar: React.FC = () => {
     navigate("/login");
   }
 
+  const location = useLocation();
   return (
     <>
       <AppBar position="static" classes={{ root: styles["app-bar-root"] }}>
@@ -64,7 +65,7 @@ export const NavBar: React.FC = () => {
                   ? classes([styles["nav-link"], styles["active"]])
                   : styles["nav-link"]
               }
-              to="/overview"
+              to={{ pathname: "/overview", search: location.search }}
             >
               {({ isActive }) => {
                 const className = isActive ? classes([styles["icon"], styles["active"]]) : styles["icon"];
@@ -82,7 +83,7 @@ export const NavBar: React.FC = () => {
                   ? classes([styles["nav-link"], styles["active"]])
                   : styles["nav-link"]
               }
-              to="/agents"
+              to={{ pathname: "/agents", search: location.search }}
             >
               {({ isActive }) => {
                 const className = isActive ? classes([styles["icon"], styles["active"]]) : styles["icon"];
@@ -101,7 +102,7 @@ export const NavBar: React.FC = () => {
                   ? classes([styles["nav-link"], styles["active"]])
                   : styles["nav-link"]
               }
-              to="/configurations"
+              to={{ pathname: "/configurations", search: location.search }}
             >
               {({ isActive }) => {
                 const className = isActive ? classes([styles["icon"], styles["active"]]) : styles["icon"];
@@ -120,7 +121,7 @@ export const NavBar: React.FC = () => {
                   ? classes([styles["nav-link"], styles["active"]])
                   : styles["nav-link"]
               }
-              to="/destinations"
+              to={{ pathname: "/destinations", search: location.search }}
             >
               {({ isActive }) => {
                 const className = isActive ? classes([styles["icon"], styles["active"]]) : styles["icon"];

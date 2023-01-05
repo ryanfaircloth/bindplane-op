@@ -6,7 +6,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { CardMeasurementContent } from "../CardMeasurementContent/CardMeasurementContent";
 import { SlidersIcon } from "../Icons";
 
@@ -28,20 +28,38 @@ export const ConfigurationCard: React.FC<ConfigurationCardProps> = ({
   disabled,
 }) => {
   const navigate = useNavigate();
-  const configurationURL = `/configurations/${id.split("/").pop()}`;
+  const location = useLocation();
+  const isEverything = id === "everything/configuration";
+  const configurationURL = isEverything
+    ? "/configurations"
+    : `/configurations/${id.split("/").pop()}`;
   const agentCount = attributes["agentCount"] ?? 0;
+
+  const cardLabel = isEverything ? "Other Configurations" : label;
 
   return (
     <div className={disabled ? styles.disabled : undefined}>
       <Card className={styles["resource-card"]}>
         <CardActionArea
           classes={{ root: styles.action }}
-          onClick={() => navigate(configurationURL)}
+          onClick={() =>
+            navigate({ pathname: configurationURL, search: location.search })
+          }
         >
           <CardContent>
-            <Stack justifyContent="center" alignItems="center">
-              <SlidersIcon height="40px" width="40px" />
-              <Typography fontWeight={600}>{label}</Typography>
+            <Stack justifyContent="center" alignItems="center" spacing={2}>
+              {isEverything ? (
+                <Stack direction="row" spacing={2}>
+                  <SlidersIcon color="#b3b3b3" height="20px" width="20px" />
+                  <SlidersIcon color="#b3b3b3" height="20px" width="20px" />
+                  <SlidersIcon color="#b3b3b3" height="20px" width="20px" />
+                </Stack>
+              ) : (
+                <SlidersIcon height="40px" width="40px" />
+              )}
+              <Typography align="center" fontWeight={600}>
+                {cardLabel}
+              </Typography>
             </Stack>
           </CardContent>
         </CardActionArea>

@@ -240,8 +240,8 @@ func (r *processorTypeResolver) Kind(ctx context.Context, obj *model.ProcessorTy
 }
 
 // OverviewPage is the resolver for the overviewPage field.
-func (r *queryResolver) OverviewPage(ctx context.Context) (*model1.OverviewPage, error) {
-	graph, err := overviewGraph(ctx, r.bindplane.Store())
+func (r *queryResolver) OverviewPage(ctx context.Context, configIDs []string, destinationIDs []string, period string, telemetryType string) (*model1.OverviewPage, error) {
+	graph, err := overviewGraph(ctx, r.bindplane, configIDs, destinationIDs, period, telemetryType)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +282,7 @@ func (r *queryResolver) Agent(ctx context.Context, id string) (*model.Agent, err
 }
 
 // Configurations is the resolver for the configurations field.
-func (r *queryResolver) Configurations(ctx context.Context, selector *string, query *string) (*model1.Configurations, error) {
+func (r *queryResolver) Configurations(ctx context.Context, selector *string, query *string, onlyDeployedConfigurations *bool) (*model1.Configurations, error) {
 	options, suggestions, err := r.queryOptionsAndSuggestions(selector, query, r.bindplane.Store().ConfigurationIndex(ctx))
 	if err != nil {
 		r.bindplane.Logger().Error("error getting query options and suggestion", zap.Error(err))
@@ -292,6 +292,20 @@ func (r *queryResolver) Configurations(ctx context.Context, selector *string, qu
 	configurations, err := r.bindplane.Store().Configurations(ctx, options...)
 	if err != nil {
 		return nil, err
+	}
+	// filter out configurations that are not deployed
+	if onlyDeployedConfigurations != nil && *onlyDeployedConfigurations {
+		filteredConfigurations := []*model.Configuration{}
+		for _, configuration := range configurations {
+			ids, err := r.bindplane.Store().AgentsIDsMatchingConfiguration(ctx, configuration)
+			if err != nil {
+				return nil, err
+			}
+			if len(ids) > 0 {
+				filteredConfigurations = append(filteredConfigurations, configuration)
+			}
+		}
+		configurations = filteredConfigurations
 	}
 	return &model1.Configurations{
 		Configurations: configurations,
@@ -377,6 +391,44 @@ func (r *queryResolver) DestinationWithType(ctx context.Context, name string) (*
 		Destination:     dest,
 		DestinationType: destinationType,
 	}, nil
+}
+
+// DestinationsInConfigs is the resolver for the destinationsInConfigs field.
+func (r *queryResolver) DestinationsInConfigs(ctx context.Context) ([]*model.Destination, error) {
+	// returns only destinations that are in non-raw (managed?) configs and deployed to agents
+	configs, err := r.bindplane.Store().Configurations(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// create a map from destination name to destination
+	destinationsMap := make(map[string]string)
+	destinations := make([]*model.Destination, 0, len(destinationsMap))
+
+	// loop through configs, collect all destinations from configs that aren't raw
+	for _, config := range configs {
+		if config.Spec.Raw != "" {
+			continue
+		}
+		ids, err := r.bindplane.Store().AgentsIDsMatchingConfiguration(ctx, config)
+		if err != nil {
+			return nil, err
+		}
+		if len(ids) > 0 {
+			for _, destination := range config.Spec.Destinations {
+				_, ok := destinationsMap[destination.Name]
+				if !ok {
+					dest, err := r.bindplane.Store().Destination(ctx, destination.Name)
+					if err != nil {
+						return destinations, err
+					}
+					destinationsMap[destination.Name] = "Remember that we've already seen this destination!"
+					destinations = append(destinations, dest)
+				}
+			}
+		}
+	}
+	return destinations, nil
 }
 
 // DestinationTypes is the resolver for the destinationTypes field.
@@ -483,8 +535,8 @@ func (r *queryResolver) ConfigurationMetrics(ctx context.Context, period string,
 }
 
 // OverviewMetrics is the resolver for the overviewMetrics field.
-func (r *queryResolver) OverviewMetrics(ctx context.Context, period string) (*model1.GraphMetrics, error) {
-	return overviewMetrics(ctx, r.bindplane, period)
+func (r *queryResolver) OverviewMetrics(ctx context.Context, period string, configIDs []string, destinationIDs []string) (*model1.GraphMetrics, error) {
+	return overviewMetrics(ctx, r.bindplane, period, configIDs, destinationIDs)
 }
 
 // Operator is the resolver for the operator field.
@@ -609,13 +661,13 @@ func (r *subscriptionResolver) ConfigurationMetrics(ctx context.Context, period 
 }
 
 // OverviewMetricsSubscription is the resolver for the overviewMetricsSubscription field.
-func (r *subscriptionResolver) OverviewMetrics(ctx context.Context, period string) (<-chan *model1.GraphMetrics, error) {
+func (r *subscriptionResolver) OverviewMetrics(ctx context.Context, period string, configIDs []string, destinationIDs []string) (<-chan *model1.GraphMetrics, error) {
 	channel := make(chan *model1.GraphMetrics)
 
 	updateTicker := time.NewTicker(overviewMetricsUpdateInterval)
 
 	sendMetrics := func() {
-		if metrics, err := overviewMetrics(ctx, r.bindplane, period); err != nil {
+		if metrics, err := overviewMetrics(ctx, r.bindplane, period, configIDs, destinationIDs); err != nil {
 			r.bindplane.Logger().Error("failed to get overviewMetrics", zap.Error(err))
 		} else {
 			channel <- metrics

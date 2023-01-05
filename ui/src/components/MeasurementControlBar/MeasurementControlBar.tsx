@@ -13,6 +13,7 @@ export const PERIODS: { [period: string]: string } = {
 export const DEFAULT_PERIOD = "10s";
 export const DEFAULT_AGENTS_TABLE_PERIOD = "10s";
 export const DEFAULT_CONFIGURATION_TABLE_PERIOD = "10s";
+export const DEFAULT_OVERVIEW_GRAPH_PERIOD = "1h";
 export const TELEMETRY_TYPES: { [telemetryType: string]: string } = {
   logs: "Logs",
   metrics: "Metrics",

@@ -49,6 +49,7 @@ export function getNodesAndEdges(
   const processorYoffset = 35;
   const targetProcOffsetMultiplier = 270;
 
+  // layout sources
   for (let i = 0; i < (graph.sources ?? []).length; i++) {
     const n = graph.sources[i];
     const x = offsets[n.id] * sourceOffsetMultiplier;
@@ -299,6 +300,10 @@ function getMetricPosition(nodeID: string): MetricPosition | undefined {
     }
   } else if (nodeID.startsWith("configuration/")) {
     return MetricPosition.Configuration;
+  } else if (nodeID.startsWith("everything/destination")) {
+    return MetricPosition.DestinationAfterProcessors;
+  } else if (nodeID.startsWith("everything/configuration")) {
+    return MetricPosition.Configuration;
   }
 }
 
@@ -356,7 +361,21 @@ export function updateMetricData(
 
         case MetricPosition.DestinationAfterProcessors:
           // D
-          edge = edges.find((e) => e.target === node.id);
+          var candidateEdges = edges.filter((e) => e.target === node.id);
+          // if there are multiple edges, we want to put the metric on the
+          // edge that has the source with the lowest y value
+          edge = candidateEdges.reduce((prev, curr) => {
+            const prevNode = nodes.find((n) => n.id === prev.source);
+            const currNode = nodes.find((n) => n.id === curr.source);
+            if (prevNode == null) {
+              return curr;
+            }
+            if (currNode == null) {
+              return prev;
+            }
+            return prevNode.position.y < currNode.position.y ? prev : curr;
+          });
+
           if (page === Page.Overview) {
             textAnchor = "end";
             startOffset = "97%";
@@ -364,7 +383,19 @@ export function updateMetricData(
           break;
 
         case MetricPosition.Configuration:
-          edge = edges.find((e) => e.source === node.id);
+          candidateEdges = edges.filter((e) => e.source === node.id);
+          edge = candidateEdges.reduce((prev, curr) => {
+            const prevNode = nodes.find((n) => n.id === prev.target);
+            const currNode = nodes.find((n) => n.id === curr.target);
+            if (prevNode == null) {
+              return curr;
+            }
+            if (currNode == null) {
+              return prev;
+            }
+            return prevNode.position.y < currNode.position.y ? prev : curr;
+          });
+
           textAnchor = "start";
           startOffset = "4%";
           break;
