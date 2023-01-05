@@ -6,7 +6,7 @@ metadata:
   icon: /icons/sources/file.svg
   description: Collect logs from generic log files.
 spec:
-  version: 0.0.1
+  version: 0.0.2
   supported_platforms:
     - macos
     - linux
@@ -50,17 +50,43 @@ spec:
       description: The regex pattern used when parsing log entries.
       type: string
       default: ""
+      required: true
       relevantIf:
         - name: parse_format
           operator: equals
           value: "regex"
+
+    - name: multiline_parsing
+      label: Multiline Parsing
+      description: Enable multiline parsing options. Either specifying a regex for where a log starts or ends.
+      type: enum
+      default: none
+      validValues:
+        - none
+        - specify line start
+        - specify line end
 
     - name: multiline_line_start_pattern
       label: Multiline Start Pattern
       description: Regex pattern that matches beginning of a log entry, for handling multiline logs.
       type: string
       default: ""
-      advancedConfig: true
+      required: true
+      relevantIf:
+        - name: multiline_parsing
+          operator: equals
+          value: specify line start
+
+    - name: multiline_line_end_pattern
+      label: Multiline End Pattern
+      description: Regex pattern that matches end of a log entry, useful for terminating parsing of multiline logs.
+      type: string
+      default: ""
+      required: true
+      relevantIf:
+        - name: multiline_parsing
+          operator: equals
+          value: specify line end
 
     - name: encoding
       label: Encoding
@@ -76,6 +102,65 @@ spec:
         - big5
       advancedConfig: true
 
+    - name: include_file_name_attribute
+      label: Include File Name Attribute
+      description: Whether to add the file name as the attribute "log.file.name".
+      type: bool
+      default: true
+      advancedConfig: true
+
+    - name: include_file_path_attribute
+      label: Include File Path Attribute
+      description: Whether to add the file path as the attribute "log.file.path".
+      type: bool
+      default: false
+      advancedConfig: true
+
+    - name: include_file_name_resolved_attribute
+      label: Include File Name Resolved Attribute
+      description: Whether to add the file name after symlinks resolution as the attribute "log.file.name_resolved".
+      type: bool
+      default: false
+      advancedConfig: true
+
+    - name: include_file_path_resolved_attribute
+      label: Include File Path Resolved Attribute
+      description: Whether to add the file path after symlinks resolution as the attribute "log.file.path_resolved".
+      type: bool
+      default: false
+      advancedConfig: true
+
+    - name: offset_storage_dir
+      label: Offset Storage Directory
+      description: The directory that the offset storage file will be created.
+      type: string
+      default: $OIQ_OTEL_COLLECTOR_HOME/storage
+      advancedConfig: true
+
+    - name: poll_interval
+      label: Filesystem Poll Interval
+      description: The duration of time in milliseconds between filesystem polls.
+      type: int
+      default: 200
+      advancedConfig: true
+
+    - name: max_concurrent_files
+      label: Max Concurrent Files
+      description: The maximum number of log files fromw hich logs will be read concurrently. If the number of files matched exceeds this number, then files will be processed in batches.
+      type: int
+      default: 1024
+      advancedConfig: true
+
+    - name: parse_to
+      label: Parse To
+      description: The field to which the log will be parsed.
+      type: enum
+      validValues:
+        - body
+        - attributes
+      default: body
+      advancedConfig: true
+
     - name: start_at
       label: Start At
       description: Start reading logs from 'beginning' or 'end'.
@@ -87,28 +172,53 @@ spec:
       advancedConfig: true
 
   logs:
+    extensions: |
+      - file_storage:
+          directory: {{ .offset_storage_dir }}
+
     receivers: |
-      - plugin:
-          path: $OIQ_OTEL_COLLECTOR_HOME/plugins/file_logs.yaml
-          parameters:
-            file_path:
-              {{ range $fp := .file_path }}
-              - '{{ $fp }}'
-              {{ end }}
-            {{ if .exclude_file_path }}
-            exclude_file_path:
-              {{ range $fp := .exclude_file_path }}
-              - '{{ $fp }}'
-              {{end}}
+      - filelog:
+          include:
+          {{ range $fp := .file_path }}
+            - '{{ $fp }}'
+          {{ end }}
+          {{ if .exclude_file_path }}
+          exclude:
+          {{ range $fp := .exclude_file_path }}
+          - '{{ $fp }}'
+          {{end}}
+          {{ end }}
+          {{ if ne .multiline_parsing "none"}}
+          multiline:
+            {{ if eq .multiline_parsing "specify line start" }}
+            line_start_pattern: '{{ .multiline_line_start_pattern }}'
             {{ end }}
-            multiline_line_start_pattern: '{{ .multiline_line_start_pattern }}'
-            encoding: {{ .encoding }}
-            parse_format: {{ .parse_format }}
+            {{ if eq .multiline_parsing "specify line end" }}
+            line_end_pattern: '{{ .multiline_line_end_pattern }}'
+            {{ end }}
+          {{ end }}
+          encoding: {{ .encoding }}
+          include_file_name: {{ .include_file_name_attribute }}
+          include_file_name_resolved: {{ .include_file_name_resolved_attribute }}
+          include_file_path: {{ .include_file_path_attribute }}
+          include_file_path_resolved: {{ .include_file_path_resolved_attribute }}
+          start_at: {{ .start_at }}
+          poll_interval: {{ .poll_interval }}ms
+          storage: {{ bpComponentID "file_storage" }}
+          max_concurrent_files: {{ .max_concurrent_files }}
+          operators:
+            {{ if eq .parse_format "json" }}
+            - type: json_parser
+              parse_to: {{ .parse_to }}
+            {{ end }}
             {{ if eq .parse_format "regex" }}
-            regex_pattern: '{{ .regex_pattern }}'
+            - type: regex_parser
+              regex: '{{ .regex_pattern }}'
+              parse_to: {{ .parse_to }}
             {{ end }}
-            log_type: {{ .log_type }}
-            start_at: {{ .start_at }}
+            - type: add
+              field: attributes.log_type
+              value: {{ .log_type }}
 
     processors: |
       - resourcedetection:
